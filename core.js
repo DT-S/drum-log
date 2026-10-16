@@ -48,8 +48,8 @@ export function todayLesson(s,lessons,now=new Date()){
 // Additive version upgrade: lesson records are deliberately untouched.
 export function migrateState(state){if(state.schemaVersion===1)state.schemaVersion=2;if(state.schemaVersion===2){state.appointments=[];state.schemaVersion=3;}if(state.schemaVersion===3){state.trials=[];state.schemaVersion=4;}if(state.schemaVersion!==4)throw Error('This database needs a newer version of Drum Log.');return state;}
 export const lessonKey=(studentId,date,time)=>JSON.stringify([studentId,date,time]);
-const validDate=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&localDate(new Date(v+'T12:00:00'))===v;
-const validTime=v=>typeof v==='string'&&/^([01]\d|2[0-3]):[0-5]\d$/.test(v);
+export const validDate=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&localDate(new Date(v+'T12:00:00'))===v;
+export const validTime=v=>typeof v==='string'&&/^([01]\d|2[0-3]):[0-5]\d$/.test(v);
 export function validateBackup(raw){
  const fail=m=>{throw Error('Invalid backup: '+m);};const str=(v,max=200000)=>typeof v==='string'&&v.length<=max;
  if(!raw||![1,2,3,4].includes(raw.schemaVersion))fail('unsupported schema version.');

@@ -57,7 +57,7 @@ Use an iPhone passcode/Face ID and full-disk encryption plus a locked user sessi
 
 ## Updates and future development
 
-Before updating, export a backup. Keep the hosting origin and path stable. Replace application assets together, and increment the cache version (currently `v7`) in `sw.js` for each release. The new service worker caches all required assets before installation completes, then waits for old app tabs/windows to close. Reopen online to activate it, verify **OFFLINE READY**, and test offline again. App-shell cache cleanup does not touch IndexedDB.
+Before updating, export a backup. Keep the hosting origin and path stable. Replace application assets together, and increment the cache version (currently `v8`) in `sw.js` for each release. The new service worker caches all required assets before installation completes, then waits for old app tabs/windows to close. Reopen online to activate it, verify **OFFLINE READY**, and test offline again. App-shell cache cleanup does not touch IndexedDB.
 
 Database: `drum-log-lcars`, IndexedDB version 1, object store `state`, key `main`. The stored JSON has `schemaVersion: 4` and collections `students`, `lessons`, `snippets`, plus `settings`. Database transactions always read the latest state before applying a mutation, avoiding stale full-state writes across tabs. Editing the same lesson from two tabs detects differing note text and stops rather than silently replacing it. Reconcile conflicting notes manually. Do not use simultaneous editing as a synchronization feature.
 
@@ -142,3 +142,11 @@ See GITHUB-IPHONE.md for German GitHub Pages and iPhone setup instructions and t
 ## Audio patch 1.5.1
 
 Waits for asynchronous AudioContext activation before playing. Touch-end and click gestures retry audio activation, including interrupted contexts after returning to the app. Test sound displays audio state and asset failures. iPhone Silent Mode is still respected; disable it and check media volume/Bluetooth if audio is active but inaudible. Device playback has not been tested in this development environment. No changes to database schema or license selection.
+
+
+## Date / time patch 1.5.2
+All application dates use YYYY-MM-DD. Time uses HH:mm (24-hour).
+Date/time entry uses explicit text fields instead of locale-dependent native pickers.
+Real calendar dates and 00:00–23:59 times are validated before use.
+English UI, stored records, schema and existing backup compatibility are unchanged.
+CSV lesson dates remain DD.MM.YYYY.
