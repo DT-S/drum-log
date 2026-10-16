@@ -62,3 +62,7 @@ Browser checks remain pending: add/edit/remove appointments for each profile typ
 39 automated tests pass. New coverage: automatic selection without students; trial/regular overlaps; archived exclusion; midnight; full conversion preserving contact, remarks, notes and historical timing; atomic failure behavior; double-conversion prevention; conversion before notes exist; validation and schema 1–3 migration. JavaScript syntax and all offline assets checked. No browser/iPhone execution was available here.
 
 Before production use: create a trial with no students, write notes and insert shortcuts, reload; verify Schedule and automatic selection; archive/restore; convert with a different regular weekday/time and confirm the original trial note remains at its original time. Export/import trials including archived records. Repeat offline in the installed iPhone app.
+
+## Audio patch 1.5.1
+
+The 39 existing tests passed; an additional test passed for delayed activation of an interrupted AudioContext, bringing coverage to 40 tests. Real iPhone validation remains required.

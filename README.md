@@ -57,7 +57,7 @@ Use an iPhone passcode/Face ID and full-disk encryption plus a locked user sessi
 
 ## Updates and future development
 
-Before updating, export a backup. Keep the hosting origin and path stable. Replace application assets together, and increment the cache version (currently `v6`) in `sw.js` for each release. The new service worker caches all required assets before installation completes, then waits for old app tabs/windows to close. Reopen online to activate it, verify **OFFLINE READY**, and test offline again. App-shell cache cleanup does not touch IndexedDB.
+Before updating, export a backup. Keep the hosting origin and path stable. Replace application assets together, and increment the cache version (currently `v7`) in `sw.js` for each release. The new service worker caches all required assets before installation completes, then waits for old app tabs/windows to close. Reopen online to activate it, verify **OFFLINE READY**, and test offline again. App-shell cache cleanup does not touch IndexedDB.
 
 Database: `drum-log-lcars`, IndexedDB version 1, object store `state`, key `main`. The stored JSON has `schemaVersion: 4` and collections `students`, `lessons`, `snippets`, plus `settings`. Database transactions always read the latest state before applying a mutation, avoiding stale full-state writes across tabs. Editing the same lesson from two tabs detects differing note text and stops rather than silently replacing it. Reconcile conflicting notes manually. Do not use simultaneous editing as a synchronization feature.
 
@@ -138,3 +138,7 @@ Convert to student opens the regular student form so you can choose weekly, fort
 Trials are included in schema 4 JSON backups/import previews and a dedicated trial CSV export. Schemas 1–3 remain importable. The IndexedDB object store/version is retained. Only the application data schema changes.
 
 See GITHUB-IPHONE.md for German GitHub Pages and iPhone setup instructions and the distinction between public program files and private local data.
+
+## Audio patch 1.5.1
+
+Waits for asynchronous AudioContext activation before playing. Touch-end and click gestures retry audio activation, including interrupted contexts after returning to the app. Test sound displays audio state and asset failures. iPhone Silent Mode is still respected; disable it and check media volume/Bluetooth if audio is active but inaudible. Device playback has not been tested in this development environment. No changes to database schema or license selection.
