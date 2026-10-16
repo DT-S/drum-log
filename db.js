@@ -1,0 +1,7 @@
+import {defaults,migrateState} from './core.js';
+let db;
+export function openDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open('drum-log-lcars',1);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains('state'))d.createObjectStore('state');};r.onerror=()=>reject(r.error);r.onblocked=()=>reject(Error('Close other Drum Log tabs to finish the database upgrade.'));r.onsuccess=()=>{db=r.result;db.onversionchange=()=>{db.close();location.reload();};resolve();};});}
+export function readState(){return new Promise((resolve,reject)=>{const tx=db.transaction('state','readonly');const r=tx.objectStore('state').get('main');r.onsuccess=()=>{try{resolve(migrateState(r.result||defaults()));}catch(e){reject(e);}};r.onerror=()=>reject(r.error);});}
+// Each mutation reads the latest committed state inside the same serialized transaction.
+export function mutate(fn){return new Promise((resolve,reject)=>{const tx=db.transaction('state','readwrite');const store=tx.objectStore('state'),r=store.get('main');let state,error;r.onsuccess=()=>{try{state=migrateState(r.result||defaults());fn(state);store.put(state,'main');}catch(e){error=e;tx.abort();}};tx.oncomplete=()=>resolve(state);tx.onabort=()=>reject(error||tx.error||Error('Storage transaction failed.'));tx.onerror=()=>{};});}
+export function replaceState(next){return mutate(s=>{Object.keys(s).forEach(k=>delete s[k]);Object.assign(s,next);});}

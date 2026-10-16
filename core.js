@@ -1,0 +1,92 @@
+export const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+export const defaults=()=>({schemaVersion:4,students:[],trials:[],appointments:[],lessons:[],snippets:[['WDH','Review: '],['Timing','Timing: '],['Technique','Technique: '],['Grooves','Grooves: '],['Rudiments','Rudiments: '],['Homework','Homework: ']].map(([label,text],i)=>({id:'snippet-'+i,label,text})),settings:{backupReminder:true,lastBackup:null,soundEnabled:true,soundVolume:0.35}});
+export const localDate=(d=new Date())=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+export const minutes=t=>Number(t.slice(0,2))*60+Number(t.slice(3));
+export function appointment(s,date){const d=new Date(date);d.setHours(...s.time.split(':').map(Number),0,0);return d;}
+export const scheduleType=s=>s.schedule??'weekly';
+const calendarDay=d=>{const [y,m,day]=d.split('-').map(Number);return Date.UTC(y,m-1,day)/86400000;};
+export function isTeachingDay(s,date){
+ const type=scheduleType(s);if(type==='flexible')return false;
+ if(new Date(date+'T12:00:00').getDay()!==s.day)return false;
+ if(type==='biweekly'){const delta=calendarDay(date)-calendarDay(s.anchorDate);return delta>=0&&delta%14===0;}
+ return true;
+}
+export function selectScheduled(students,now=new Date(),appointments=[],trials=[]){
+ const current=[],next=[];
+ for(const s of students.filter(s=>!s.archived&&scheduleType(s)!=='flexible')){
+  const base=new Date(now);base.setDate(base.getDate()-1);base.setHours(12,0,0,0);
+  if(scheduleType(s)==='biweekly'&&localDate(base)<s.anchorDate)base.setTime(+new Date(s.anchorDate+'T12:00:00'));
+  for(let offset=0;offset<=15;offset++){
+   const day=new Date(base);day.setDate(day.getDate()+offset);if(!isTeachingDay(s,localDate(day)))continue;
+   const start=appointment(s,day),end=new Date(+start+s.duration*60000);
+   if(start<=now&&now<end)current.push({student:s,start});else if(start>now)next.push({student:s,start});
+  }
+ }
+ for(const extra of appointments){
+  const student=students.find(s=>s.id===extra.studentId&&!s.archived);if(!student)continue;
+  const start=new Date(extra.date+'T'+extra.time+':00'),end=new Date(+start+extra.duration*60000);
+  // Explicit booking takes precedence over an identical recurring occurrence.
+  for(const list of [current,next]){const i=list.findIndex(x=>x.student.id===student.id&&+x.start===+start);if(i>=0)list.splice(i,1);}
+  const item={student,start,appointment:extra};if(start<=now&&now<end)current.push(item);else if(start>now)next.push(item);
+ }
+ for(const trial of trials.filter(t=>!t.archived)){
+  const start=new Date(trial.date+'T'+trial.time+':00'),end=new Date(+start+trial.duration*60000);
+  const item={student:{id:'trial:'+trial.id,name:trial.name},start,trial};
+  if(start<=now&&now<end)current.push(item);else if(start>now)next.push(item);
+ }
+ const order=(a,b)=>a.start-b.start||a.student.name.localeCompare(b.student.name)||a.student.id.localeCompare(b.student.id);current.sort(order);next.sort(order);
+ return {kind:current.length?'current':'next',matches:current,selected:current[0]||next[0]||null};
+}
+export function todayLesson(s,lessons,now=new Date()){
+ const date=localDate(now);
+ if(scheduleType(s)==='flexible'){
+  const existing=lessons.filter(l=>l.studentId===s.id&&l.date===date).sort((a,b)=>b.time.localeCompare(a.time))[0];
+  return {date,time:existing?.time||String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0'),duration:existing?.duration||s.duration};
+ }
+ return {date,time:s.time,duration:s.duration};
+}
+// Additive version upgrade: lesson records are deliberately untouched.
+export function migrateState(state){if(state.schemaVersion===1)state.schemaVersion=2;if(state.schemaVersion===2){state.appointments=[];state.schemaVersion=3;}if(state.schemaVersion===3){state.trials=[];state.schemaVersion=4;}if(state.schemaVersion!==4)throw Error('This database needs a newer version of Drum Log.');return state;}
+export const lessonKey=(studentId,date,time)=>JSON.stringify([studentId,date,time]);
+const validDate=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&localDate(new Date(v+'T12:00:00'))===v;
+const validTime=v=>typeof v==='string'&&/^([01]\d|2[0-3]):[0-5]\d$/.test(v);
+export function validateBackup(raw){
+ const fail=m=>{throw Error('Invalid backup: '+m);};const str=(v,max=200000)=>typeof v==='string'&&v.length<=max;
+ if(!raw||![1,2,3,4].includes(raw.schemaVersion))fail('unsupported schema version.');
+ if(!Array.isArray(raw.students)||!Array.isArray(raw.lessons)||!Array.isArray(raw.snippets))fail('missing data collections.');
+ const ids=new Set();for(const s of raw.students){
+  if(!s||!str(s.id,100)||!s.id||ids.has(s.id)||!str(s.name,200)||!s.name.trim()||!Number.isInteger(s.duration)||s.duration<1||s.duration>1440||!str(s.remarks)||typeof s.archived!=='boolean')fail('student record.');
+  const type=scheduleType(s);if(!['weekly','biweekly','flexible'].includes(type))fail('schedule type.');
+  if(type==='flexible'){if(s.day!==null||s.time!==null)fail('flexible schedule must have no fixed day or time.');}
+  else if(!Number.isInteger(s.day)||s.day<0||s.day>6||!validTime(s.time))fail('schedule day or time.');
+  if(type==='biweekly'&&(!validDate(s.anchorDate)||new Date(s.anchorDate+'T12:00:00').getDay()!==s.day))fail('fortnightly start date.');
+  ids.add(s.id);
+ }
+ const keys=new Set();for(const l of raw.lessons){if(!l||!ids.has(l.studentId)||!validDate(l.date)||!validTime(l.time)||!Number.isInteger(l.duration)||l.duration<1||l.duration>1440||!str(l.notes)||l.id!==lessonKey(l.studentId,l.date,l.time)||keys.has(l.id))fail('lesson record or duplicate lesson.');keys.add(l.id);}
+ const appointments=raw.appointments??(raw.schemaVersion<3?[]:null);
+ if(!Array.isArray(appointments))fail('appointments collection.');
+ const appointmentIds=new Set(),appointmentSlots=new Set();
+ for(const a of appointments){
+  if(!a||!str(a.id,100)||!a.id||appointmentIds.has(a.id)||!ids.has(a.studentId)||!validDate(a.date)||!validTime(a.time)||!Number.isInteger(a.duration)||a.duration<1||a.duration>1440||!str(a.label,200))fail('appointment record.');
+  const slot=lessonKey(a.studentId,a.date,a.time);if(appointmentSlots.has(slot))fail('duplicate appointment.');appointmentIds.add(a.id);appointmentSlots.add(slot);
+ }
+ const trials=raw.trials??(raw.schemaVersion<4?[]:null);
+ if(!Array.isArray(trials))fail('trials collection.');
+ const trialIds=new Set();for(const t of trials){if(!t||!str(t.id,100)||!t.id||trialIds.has(t.id)||!str(t.name,200)||!t.name.trim()||!validDate(t.date)||!validTime(t.time)||!Number.isInteger(t.duration)||t.duration<1||t.duration>1440||!str(t.contact,2000)||!str(t.remarks)||!str(t.notes)||typeof t.archived!=='boolean')fail('trial record.');trialIds.add(t.id);}
+ const snippets=new Set();for(const s of raw.snippets){if(!s||!str(s.id,100)||!s.id||snippets.has(s.id)||!str(s.label,50)||!s.label.trim()||!str(s.text,10000))fail('text shortcut.');snippets.add(s.id);}
+ if(!raw.settings||typeof raw.settings.backupReminder!=='boolean'||!(raw.settings.lastBackup===null||(typeof raw.settings.lastBackup==='string'&&Number.isFinite(Date.parse(raw.settings.lastBackup)))))fail('settings.');
+ if(raw.settings.soundEnabled!==undefined&&typeof raw.settings.soundEnabled!=='boolean')fail('sound setting.');
+ if(raw.settings.soundVolume!==undefined&&(!Number.isFinite(raw.settings.soundVolume)||raw.settings.soundVolume<0||raw.settings.soundVolume>1))fail('sound volume.');
+ return {schemaVersion:4,trials:trials.map(({id,name,date,time,duration,contact,remarks,notes,archived})=>({id,name,date,time,duration,contact,remarks,notes,archived})),appointments:appointments.map(({id,studentId,date,time,duration,label})=>({id,studentId,date,time,duration,label})),students:raw.students.map(({id,name,day,time,duration,remarks,archived,schedule,anchorDate})=>({id,name,day,time,duration,remarks,archived,...(schedule?{schedule}:{}),...(schedule==='biweekly'?{anchorDate}:{})})),lessons:raw.lessons.map(({id,studentId,date,time,duration,notes})=>({id,studentId,date,time,duration,notes})),snippets:raw.snippets.map(({id,label,text})=>({id,label,text})),settings:{backupReminder:raw.settings.backupReminder,lastBackup:raw.settings.lastBackup,soundEnabled:raw.settings.soundEnabled??true,soundVolume:raw.settings.soundVolume??0.35}};
+}
+export function csv(rows){const cell=v=>{let s=String(v??'');if(/^[\s]*[=+@-]/.test(s)||/^[\t\r\n]/.test(s))s="'"+s;return '"'+s.replaceAll('"','""')+'"';};return '\ufeff'+rows.map(r=>r.map(cell).join(';')).join('\r\n');}
+
+// Applied inside one IndexedDB transaction: either every conversion record commits, or none do.
+export function convertTrial(state,trialId,profile,appointmentId){
+ const trial=state.trials.find(t=>t.id===trialId);if(!trial)throw Error('Trial no longer exists. It may already have been converted.');
+ if(state.students.some(s=>s.id===profile.id))throw Error('Student identifier already exists.');
+ const student={...profile,remarks:[profile.remarks,trial.contact?'Trial contact: '+trial.contact:'',trial.remarks?'Trial remarks: '+trial.remarks:''].filter(Boolean).join('\n\n')};
+ const entry={id:lessonKey(student.id,trial.date,trial.time),studentId:student.id,date:trial.date,time:trial.time,duration:trial.duration,notes:trial.notes};
+ const next={...state,students:[...state.students,student],lessons:trial.notes?[...state.lessons,entry]:state.lessons,appointments:[...state.appointments,{id:appointmentId,studentId:student.id,date:trial.date,time:trial.time,duration:trial.duration,label:'Trial lesson'}],trials:state.trials.filter(t=>t.id!==trialId)};
+ validateBackup(next);Object.assign(state,next);return entry;
+}
