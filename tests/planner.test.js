@@ -84,7 +84,7 @@ test('trial booking is red-category regardless of other events',()=>{
  assert.equal(dayEvents(s,monday).find(e=>e.kind==='trial').name,'Guest');
 });
 test('cross-midnight events cannot be double-booked',()=>{
- const s=defaults();s.students.push(student('Late',7,'23:45',45),student('B',3,'12:15'));
+ const s=defaults();s.students.push(student('Late',0,'23:45',45),student('B',3,'12:15'));
  s.appointments.push({id:'late',studentId:'Late',date:'2026-10-18',time:'23:45',duration:45,label:'Extra'});
  assert.equal(hasCollision(s,monday,'00:15',15).studentId,'Late');
 });
