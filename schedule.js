@@ -103,11 +103,16 @@ export function bookReplacement(state,key,newStudentId,reason='cancelled'){
  if(newStudentId===source.studentId)throw Error('Choose a different student, or restore the original lesson.');
  const replacement=state.students.find(s=>s.id===newStudentId&&!s.archived);
  if(!replacement)throw Error('Choose an active student.');
- if(!source.cancelled)cancelLesson(state,key,reason);
- const clash=hasCollision(state,key.date,key.time,source.duration);
+ if(!['sick','cancelled','vacation','other'].includes(reason))throw Error('Invalid cancellation reason.');
+ const proposedCancellation={studentId:key.studentId,date:key.date,time:key.time,reason};
+ const candidate=source.cancelled?state:{...state,cancellations:[...state.cancellations,proposedCancellation]};
+ const clash=hasCollision(candidate,key.date,key.time,source.duration);
  if(clash)throw Error('Booking conflict: '+clash.name+' · '+clash.time+'.');
  if(state.appointments.some(a=>a.studentId===newStudentId&&a.date===key.date&&a.time===key.time))throw Error('Student already has an appointment in this slot.');
- state.appointments.push({id:crypto.randomUUID(),studentId:newStudentId,date:key.date,time:key.time,duration:source.duration,label:'Replacement lesson'});
+ // All validation above precedes mutation; caller also writes both in one IndexedDB transaction.
+ const appointment={id:crypto.randomUUID(),studentId:newStudentId,date:key.date,time:key.time,duration:source.duration,label:'Replacement lesson'};
+ if(!source.cancelled)state.cancellations.push(proposedCancellation);
+ state.appointments.push(appointment);
 }
 export function bookFreeSlot(state,studentId,date,time,duration){
  if(!validDate(date)||!validTime(time)||!Number.isInteger(duration)||duration<1||duration>1440)throw Error('Invalid lesson time or duration.');
