@@ -1,0 +1,69 @@
+/* Schedule planner. LCARS colors are semantic; trial lessons are explicitly red. */
+:root{--trial-red:#f35b65;--free-blue:#91b6f5}
+.plan-controls{display:flex;flex-wrap:wrap;align-items:end;gap:12px;padding:12px 0 8px;border-bottom:5px solid var(--purple)}
+.plan-controls>.toolbar{flex:0 0 auto}
+.plan-controls>label{flex:1 1 180px;font-size:17px}
+.plan-controls>label input{min-height:38px}
+.plan-controls button{min-height:38px;padding:6px 14px;font-size:18px}
+.plan-controls button[aria-pressed="true"]{background:var(--peach)}
+.plan-legend{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.plan-key{display:inline-block;font:700 14px/1.2 var(--ui);text-transform:uppercase;padding:5px 9px;border-left:8px solid var(--accent);color:var(--accent);background:#16121d}
+.slot-regular{--accent:var(--peach)}
+.slot-trial{--accent:var(--trial-red)}
+.slot-extra{--accent:var(--purple)}
+.slot-cancelled{--accent:#e58e99}
+.slot-available{--accent:var(--free-blue)}
+.plan-days{display:grid;gap:14px;min-width:0}
+.plan-day{min-width:0;border-left:12px solid var(--purple);border-top:7px solid var(--purple);border-radius:22px 0 0 0;padding:12px 0 5px 12px}
+.plan-day>h3{font-size:25px;margin:0 0 6px;color:var(--gold)}
+.plan-day>.muted{margin-bottom:7px}
+.plan-list{display:grid;gap:6px}
+.plan-row{display:grid;grid-template-columns:92px minmax(0,1fr) auto;align-items:center;gap:8px;min-width:0;border-left:9px solid var(--accent);background:#121017;padding:7px 8px}
+.plan-time{color:var(--accent);font:700 19px/1.1 var(--ui);white-space:nowrap}
+.plan-details{min-width:0}
+.plan-details strong{display:block;color:var(--accent);font:700 21px/1.12 var(--ui);text-transform:uppercase;overflow-wrap:anywhere}
+.plan-details small{display:block;color:var(--muted);font:14px/1.35 system-ui,sans-serif;overflow-wrap:anywhere}
+.plan-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:4px}
+.plan-row button{min-height:34px;font-size:15px;padding:5px 9px;border-radius:0 12px 12px 0}
+.plan-row.slot-trial{background:#21090e}
+.plan-row.slot-cancelled{opacity:.84}
+.plan-row.slot-available{background:#0d1a28}
+.plan-archives{border-top:4px solid var(--purple);margin-top:18px;padding:8px 0}
+.plan-archives>summary{font-size:21px}
+.trialrow{border-color:var(--trial-red)!important}
+.trialrow:before{color:#000}
+.teaching-hours-row{display:grid;grid-template-columns:minmax(115px,1fr) minmax(65px,.7fr) minmax(65px,.7fr);gap:8px;align-items:end;border-bottom:1px solid var(--line);padding:6px 0}
+.teaching-hours-row .check{margin:0;min-height:44px;font-size:18px;align-items:center}
+.teaching-hours-row label{font-size:15px}
+.teaching-hours-row input[type=text]{min-height:38px;padding:4px}
+.teaching-hours-row input:disabled{opacity:.32}
+@media(max-width:760px){
+ .plan-controls{gap:7px}
+ .plan-controls button{font-size:16px;padding:5px 9px}
+ .plan-controls>label{flex-basis:140px;font-size:15px}
+ .plan-day{padding-left:7px;border-left-width:8px}
+ .plan-row{grid-template-columns:65px minmax(0,1fr);gap:5px;border-left-width:6px;padding:7px 5px}
+ .plan-time{font-size:16px}
+ .plan-details strong{font-size:18px}
+ .plan-details small{font-size:12px}
+ .plan-actions{grid-column:2;justify-content:flex-start}
+ .plan-row button{font-size:14px;min-height:35px}
+ .plan-key{font-size:12px;padding:4px 6px}
+ .plan-day>h3{font-size:21px}
+}
+@media(max-width:600px){
+ .plan-controls{gap:5px}
+ .plan-controls button{min-height:34px;font-size:calc(16px * var(--mobile-ui-scale));padding:4px 8px}
+ .plan-controls>label{flex-basis:135px;font-size:calc(15px * var(--mobile-ui-scale))}
+ .plan-controls>label input{height:35px;min-height:35px}
+ .plan-legend{gap:4px;margin:7px 0}
+ .plan-key{font-size:calc(12px * var(--mobile-ui-scale));border-left-width:5px}
+ .plan-days{gap:9px}
+ .plan-day{padding-top:6px;border-top-width:5px}
+ .plan-day>h3{font-size:calc(23px * var(--mobile-ui-scale))}
+ .plan-compact .plan-row button{min-height:34px}
+ .teaching-hours-row{gap:5px;grid-template-columns:minmax(100px,1.2fr) minmax(62px,.8fr) minmax(62px,.8fr)}
+ .teaching-hours-row .check{font-size:calc(17px * var(--mobile-ui-scale))}
+ .teaching-hours-row label{font-size:calc(14px * var(--mobile-ui-scale))}
+ .plan-archives>summary{font-size:calc(20px * var(--mobile-ui-scale))}
+}

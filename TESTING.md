@@ -75,3 +75,17 @@ The 39 existing tests passed; an additional test passed for delayed activation o
 - Verify a long note uses the textarea's own scrolling without clipped text; history and settings can scroll internally; no previous-lesson buttons become inaccessible.
 - Open the iOS software keyboard; verify text fields remain legible and usable, no focus-induced browser zoom, and save status remains reachable. Repeat with very short landscape viewport and 200% accessibility zoom.
 - Verify existing autosave, manual selection, appointment navigation, trial conversion, and text-shortcut insertion. Do not clear website data when testing service-worker updates.
+
+
+## Schedule planner — version 1.6.0 acceptance (new)
+The repository CI now runs Node 22 syntax checks and all Node regression tests, including cancellation and replacement invariants. **Manual mobile/browser acceptance remains required.**
+1. Export an old v1.5.3 JSON backup outside the PWA. After update, verify the same students, journal records, trial and extra appointments remain. Import a duplicate of the old backup into a disposable context and verify migration.
+2. Set Monday teaching hours e.g. 12:00–17:00 under Data systems. In Schedule Day, confirm free windows exclude weekly, fortnightly (correct weeks), trial and dated extra bookings. Switch to Week; verify Monday–Sunday dates, previous/next week and Today buttons.
+3. Cancel only student A's next Monday at 12:15. Verify that occurrence displays Cancelled and a blue Available window, while the following Monday stays scheduled. Existing historical notes must survive unchanged; auto-follow skips the cancelled event.
+4. Replace A with B from the cancellation. Verify one dated B appointment exists, slot no longer shown Available, and A remains cancelled for that date alone. B's ordinary timetable remains untouched.
+5. Attempt replacement with B already booked at an overlapping time; check an error is shown and **A is not cancelled**. Verify the same after leaving an unsaved note and attempting navigation.
+6. Try restoring A while B still occupies the slot; confirm refusal. Remove or move B's replacement booking, then restore A.
+7. Without configured hours, ensure there are no invented free periods, except cancellation-derived windows. Add weekend and biweekly examples, trials and overnight bookings to confirm collision handling.
+8. Set different hours per weekday; export and reimport JSON and check persistence. Try malformed cancellation/hours backup in a disposable browser: no changes to live data.
+9. iPhone PWA: verify red trial rows, legible mobile controls, daily/weekly scrolling within the existing one-window workspace, dialogs, keyboard zoom, offline mode, and reminder functionality.
+10. Confirm published service-worker v10 fetches the new JS/CSS and that the app can still be reopened in airplane mode; never clear existing site storage to make a cache refresh.
