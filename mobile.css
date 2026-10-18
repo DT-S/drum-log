@@ -1,0 +1,115 @@
+/* iPhone-first, one-window LCARS workspace. Desktop/tablet layout remains unchanged. */
+@media (min-width:601px){.mobile-pane-tabs{display:none}}
+
+@media (max-width:600px){
+  :root{--mobile-ui-scale:.8}
+  html{height:100%;overscroll-behavior:none}
+  body{
+    height:100dvh;max-width:none;width:100%;min-width:0;overflow:hidden;
+    display:grid;grid-template-rows:auto minmax(0,1fr) auto;
+    padding:max(7px,env(safe-area-inset-top)) 9px max(7px,env(safe-area-inset-bottom));
+    font-size:calc(16px * var(--mobile-ui-scale));line-height:1.35;
+  }
+  header{min-height:0;border-top-width:12px;border-radius:32px 0 0 0;grid-template-columns:18px minmax(0,1fr)}
+  .elbow{border-radius:20px 0 0 0}
+  .elbow:after{width:5px}
+  .mast{padding:4px 0 3px 10px;gap:4px}
+  .topline{font-size:calc(12px * var(--mobile-ui-scale));line-height:1.1}
+  .topline>span:first-child{max-width:none}
+  h1{font-size:calc(40px * var(--mobile-ui-scale));line-height:1}
+  h1 small{font-size:calc(17px * var(--mobile-ui-scale));margin-left:3px}
+  .telemetry{display:none}
+  .rail{height:7px;gap:4px}
+  .rail span{font-size:10px;line-height:8px}
+  .layout{display:flex;flex-direction:column;gap:5px;margin:5px 0 0;min-height:0;overflow:hidden}
+  aside{flex:0 0 auto}
+  nav{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+  nav button{
+    min-width:0;min-height:clamp(38px,calc(51px * var(--mobile-ui-scale)),51px);
+    padding:4px 5px;font-size:calc(13px * var(--mobile-ui-scale));
+    border-radius:0 0 11px 0;line-height:1.05;
+  }
+  nav button span{font-size:calc(18px * var(--mobile-ui-scale));line-height:1.1;overflow-wrap:anywhere}
+  main{display:flex;flex-direction:column;flex:1;min-height:0;padding:2px 0;overflow:hidden}
+  main>#notice,main>#error{flex:0 0 auto;max-height:25%;overflow:auto;margin-bottom:5px;padding:5px 8px}
+  .view:not([hidden]){flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+  #journal:not([hidden]){display:flex;flex-direction:column}
+  #journal:not([hidden]):has(.journalgrid){overflow:hidden}
+  .sectionhead{flex:0 0 auto;gap:6px;margin-bottom:9px;padding-bottom:6px;border-bottom-width:4px}
+  .sectionhead:after{height:4px;bottom:-4px}
+  .sectionhead h2{font-size:calc(37px * var(--mobile-ui-scale));line-height:1.03;white-space:normal}
+  .sectionhead h3{font-size:calc(22px * var(--mobile-ui-scale))}
+  .sectionhead button{font-size:calc(16px * var(--mobile-ui-scale));max-width:none;padding:5px 8px}
+  .eyebrow{font-size:calc(15px * var(--mobile-ui-scale));margin-bottom:2px}
+  .tag{font-size:calc(16px * var(--mobile-ui-scale))}
+  h3{font-size:calc(22px * var(--mobile-ui-scale));margin-bottom:7px}
+  p{margin-bottom:8px}
+  button{font-size:calc(18px * var(--mobile-ui-scale));min-height:clamp(36px,calc(44px * var(--mobile-ui-scale)),44px);padding:6px 10px}
+  label{font-size:calc(16px * var(--mobile-ui-scale));gap:3px}
+  input,select,textarea{min-height:38px;padding:6px 7px}
+  /* Keep edit fields at 16px to prevent Safari zooming the entire page on focus. */
+  input:not([type="range"]):not([type="checkbox"]),select,textarea{font-size:16px}
+  .toolbar{gap:4px}
+  .toolbar button{flex-grow:0}
+  #journal>.sectionhead{margin-bottom:5px}
+  #journal>label{flex:0 0 auto}
+  #journal>label select{min-height:35px;height:35px;padding:3px 6px}
+  #journal>.warn{margin:0 0 3px;flex:0 0 auto;font-size:12px}
+  .mobile-pane-tabs{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:5px 0;flex:0 0 auto}
+  .mobile-pane-tabs button{min-height:35px;border-radius:14px 14px 0 0;padding:5px;background:var(--purple);font-size:calc(17px * var(--mobile-ui-scale))}
+  .mobile-pane-tabs button[aria-pressed="true"]{background:var(--peach)}
+  #journal .journalgrid{
+    display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);
+    flex:1;min-height:0;gap:0;margin:0;overflow:hidden;
+  }
+  #journal .journalgrid>div{min-height:0;min-width:0;overflow-y:auto;overscroll-behavior:contain}
+  #journal[data-mobile-pane="notes"] .journalgrid>div:nth-child(2),
+  #journal[data-mobile-pane="history"] .journalgrid>div:nth-child(1){display:none}
+  #journal .editor-console{
+    display:flex;flex-direction:column;border-left-width:8px;border-top-width:8px;
+    border-bottom-width:5px;border-radius:18px 0 0 16px;padding:7px 3px 4px 8px;
+    min-height:0;overflow:auto;
+  }
+  #journal .editor-console:before{display:none}
+  #journal .editor-console>h3{margin:0 0 4px;font-size:calc(19px * var(--mobile-ui-scale))}
+  #journal .fields{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,.72fr);gap:5px;margin:2px 0 6px}
+  #journal .fields label{font-size:calc(14px * var(--mobile-ui-scale));border-top-width:3px;padding-top:3px}
+  #journal .fields input{height:35px;min-height:35px;padding:3px 4px}
+  #journal .shortcuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;margin:5px 0 7px}
+  #journal .shortcuts button{min-width:0;min-height:32px;font-size:calc(17px * var(--mobile-ui-scale));padding:4px 3px;border-radius:0 12px 12px 0}
+  #journal .notes{flex:1;min-height:105px;resize:none;font-size:16px;line-height:1.42;padding:7px 3px}
+  #journal .editor-console>label{margin:2px 0}
+  #journal .savebar{flex:0 0 auto;font-size:calc(14px * var(--mobile-ui-scale));padding:4px 0;line-height:1.2}
+  #journal #retry{min-height:31px;margin-top:3px;padding:4px 9px;font-size:calc(15px * var(--mobile-ui-scale));align-self:flex-start}
+  #journal .panel{margin:3px 0 12px;border-left-width:10px;padding:12px 3px 12px 10px}
+  #journal .panel>h3:first-child{margin:-23px 0 12px auto}
+  #journal .history{gap:5px}
+  #journal .history button{font-size:calc(19px * var(--mobile-ui-scale));min-height:41px}
+  #journal .history button small{font-size:calc(17px * var(--mobile-ui-scale))}
+  #journal .previous{max-height:35dvh}
+  .studentrow{margin-bottom:5px;padding-top:6px;padding-bottom:6px}
+  .studentrow strong{font-size:calc(28px * var(--mobile-ui-scale))}
+  .studentrow p{font-size:calc(18px * var(--mobile-ui-scale))}
+  .studentrow .toolbar{gap:4px}
+  .panel{margin-bottom:12px;padding-top:12px;padding-bottom:10px}
+  .panel>h3:first-child{font-size:calc(21px * var(--mobile-ui-scale))}
+  .dayheading{font-size:calc(24px * var(--mobile-ui-scale));margin:12px 0 8px}
+  .settingsgrid{margin-top:10px;gap:12px}
+  footer{
+    flex:0 0 auto;min-height:0;margin-top:4px;padding:2px 0 5px 9px;
+    border-left-width:20px;border-bottom-width:8px;border-radius:0 0 0 22px;
+    font-size:calc(13px * var(--mobile-ui-scale));line-height:1.1;
+  }
+  footer:after{height:8px;bottom:-8px}
+  footer span:last-child{display:none}
+  dialog{max-height:calc(100dvh - 22px);overflow-y:auto}
+  #mobileScale{accent-color:var(--peach);padding:5px 0;border:0}
+  #mobileScaleValue{color:var(--gold)}
+}
+@media (max-width:600px) and (max-height:620px){
+  .topline{display:none}
+  .rail{display:none}
+  header{border-top-width:7px}
+  .mast{padding-top:2px}
+  #journal .editor-console{overflow-y:auto}
+}
