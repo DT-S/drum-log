@@ -177,7 +177,7 @@ function editStudent(s,trial=null){
  const type=f.get('schedule'),anchorDate=f.get('anchorDate');
  const item={id:s?.id||crypto.randomUUID(),name:f.get('name').trim(),schedule:type,day:type==='flexible'?null:type==='biweekly'?new Date(anchorDate+'T12:00:00').getDay():Number(f.get('day')),time:type==='flexible'?null:f.get('time'),duration:Number(f.get('duration')),remarks:f.get('remarks'),archived:f.has('archived'),...(type==='biweekly'?{anchorDate}:{})};
  if(!item.name)throw Error('Please enter a name.');
- validateBackup({...state,students:[item],lessons:[],appointments:[],trials:[]});
+ validateBackup({...state,students:[item],lessons:[],appointments:[],trials:[],cancellations:[]});
  if(trial){let entry;await change(st=>{entry=convertTrial(st,trial.id,item,crypto.randomUUID());});trialId=null;studentId=item.id;date=entry.date;time=entry.time;duration=entry.duration;manual=true;view='journal';}else{await change(st=>{const i=st.students.findIndex(y=>y.id===item.id);if(i<0)st.students.push(item);else st.students[i]=item;});if(!studentId&&!trialId)automatic();}
  });
  const updateScheduleFields=()=>{const type=$('#scheduleType').value;for(const [id,show] of [['weekdayField',type==='weekly'],['anchorField',type==='biweekly'],['startField',type!=='flexible']]){const field=$('#'+id);field.hidden=!show;const input=field.querySelector('input,select');input.disabled=!show;input.required=show;}$('#scheduleHelp').textContent=type==='biweekly'?'The first lesson date sets the weekday and alternating weeks. No automatic lessons before this date.':type==='flexible'?'No automatic weekly selection. Open the student log and choose the actual lesson date and time.':'Repeats on the selected weekday each week.';};
