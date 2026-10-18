@@ -1,0 +1,27 @@
+name: Verify Drum Log
+on:
+  push:
+    branches: [main, "feature/**"]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Europe/Berlin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax checks
+        run: |
+          node --check app.js
+          node --check core.js
+          node --check schedule.js
+          node --check db.js
+          node --check sw.js
+      - name: Automated regression tests
+        run: npm test
