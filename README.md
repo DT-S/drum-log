@@ -150,3 +150,12 @@ Date/time entry uses explicit text fields instead of locale-dependent native pic
 Real calendar dates and 00:00–23:59 times are validated before use.
 English UI, stored records, schema and existing backup compatibility are unchanged.
 CSV lesson dates remain DD.MM.YYYY.
+
+
+## Phone compact workspace — 1.5.3 (pending device acceptance)
+
+On phones up to 600 CSS pixels wide, Drum Log runs within one viewport: LCARS header and navigation stay visible while the active content area uses the remaining height. Lists and long notes can still scroll **inside** their own panels. The lesson journal defaults to **Notes**; **History / details** switches to previous records, the record index or trial details without scrolling through an entire page. No information is deleted when switching panes.
+
+**Data systems → Mobile display → Phone UI size** offers 65–100% density (default **80%**, 75% is another suggested choice). The setting is saved in the existing JSON backup/settings object and has no effect on tablet/desktop sizing. Text editing fields remain at least 16 CSS pixels to avoid iOS autofocus zoom. The value is optional when importing older backups; those use 80%. No database version change or migration is required.
+
+The viewport-only layout is a **phone UI preference**, not an accessibility prohibition against scrolling: tall student lists, settings, long histories, very small landscape screens and the open iPhone keyboard may still require internal scrolling. Do not cut off access to any content to force a "no scrolling" claim. Desktop and tablet behavior is unchanged. Native Safari/PWA device verification is still required. Before replacing the published files, export and verify a JSON backup. Update the full asset folder at the same address including mobile.css; v9 precaches the new file. After update, fully close/reopen the app online, check OFFLINE READY, and confirm airplane-mode reopening works without clearing browser storage.
