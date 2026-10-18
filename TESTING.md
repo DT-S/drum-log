@@ -66,3 +66,12 @@ Before production use: create a trial with no students, write notes and insert s
 ## Audio patch 1.5.1
 
 The 39 existing tests passed; an additional test passed for delayed activation of an interrupted AudioContext, bringing coverage to 40 tests. Real iPhone validation remains required.
+
+
+## Mobile compact workspace — 1.5.3 acceptance (not device-tested yet)
+- Automated: verify schema-4 backup keeps phone scale and legacy backup defaults; reject invalid values. Verify mobile.css is referenced and offline-cached.
+- Browser/device: iPhone 13 Safari PWA at 390px width: verify 80% default, switch to 75%, close/reopen, export/import JSON, confirm scale persists. Tablet and desktop must remain unchanged.
+- Confirm header, four navigation buttons, and offline-status footer stay visible without *outer page scrolling* in portrait orientation; Notes and History / details switch correctly for normal and trial lessons.
+- Verify a long note uses the textarea's own scrolling without clipped text; history and settings can scroll internally; no previous-lesson buttons become inaccessible.
+- Open the iOS software keyboard; verify text fields remain legible and usable, no focus-induced browser zoom, and save status remains reachable. Repeat with very short landscape viewport and 200% accessibility zoom.
+- Verify existing autosave, manual selection, appointment navigation, trial conversion, and text-shortcut insertion. Do not clear website data when testing service-worker updates.
