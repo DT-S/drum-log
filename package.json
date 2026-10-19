@@ -2,7 +2,7 @@
   "name": "drum-log-lcars",
   "private": true,
   "type": "module",
-  "version": "1.10.0",
+  "version": "1.10.1",
   "scripts": {
     "test": "node --test tests/*.test.js"
   }
