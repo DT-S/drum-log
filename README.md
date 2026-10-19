@@ -245,3 +245,12 @@ Calendar entries display as **cyan LCARS blocks** in the Day and rolling Week sc
 **Database schema 9** adds an independent \`calendarEvents[]\` collection. Existing schema 1–8 backups import safely with an empty collection, while new backups contain every event, attendee description and note. IndexedDB's internal version remains 1. Old application releases cannot import new schema-9 backups. App v1.9.0 updates the offline cache to **v15**.
 
 Before upgrading, store a full external JSON backup. Reopen once online after publishing, verify the Schedule editor and backup export/import, and test offline on iPhone/iPad without clearing browser data. General events are single-date appointments, not recurring bookings or notification alerts.
+
+
+## Delete a cancelled / never-held trial — v1.9.1
+
+The trial journal now has **three actions**: **Convert to student**, **Archive trial** (reversible), and **Delete trial** (permanent after confirmation). Delete is also available beside **Edit** in the Schedule full-records list, for both upcoming and past/archived trials. It requires a second explicit confirmation showing the trial participant, date and time, and offers **Keep trial** to cancel.
+
+This permanently removes **only the individual unconverted trial by immutable trial ID**, including its trial-only contact details, remarks and notes. A prospective student who cancels or never attends can be deleted without creating a student record. Repeated entries with the same participant name remain independent. Deletion does **not** touch other trials, student profiles, lesson journals, recording/jam calendar events, cancelled regular lessons, or make-up credit balances. The deleted trial disappears from current/upcoming selection and releases its occupied time in the planner. Converted trials are no longer trial records and cannot be deleted this way.
+
+**Archive trial** remains the better choice if you might want those contact details or notes later. For permanent deletion, first keep an external JSON backup. This is a UI and data action only: **schema remains 9**, no new migrations or IndexedDB version changes. App version **1.9.1** advances service-worker cache to **v16**, so open online once, close old PWA tabs, reopen and verify offline mode.
