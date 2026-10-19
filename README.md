@@ -218,3 +218,17 @@ Offline asset cache advances to **v12**, still the same schema-v6 local data. Be
 The app JSON format is now **schema 7**. Existing schema 1–6 local records and backups remain importable; student balances default to **0** where no count existed, and old cancellations without an origin are treated as **student/unknown** for accounting (never retroactively credited). Once saved in v1.8.0, JSON backups preserve explicit origin plus every balance. New schema-7 backups intentionally cannot be imported into old app versions, preventing them silently discarding credits. IndexedDB's database version remains unchanged; historical notes and existing lessons are not modified. Cache v13 updates the offline shell.
 
 **Before installing:** Export an external JSON backup. Merge/ship all changed files together on the same HTTPS origin, reopen once online, confirm OFFLINE READY and test offline; never clear Safari/Firefox website data.
+
+
+## Make-up credit booking semantics (v1.8.1)
+
+**An explicitly booked Make-up lesson consumes one owed credit immediately.** In Schedule → Add appointment or Book an available slot, choose **LESSON TYPE → Make-up lesson**. The student must have at least one owed credit, otherwise the booking is rejected with a clear message (use **Extra lesson** for a booking that does not redeem credit, or correct the student's balance under Edit). Scheduling the lesson is considered fulfilling the outstanding obligation; this is the instructor's chosen accounting rule.
+
+- Teacher cancels the booked make-up lesson: credit returns **+1**. Student cancels: credit is **forfeited**, no refund. Both cancellation types are already available in the existing Schedule cancellation dialog.
+- Restoring a teacher cancellation removes that reissued credit again; restoring a student cancellation changes nothing.
+- Changing the date/time of the same booked make-up lesson does not debit again. Changing the booked make-up into an extra lesson returns the credit; changing an extra into a make-up spends one. Moving the booking to a different student refunds one to the old student and consumes one from the new student, atomically.
+- Deleting a still-active credited booking returns one credit. Deleting a teacher-cancelled booking does **not** add a second refund. Deleting a student-cancelled booking does **not** return their forfeited credit. Cancelled bookings must be restored before editing.
+- The native appointment stores **\`redeemedCredit: true\`** to remember the precise booking for which the credit was already consumed. Existing schema-7 appointments that happen to have a free-text label \`Make-up lesson\` remain **unchanged and are not retroactively debited**. Booking or editing another lesson cannot silently settle old unknown entries.
+- Backup format moves **v7 → v8**, without wiping the existing IndexedDB database. Old v1–v7 backups can still be imported. New v8 backups cannot be read by releases before 1.8.1. Offline app-shell cache v14.
+
+This deliberately supersedes the v1.8.0 manual-after-completion assumption in the earlier documentation. **Before updating, export an external JSON backup**, then reopen the app online so the service worker can cache updated files; confirm OFFLINE READY, then test in airplane mode. Never clear browser website data.
