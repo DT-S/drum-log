@@ -91,11 +91,11 @@ test('legacy schema 6 data and cancellations migrate without inventing past teac
  old.cancellations=[{studentId:'A',date:mon,time:'12:15',reason:'cancelled'}];
  assert.equal(old.students[0].makeupBalance,undefined);
  const imported=validateBackup(JSON.parse(JSON.stringify(old)));
- assert.equal(imported.schemaVersion,8);
+ assert.equal(imported.schemaVersion,9);
  assert.equal(imported.students[0].makeupBalance??0,0);
  assert.equal(imported.cancellations[0].cancelledBy??'student','student');
  const migrated=migrateState(JSON.parse(JSON.stringify(old)));
- assert.equal(migrated.schemaVersion,8);
+ assert.equal(migrated.schemaVersion,9);
  assert.deepEqual(migrated.lessons,[]);
  assert.equal(migrated.students[0].makeupBalance??0,0);
 });
@@ -110,7 +110,7 @@ test('backup roundtrip preserves manual credit values and teacher origin; invali
  for(const value of ['anyone','',null,42]){
   assert.throws(()=>validateBackup({...s,cancellations:[{...s.cancellations[0],cancelledBy:value}]}),/Invalid backup: cancelled lesson/);
  }
- assert.throws(()=>validateBackup({...s,schemaVersion:9}),/unsupported schema/);
+ assert.throws(()=>validateBackup({...s,schemaVersion:10}),/unsupported schema/);
 });
 
 test('three mobile terminal caps and cancellation UI affordances are present',()=>{
