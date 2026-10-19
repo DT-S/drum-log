@@ -169,7 +169,7 @@ function editHoliday(holiday=null){
  const current=holiday||{startDate:plannerDate,endDate:plannerDate,label:'Holidays'};
  dialog(`<form><h2>${holiday?'Edit holiday break':'Add holiday break'}</h2>
  <label>LABEL<input name="label" maxlength="200" value="${esc(current.label)}" placeholder="Holidays / School closed"></label>
- <div class="fields"><label>FROM (INCLUSIVE)<input type="text" name="startDate" data-calendar-date maxlength="10" placeholder="YYYY-MM-DD" value="${current.startDate}" required></label>
+ <div class="fields holiday-date-fields"><label>FROM (INCLUSIVE)<input type="text" name="startDate" data-calendar-date maxlength="10" placeholder="YYYY-MM-DD" value="${current.startDate}" required></label>
  <label>TO (INCLUSIVE)<input type="text" name="endDate" data-calendar-date maxlength="10" placeholder="YYYY-MM-DD" value="${current.endDate}" required></label></div>
  <p class="muted">Regular weekly and fortnightly lessons are paused for every day in this range. Extra bookings, trials and existing lesson records stay untouched. You can still add an explicit make-up appointment.</p>
  <div class="toolbar"><button type="submit">Save holiday break</button><button type="button" class="secondary" data-close>Cancel</button></div></form>`,async fields=>{
