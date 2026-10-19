@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {defaults,selectScheduled,isHolidayDate,validateBackup,migrateState,lessonKey} from '../core.js';
-import {dayEvents,availableSlots,scheduleWeek,holidaysOnDate,hasCollision,bookFreeSlot,cancelLesson} from '../schedule.js';
+import {dayEvents,availableSlots,scheduleWeek,holidaysOnDate,hasCollision,bookFreeSlot,cancelLesson,restoreLesson} from '../schedule.js';
 
 const makeStudent=(id='A',day=3,time='12:15',schedule='weekly',anchorDate)=>({
  id,name:id,day,time,duration:45,remarks:'',archived:false,schedule,
@@ -143,4 +143,37 @@ test('invalid holiday ranges, duplicate ids, missing collection and future schem
  const missing={...s};delete missing.holidays;
  assert.throws(()=>validateBackup(missing),/Invalid backup/);
  assert.throws(()=>validateBackup({...s,schemaVersion:7}),/Invalid backup/);
+});
+
+test('explicit holiday appointment can itself be cancelled and restored',()=>{
+ const s=defaults();s.students.push(makeStudent());
+ addHoliday(s);
+ s.appointments.push({id:'book1',studentId:'A',date:'2026-10-21',time:'12:15',duration:45,label:'Make-up lesson'});
+ const key={studentId:'A',date:'2026-10-21',time:'12:15'};
+ cancelLesson(s,key,'sick');
+ assert.equal(dayEvents(s,'2026-10-21')[0].cancelled,true);
+ assert.equal(s.cancellations[0].appointmentId,'book1');
+ // No appointment is selected while cancelled; next regular is after the holiday.
+ assert.equal(selectScheduled(s.students,at('2026-10-21'),s.appointments,s.trials,s.cancellations,s.holidays).selected?.appointment,undefined);
+ assert.deepEqual(validateBackup(s),s);
+ restoreLesson(s,key);
+ assert.equal(dayEvents(s,'2026-10-21')[0].cancelled,false);
+ assert.equal(s.cancellations.length,0);
+});
+test('old regular cancellation and new manual holiday cancellation use independent identities',()=>{
+ const s=defaults();s.students.push(makeStudent());
+ const key={studentId:'A',date:'2026-10-21',time:'12:15'};
+ cancelLesson(s,key,'sick'); // Recurring occurrence.
+ addHoliday(s);
+ s.appointments.push({id:'new-booking',studentId:'A',date:key.date,time:key.time,duration:45,label:'Make-up'});
+ assert.equal(dayEvents(s,key.date)[0].cancelled,false);
+ cancelLesson(s,key,'cancelled'); // The manual appointment.
+ assert.equal(s.cancellations.length,2);
+ assert.equal(dayEvents(s,key.date)[0].cancelled,true);
+ assert.deepEqual(validateBackup(s),s);
+ restoreLesson(s,key);
+ assert.equal(dayEvents(s,key.date)[0].cancelled,false);
+ assert.equal(s.cancellations.length,1);
+ s.holidays=[];
+ assert.equal(dayEvents(s,key.date)[0].cancelled,true); // Original regular cancellation persists.
 });
