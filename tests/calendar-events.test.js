@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {defaults,validateBackup,migrateState,selectScheduled,lessonKey} from '../core.js';
-import {dayEvents,scheduleWeek,availableSlots,hasCollision,cancelLesson,saveCalendarEvent,removeCalendarEvent} from '../schedule.js';
+import {dayEvents,scheduleWeek,availableSlots,hasCollision,cancelLesson,saveCalendarEvent,removeCalendarEvent,saveAppointment} from '../schedule.js';
 
 const day='2026-10-21';
 const p=(id='s1',name='Lena',time='16:00')=>({id,name,day:3,time,duration:45,schedule:'weekly',remarks:'Student notes',archived:false,makeupBalance:3});
@@ -164,4 +164,23 @@ test('UI offers a studentless event editor without adding another Schedule heade
  assert.ok(start>0);
  const header=app.slice(start,start+380);
  assert.doesNotMatch(header,/addCalendarEvent/);
+});
+
+test('new student appointments cannot silently overlap a recording or jam event',()=>{
+ const s=defaults();s.students=[p()];
+ saveCalendarEvent(s,ev('recording',day,'13:00','Recording session'));
+ const prev=JSON.stringify(s);
+ assert.throws(()=>saveAppointment(s,{id:'a-new',studentId:'s1',date:day,time:'13:30',duration:45,label:'Extra lesson'}),/Schedule conflict/);
+ assert.equal(JSON.stringify(s),prev);
+ saveAppointment(s,{id:'a-new',studentId:'s1',date:day,time:'18:00',duration:45,label:'Extra lesson'});
+ assert.equal(s.appointments.length,1);
+ assert.equal(s.calendarEvents.length,1);
+});
+test('recording conflict cannot consume a make-up credit when booking fails',()=>{
+ const s=defaults();s.students=[p()];
+ saveCalendarEvent(s,ev('recording',day,'13:00','Recording session'));
+ const prev=JSON.stringify(s);
+ assert.throws(()=>saveAppointment(s,{id:'makeup',studentId:'s1',date:day,time:'13:30',duration:45,label:'Make-up lesson'}),/Schedule conflict/);
+ assert.equal(JSON.stringify(s),prev);
+ assert.equal(s.students[0].makeupBalance,3);
 });
