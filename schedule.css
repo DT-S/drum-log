@@ -67,3 +67,25 @@
  .teaching-hours-row label{font-size:calc(14px * var(--mobile-ui-scale))}
  .plan-archives>summary{font-size:calc(20px * var(--mobile-ui-scale))}
 }
+
+/* Holiday periods are teaching closures, not ordinary AVAILABLE slots. */
+.holiday-banner{display:flex;align-items:center;flex-wrap:wrap;gap:7px 13px;margin:8px 0;padding:9px 12px;border-left:9px solid var(--gold);background:#211c11;color:var(--gold)}
+.holiday-banner strong{font:700 20px/1.15 var(--ui);text-transform:uppercase;overflow-wrap:anywhere}
+.holiday-banner span{flex:1 1 180px;font-size:13px;color:var(--muted)}
+.holiday-banner button{font-size:15px;min-height:36px;padding:5px 10px}
+.holiday-settings{padding:10px 0;border-top:4px solid var(--gold);border-bottom:3px solid var(--purple);margin:16px 0}
+.holiday-settings>summary{color:var(--gold);font-size:21px}
+.holiday-row{display:flex;gap:12px;justify-content:space-between;align-items:center;border-left:7px solid var(--gold);padding:8px 12px;background:#16131a;margin:6px 0;flex-wrap:wrap}
+.holiday-row strong{font:700 20px var(--ui);color:var(--gold);text-transform:uppercase;overflow-wrap:anywhere}
+.holiday-row p{margin:2px 0}
+.holiday-row button{font-size:15px;padding:5px 11px;min-height:36px}
+dialog .holiday-date-fields{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media(max-width:600px){
+ .holiday-banner{padding:6px 8px;border-left-width:6px}
+ .holiday-banner strong{font-size:calc(19px * var(--mobile-ui-scale))}
+ .holiday-banner button{font-size:calc(15px * var(--mobile-ui-scale))}
+ .holiday-settings>summary{font-size:calc(20px * var(--mobile-ui-scale))}
+ .holiday-row strong{font-size:calc(18px * var(--mobile-ui-scale))}
+ .holiday-row button{font-size:calc(15px * var(--mobile-ui-scale))}
+ dialog .holiday-date-fields{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+}

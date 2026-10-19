@@ -74,7 +74,8 @@ test('biweekly schedule is only projected in its own weeks',()=>{
  assert.equal(dayEvents(s,'2026-10-26').length,0);
  assert.equal(dayEvents(s,'2026-11-02').length,1);
  assert.equal(scheduleWeek(s,monday)[0].date,monday);
- assert.equal(scheduleWeek(s,'2026-10-21')[0].weekday,'Monday');
+ assert.equal(scheduleWeek(s,'2026-10-21')[0].weekday,'Wednesday');
+ assert.equal(scheduleWeek(s,'2026-10-21')[6].date,'2026-10-27');
 });
 test('trial booking is red-category regardless of other events',()=>{
  const s=defaults();
@@ -93,10 +94,10 @@ test('schema 4 migrates additively, including backups and teaching hours',()=>{
  old.schemaVersion=4;delete old.cancellations;delete old.settings.teachingHours;
  old.students.push(student('A'));
  const migrated=migrateState(old);
- assert.equal(migrated.schemaVersion,5);
+ assert.equal(migrated.schemaVersion,6);
  assert.deepEqual(migrated.cancellations,[]);
  assert.equal(migrated.settings.teachingHours.length,7);
- assert.equal(validateBackup(JSON.parse(JSON.stringify(migrated))).schemaVersion,5);
+ assert.equal(validateBackup(JSON.parse(JSON.stringify(migrated))).schemaVersion,6);
  const file=JSON.parse(JSON.stringify(migrated));file.schemaVersion=4;delete file.cancellations;delete file.settings.teachingHours;
  assert.deepEqual(validateBackup(file),migrated);
 });

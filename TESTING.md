@@ -89,3 +89,12 @@ The repository CI now runs Node 22 syntax checks and all Node regression tests, 
 8. Set different hours per weekday; export and reimport JSON and check persistence. Try malformed cancellation/hours backup in a disposable browser: no changes to live data.
 9. iPhone PWA: verify red trial rows, legible mobile controls, daily/weekly scrolling within the existing one-window workspace, dialogs, keyboard zoom, offline mode, and reminder functionality.
 10. Confirm published service-worker v10 fetches the new JS/CSS and that the app can still be reopened in airplane mode; never clear existing site storage to make a cache refresh.
+
+
+## Rolling weekday weeks + holidays — version 1.7.0 acceptance
+- Automated Node tests: selected Wednesday anchors a Wednesday–Tuesday seven-day window, and next/previous advances from the anchor by seven days across DST, month and year boundaries. Existing Monday-start expectation is intentionally superseded.
+- Holiday boundaries: From and To are both included; regular weekly and fortnightly lessons resume immediately after the end date. Verify across 2+ weeks and that Follow schedule finds the next session after longer breaks.
+- Preserve all regular student profiles, historical notes, cancellations, trials and appointments; manually book an extra lesson inside a break, verify it is visible while the ordinary recurring instance remains suppressed.
+- Never list a closed day as AVAILABLE solely from teaching hours, but allow **Book make-up** on its holiday banner. Verify overlapping manual bookings remain subject to collision warning.
+- Backup migration: old schema-5 JSON loads into schema 6 with \`holidays: []\`; new schema-6 backup roundtrips all periods. Invalid dates, duplicate IDs and missing holiday arrays are rejected. Older releases cannot safely import schema 6.
+- iPhone PWA portrait: switch Day/Week after selecting Wednesday; navigate Next/Previous, add/edit/remove a holiday, create a make-up, check red trial colors, verify all text inputs/dialog controls visible and scrolling within the single-window layout. Reopen online after cache update, test offline in airplane mode.
