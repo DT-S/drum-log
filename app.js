@@ -93,7 +93,7 @@ function planDayHTML(day,compact=false){
    return `<div class="plan-row slot-available"><div class="plan-time">${slot.start}–${slot.end}</div><div class="plan-details"><strong>AVAILABLE</strong><small>${slot.minutes} min · Free teaching time</small></div><button type="button" class="secondary" data-free-book="${day}" data-free-start="${slot.start}" data-free-end="${slot.end}">Book</button></div>`;
   }
   const e=x.event,kind=e.kind==='calendar'?'calendar':e.cancelled?'cancelled':e.kind==='trial'||e.kind==='trial-converted'?'trial':e.kind==='extra'?'extra':'regular';
-  const details=e.isOverride?'Adjusted lesson · original '+e.originalDate+' '+e.originalTime:e.kind==='calendar'?`${e.label}${e.people?' · '+e.people:''}${e.notes?' · '+e.notes:''}`:e.cancelled?`Cancelled · ${e.reason}`:e.kind==='regular'?'Regular lesson':e.label;
+  const details=e.cancelled?'Cancelled · '+e.reason+(e.isOverride?' · adjusted from '+e.originalDate+' '+e.originalTime:''):e.isOverride?'Adjusted lesson · original '+e.originalDate+' '+e.originalTime:e.kind==='calendar'?`${e.label}${e.people?' · '+e.people:''}${e.notes?' · '+e.notes:''}`:e.cancelled?`Cancelled · ${e.reason}`:e.kind==='regular'?'Regular lesson':e.label;
   const keys=`data-plan-date="${e.date}" data-plan-time="${e.time}" data-plan-student="${esc(e.studentId||'')}"`;
   const actions=e.kind==='calendar'
    ? `<button type="button" class="secondary" data-calendar-event-edit="${esc(e.calendarEventId)}">Edit event</button>`
