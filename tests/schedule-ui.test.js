@@ -123,7 +123,7 @@ test('offline stylesheet cache and release label update together',()=>{
  const pkg=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8'));
  assert.match(html,/schedule\.css/);
  assert.match(sw,/'\.\/schedule\.css'/);
- assert.equal(pkg.version,'1.9.0');
- assert.match(html,/DRUM LOG \/ 1\.9\.0/);
- assert.match(sw,/PREFIX\+'v15'/);
+ assert.equal(pkg.version,'1.10.0');
+ assert.match(html,/DRUM LOG \/ 1\.10\.0/);
+ assert.match(sw,/PREFIX\+'v16'/);
 });
