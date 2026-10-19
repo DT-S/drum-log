@@ -137,3 +137,12 @@ The repository CI now runs Node 22 syntax checks and all Node regression tests, 
 - During a holiday break an independent event stays visible, but regular recurring lessons remain suspended.
 - Export a full JSON backup; confirm event collection/title/type/people/notes survive reimport. Import a schema-8 backup; event collection defaults empty and old lesson notes remain intact. Schema-9 backups should be refused by versions 1.8.x or lower.
 - At iPhone scale 75–80% confirm no horizontal clipping in the new modal, Schedule events remain readable, and offline reopen after cache v15 displays saved events. Verify the original three LCARS Schedule buttons are unchanged.
+
+
+## v1.9.1 cancelling/removing trial lessons
+- Create two trial lessons with exactly the same prospective student name, distinct dates and notes; open either from the journal or Schedule → Full records. The **Delete trial** action appears beside Convert and Archive, and **Delete** appears in the Schedule upcoming/past-trial list.
+- Tap Delete, then **Keep trial**: nothing is removed. Tap Delete again, verify the confirmation identifies the **exact date and time**, and select **Delete trial permanently**. Only the selected trial ID disappears; the other same-name entry and its notes survive.
+- Deletion removes a trial from automatic lesson selection and frees that time in the schedule; it does not create a new student or change student records, recording/jam events, archived trials, past lesson notes or make-up credits.
+- Trial archive and restore still work, as does Convert to student. Converted trials cannot subsequently be deleted via the trial action. A stale/deleted ID must show a safe error instead of deleting another entry.
+- With trial notes freshly edited, the action must await the pending auto-save. If notes failed to save, deleting is blocked until the notes can be safely copied/retried.
+- Export and verify a backup before deleting any trial with useful notes. On iPhone Safari at 75–80% UI scale, check the additional button wraps cleanly; after updating on HTTPS, confirm offline reopening and the service worker's v16 cache. The JSON schema remains 9.
