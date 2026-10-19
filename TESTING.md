@@ -115,7 +115,7 @@ The repository CI now runs Node 22 syntax checks and all Node regression tests, 
 - Replace student A with B, choose Teacher for original cancellation: A gains one credit, B gains none; double bookings are still rejected atomically. Existing cancellations maintain their previous origin.
 - Edit student → MAKE-UP LESSONS OWED: set 2, 0, 7, save/reopen, JSON export/import roundtrip, confirm exact value. Fractional/negative/out-of-range values are invalid. Booking a future makeup lesson does not deduct a credit. Manually reduce the count when a make-up has been delivered.
 - Import a schema 6 backup with old cancellations lacking cancelledBy: credits default zero; no fabricated past teacher debt. Invalid origin/balance or schema 8 backup is rejected before replacing data.
-- iPhone at 75–80% scale: first mobile command row **Add Trial Lesson** has right curved cap; second row **Holiday Break** has left curved cap, no horizontal clipping. Counters readable at both 75 and 80%.
+- Updated v1.8.1 phone layout at 75–80% scale: exactly three Schedule command buttons remain side by side **on one row**. Left: Add appointment, **left cap rounded**; center: Add trial lesson, **both sides straight**; right: Holiday break, **right cap rounded**. Verify no text clipping on narrow iPhones. Ensure Students → Add student still opens the student editor and there are no duplicate visible `addStudent` IDs.
 - All Node CI tests and syntax checks must pass; real iPhone/Firefox and offline reinstallation require manual acceptance. Keep external JSON backup before update.
 
 
