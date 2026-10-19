@@ -1,15 +1,17 @@
 // Local, deterministic schedule projection. Notes are never mutated by planning actions.
-import {DAYS,localDate,minutes,lessonKey,isTeachingDay,validDate,validTime} from './core.js';
+import {DAYS,localDate,minutes,lessonKey,isTeachingDay,isHolidayDate,validDate,validTime} from './core.js';
 
 const minsToTime=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
 const addDay=(date,n)=>{const d=new Date(date+'T12:00:00');d.setDate(d.getDate()+n);return localDate(d);};
 const uid=(studentId,date,time)=>lessonKey(studentId,date,time);
+export function holidaysOnDate(state,date){return (state.holidays||[]).filter(h=>h.startDate<=date&&date<=h.endDate);}
 
 export function dayEvents(state,date){
  if(!validDate(date))throw Error('Invalid date.');
  const events=new Map(),students=state.students.filter(s=>!s.archived);
+ const closed=isHolidayDate(state.holidays||[],date);
  for(const student of students){
-  if(isTeachingDay(student,date)){
+  if(!closed&&isTeachingDay(student,date)){
    const event={key:uid(student.id,date,student.time),kind:'regular',studentId:student.id,
     name:student.name,date,time:student.time,duration:student.duration,label:'Regular lesson'};
    events.set(event.key,event);
@@ -31,14 +33,16 @@ export function dayEvents(state,date){
  }
  const cancelled=new Map((state.cancellations||[]).map(c=>[uid(c.studentId,c.date,c.time),c]));
  return [...events.values()].map(e=>{
-  const cancellation=e.studentId?cancelled.get(e.key):null;
+  // A booking explicitly made during holidays overrides an old cancellation of
+  // the otherwise absent recurring occurrence at exactly this time.
+  const cancellation=e.studentId&&!(closed&&e.kind!=='regular')?cancelled.get(e.key):null;
   return {...e,cancelled:!!cancellation,reason:cancellation?.reason||null};
  }).sort((a,b)=>minutes(a.time)-minutes(b.time)||a.name.localeCompare(b.name));
 }
 export function scheduleWeek(state,date){
  if(!validDate(date))throw Error('Invalid date.');
- const weekStart=addDay(date,-((new Date(date+'T12:00:00').getDay()+6)%7));
- return Array.from({length:7},(_,i)=>{const day=addDay(weekStart,i);return {date:day,weekday:DAYS[new Date(day+'T12:00:00').getDay()],events:dayEvents(state,day),available:availableSlots(state,day)};});
+ // Rolling seven-day window anchored to the selected day, not ISO Monday.
+ return Array.from({length:7},(_,i)=>{const day=addDay(date,i);return {date:day,weekday:DAYS[new Date(day+'T12:00:00').getDay()],events:dayEvents(state,day),available:availableSlots(state,day)};});
 }
 function busyWindows(state,date){
  // Include bookings started yesterday that extend past midnight.
@@ -61,6 +65,9 @@ function joinRanges(ranges){
  return result;
 }
 export function availableSlots(state,date){
+ // Holidays suspend ordinary teaching availability, not manually booked lessons.
+ // Do not advertise an entire closed day as free for automatic booking.
+ if(isHolidayDate(state.holidays||[],date))return [];
  const hours=state.settings.teachingHours?.[new Date(date+'T12:00:00').getDay()]??null;
  // If working hours aren't defined, only explicitly cancelled time is known to be free.
  const ranges=hours?[[minutes(hours.start),minutes(hours.end)]]:dayEvents(state,date).filter(e=>e.cancelled).map(e=>[minutes(e.time),Math.min(1440,minutes(e.time)+e.duration)]);
