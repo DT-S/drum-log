@@ -43,13 +43,39 @@ function error(e){
  }
  const banner=$('#error');banner.textContent=message;banner.hidden=false;
 }
-function notice(text,tone='warning'){if(text)sounds.play(tone);$('#notice').textContent=text;$('#notice').hidden=!text;}
+// All informational/status banners use this one lifecycle. Clearing the old
+// timer prevents an earlier notice from hiding a newer one.
+let noticeTimer=null;
+const NOTICE_LIFETIME_MS=8500;
+function clearNotice(){
+ if(noticeTimer!==null){clearTimeout(noticeTimer);noticeTimer=null;}
+ const banner=$('#notice');
+ if(!banner)return;
+ banner.textContent='';banner.hidden=true;banner.title='';banner.tabIndex=-1;
+ banner.onclick=null;banner.onkeydown=null;
+}
+function notice(text,tone='warning'){
+ clearNotice();
+ if(!text)return;
+ const banner=$('#notice');
+ if(!banner)return;
+ sounds.play(tone);
+ banner.textContent=text;banner.hidden=false;
+ banner.title='Tap to dismiss this message';banner.tabIndex=0;
+ banner.onclick=clearNotice;
+ banner.onkeydown=e=>{
+  if(e.key==='Enter'||e.key===' '||e.key==='Escape'){
+   e.preventDefault();clearNotice();
+  }
+ };
+ noticeTimer=setTimeout(clearNotice,NOTICE_LIFETIME_MS);
+}
 async function change(fn){state=await mutate(fn);sounds.configure(state.settings);channel?.postMessage('changed');}
 function automatic(){const m=selectScheduled(state.students,new Date(),state.appointments,state.trials,state.cancellations,state.holidays,state.lessonOverrides);manual=false;trialId=null;if(m.selected?.trial){const t=m.selected.trial;trialId=t.id;studentId=null;date=t.date;time=t.time;duration=t.duration;return;}if(m.selected){studentId=m.selected.student.id;date=localDate(m.selected.start);time=m.selected.appointment?.time||m.selected.override?.time||m.selected.student.time;duration=m.selected.appointment?.duration||m.selected.override?.duration||m.selected.student.duration;}else {const flexible=state.students.find(s=>!s.archived&&scheduleType(s)==='flexible');studentId=flexible?.id||null;if(flexible){manual=true;({date,time,duration}=todayLesson(flexible,state.lessons));}}}
 async function ready(){await saveQueue;if(saveFailure){error(Error('Your last edit is not saved. Copy the note somewhere safe, then use Retry save before navigating.'));return false;}return true;}
 function scheduleSave(){if(trialId){saveTrialNotes();return;}const field=$('#notes');if(!field)return;const slot=noteSlot();const item={id:noteKey(),studentId,date:slot.date,time:slot.time,duration:$('#duration').checkValidity()?Number($('#duration').value):duration,notes:field.value};duration=item.duration;const expected=baseNotes;baseNotes=item.notes;pending++;saveFailure=false;$('#saveStatus').textContent='Saving…';saveQueue=saveQueue.then(async()=>{await change(s=>{const index=s.lessons.findIndex(l=>l.id===item.id);const old=index<0?'':s.lessons[index].notes;if(old!==expected&&old!==item.notes)throw Error('This lesson changed in another tab. Your text is still here. Copy it before reloading to reconcile both versions.');if(!s.students.some(s=>s.id===item.studentId))throw Error('This student was removed in another tab. Copy your note before reloading.');if(index<0)s.lessons.push(item);else s.lessons[index]=item;});}).catch(e=>{saveFailure=true;error(e);}).finally(()=>{pending--;if(!saveFailure&&!pending)$('#error').hidden=true;if($('#saveStatus'))$('#saveStatus').textContent=saveFailure?'NOT SAVED — copy your note':pending?'Saving…':'Saved on this device';});}
 function render(){ $('#studentCount').textContent=String(state.students.filter(s=>!s.archived).length).padStart(2,'0');$('#lessonCount').textContent=String(state.lessons.length).padStart(2,'0');for(const el of document.querySelectorAll('.view'))el.hidden=el.id!==view;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===view));({journal:renderJournal,students:renderStudents,schedule:renderSchedule,settings:renderSettings})[view]();bindMobilePanes();bindDateTimeFields(document);}
-async function navigate(next){if(!await ready())return;clearGlobalError();state=await readState();sounds.configure(state.settings);if(view!==next)sounds.play('menu');else sounds.play('press');view=next;render();}
+async function navigate(next){if(!await ready())return;clearNotice();clearGlobalError();state=await readState();sounds.configure(state.settings);if(view!==next)sounds.play('menu');else sounds.play('press');view=next;render();}
 function renderJournal(){if(trialId&&state.trials.some(t=>t.id===trialId)){renderTrial();return;}trialId=null;const root=$('#journal'),s=student();if(!s){root.innerHTML='<div class="eyebrow">01 / INSTRUCTION LOG</div><div class="empty"><h2>Student database / empty</h2><p class="muted">Create a student record to initialize automatic lesson selection.</p><div class="toolbar"><button id="firstStudent">Add student</button><button id="firstTrial" class="secondary">Add trial lesson</button></div></div>';$('#firstStudent').onclick=()=>editStudent();$('#firstTrial').onclick=()=>editTrial();return;}
  const match=selectScheduled(state.students,new Date(),state.appointments,state.trials,state.cancellations,state.holidays,state.lessonOverrides),isCurrent=match.matches.some(x=>x.student.id===s.id),l=lesson();duration=selectedOverride()?.duration||l?.duration||duration;baseNotes=l?.notes||'';
  const previous=state.lessons.filter(x=>x.studentId===s.id&&x.date+'T'+x.time<date+'T'+time).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time))[0];
@@ -308,7 +334,7 @@ function editAppointment(a,presetDate=null){
  if(a)$('#removeAppointment').onclick=()=>{$('#modal').close();dialog(`<form><h2>Remove appointment</h2><p>Remove this appointment on ${niceDate(a.date)} at ${a.time}? Existing lesson notes remain available in the journal.</p><div class="toolbar"><button class="danger" type="submit">Remove appointment</button><button type="button" class="secondary" data-close>Cancel</button></div></form>`,async()=>{await change(st=>{removeAppointment(st,a.id);validateBackup(st);});});};
 }
 function dialog(html,onSubmit){
- const m=$('#modal');clearDialogError();clearGlobalError();
+ const m=$('#modal');clearDialogError();clearNotice();clearGlobalError();
  m.innerHTML=html;bindDateTimeFields(m);m.showModal();
  // Reassigned (not accumulated) each time. Escape, Cancel and successful
  // submit all fire 'close', and editing any field clears stale validation.
