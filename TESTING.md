@@ -127,3 +127,13 @@ The repository CI now runs Node 22 syntax checks and all Node regression tests, 
 - Edit existing make-up time or date → no extra debit; change label to Extra → refund; change back to Make-up → spend. Change student: refund previous student's credit and spend from the new student or reject the change.
 - Import schema-7 backup containing historical \`Make-up lesson\` appointments → no retroactive credit change. New v8 backups preserve \`redeemedCredit\` for every new credited appointment.
 - Check iPhone Safari PWA modal options and error dismissal, service-worker v14 offline update, no changes to journal or regular timetable.
+
+
+## v1.9.0 standalone external calendar events acceptance
+- Schedule → **Add appointment** → **Recording / Jam / Other (no student)**: save a titled session with date, HH:mm start, duration, people and notes. Without any student records, Add appointment should open the independent-event editor directly.
+- The event appears cyan in Day and rolling Week; edit date, type, title, participants and notes; delete only the selected event. Enter the same attendee and title on multiple different dates; each stays independent with a unique ID.
+- Old trial lessons (red), converted trials, regular students, archived student records, journals, credits and holidays remain unchanged by event creation/edit/deletion. A standalone event has no student conversion or lesson-notes workflow.
+- Verify time collisions against a regular student, a trial, another event and an overnight recording. Creating a conflicting event or a new student lesson over an event fails safely without partial writes or credit debit. Free time strips exclude event durations.
+- During a holiday break an independent event stays visible, but regular recurring lessons remain suspended.
+- Export a full JSON backup; confirm event collection/title/type/people/notes survive reimport. Import a schema-8 backup; event collection defaults empty and old lesson notes remain intact. Schema-9 backups should be refused by versions 1.8.x or lower.
+- At iPhone scale 75–80% confirm no horizontal clipping in the new modal, Schedule events remain readable, and offline reopen after cache v15 displays saved events. Verify the original three LCARS Schedule buttons are unchanged.
