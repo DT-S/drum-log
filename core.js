@@ -55,13 +55,15 @@ export function selectScheduled(students,now=new Date(),appointments=[],trials=[
   const item={student:{id:'trial:'+trial.id,name:trial.name},start,trial};
   if(start<=now&&now<end)current.push(item);else if(start>now)next.push(item);
  }
- const blocked=new Set(cancellations.map(c=>lessonKey(c.studentId,c.date,c.time)));
  const isAllowed=x=>{
-  const date=localDate(x.start);
-  // Holidays remove the underlying recurring occurrence, not explicit manual
-  // appointments that happen to reuse the same date/time/student.
-  if(x.appointment&&isHolidayDate(holidays,date))return true;
-  return !blocked.has(lessonKey(x.student.id,date,x.appointment?.time||x.student.time));
+  const date=localDate(x.start),time=x.appointment?.time||x.student.time;
+  return !cancellations.some(c=>c.studentId===x.student.id&&c.date===date&&c.time===time&&
+   (x.appointment?
+    // Legacy cancellations without an appointmentId still affect explicit
+    // bookings outside holidays (old v5 behavior); within a closure, only a
+    // cancellation of this specific booking may suppress it.
+    (c.appointmentId?c.appointmentId===x.appointment.id:!isHolidayDate(holidays,date))
+    :!c.appointmentId));
  };
  const active=current.filter(isAllowed),future=next.filter(isAllowed);
  const order=(a,b)=>a.start-b.start||a.student.name.localeCompare(b.student.name)||a.student.id.localeCompare(b.student.id);active.sort(order);future.sort(order);
@@ -104,8 +106,9 @@ export function validateBackup(raw){
  if(!Array.isArray(cancellations))fail('cancellations collection.');
  const cancellationKeys=new Set();
  for(const c of cancellations){
-  if(!c||!ids.has(c.studentId)||!validDate(c.date)||!validTime(c.time)||!['sick','cancelled','vacation','other'].includes(c.reason))fail('cancelled lesson.');
-  const key=lessonKey(c.studentId,c.date,c.time);
+  if(!c||!ids.has(c.studentId)||!validDate(c.date)||!validTime(c.time)||!['sick','cancelled','vacation','other'].includes(c.reason)||
+   (c.appointmentId!==undefined&&(!str(c.appointmentId,100)||!c.appointmentId)))fail('cancelled lesson.');
+  const key=lessonKey(c.studentId,c.date,c.time)+':'+(c.appointmentId||'regular');
   if(cancellationKeys.has(key))fail('duplicate cancellation.');
   cancellationKeys.add(key);
  }
@@ -128,7 +131,7 @@ export function validateBackup(raw){
  if(raw.settings.uiScale!==undefined&&(!Number.isInteger(raw.settings.uiScale)||raw.settings.uiScale<65||raw.settings.uiScale>100||raw.settings.uiScale%5!==0))fail('mobile UI scale.');
  const teachingHours=raw.settings.teachingHours??(raw.schemaVersion<5?[null,null,null,null,null,null,null]:null);
  if(!Array.isArray(teachingHours)||teachingHours.length!==7||!teachingHours.every(h=>h===null||(h&&validTime(h.start)&&validTime(h.end)&&h.start<h.end)))fail('teaching hours.');
- return {schemaVersion:6,holidays:holidays.map(({id,startDate,endDate,label})=>({id,startDate,endDate,label})),cancellations:cancellations.map(({studentId,date,time,reason})=>({studentId,date,time,reason})),trials:trials.map(({id,name,date,time,duration,contact,remarks,notes,archived})=>({id,name,date,time,duration,contact,remarks,notes,archived})),appointments:appointments.map(({id,studentId,date,time,duration,label})=>({id,studentId,date,time,duration,label})),students:raw.students.map(({id,name,day,time,duration,remarks,archived,schedule,anchorDate})=>({id,name,day,time,duration,remarks,archived,...(schedule?{schedule}:{}),...(schedule==='biweekly'?{anchorDate}:{})})),lessons:raw.lessons.map(({id,studentId,date,time,duration,notes})=>({id,studentId,date,time,duration,notes})),snippets:raw.snippets.map(({id,label,text})=>({id,label,text})),settings:{backupReminder:raw.settings.backupReminder,lastBackup:raw.settings.lastBackup,soundEnabled:raw.settings.soundEnabled??true,soundVolume:raw.settings.soundVolume??0.35,uiScale:raw.settings.uiScale??80,teachingHours:teachingHours.map(h=>h?{start:h.start,end:h.end}:null)}};
+ return {schemaVersion:6,holidays:holidays.map(({id,startDate,endDate,label})=>({id,startDate,endDate,label})),cancellations:cancellations.map(({studentId,date,time,reason,appointmentId})=>({studentId,date,time,reason,...(appointmentId?{appointmentId}:{})})),trials:trials.map(({id,name,date,time,duration,contact,remarks,notes,archived})=>({id,name,date,time,duration,contact,remarks,notes,archived})),appointments:appointments.map(({id,studentId,date,time,duration,label})=>({id,studentId,date,time,duration,label})),students:raw.students.map(({id,name,day,time,duration,remarks,archived,schedule,anchorDate})=>({id,name,day,time,duration,remarks,archived,...(schedule?{schedule}:{}),...(schedule==='biweekly'?{anchorDate}:{})})),lessons:raw.lessons.map(({id,studentId,date,time,duration,notes})=>({id,studentId,date,time,duration,notes})),snippets:raw.snippets.map(({id,label,text})=>({id,label,text})),settings:{backupReminder:raw.settings.backupReminder,lastBackup:raw.settings.lastBackup,soundEnabled:raw.settings.soundEnabled??true,soundVolume:raw.settings.soundVolume??0.35,uiScale:raw.settings.uiScale??80,teachingHours:teachingHours.map(h=>h?{start:h.start,end:h.end}:null)}};
 }
 export function csv(rows){const cell=v=>{let s=String(v??'');if(/^[\s]*[=+@-]/.test(s)||/^[\t\r\n]/.test(s))s="'"+s;return '"'+s.replaceAll('"','""')+'"';};return '\ufeff'+rows.map(r=>r.map(cell).join(';')).join('\r\n');}
 
