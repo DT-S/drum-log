@@ -180,6 +180,11 @@ export function saveAppointment(state,item){
  if(old&&appointmentCancellation(state,old))throw Error('Restore this cancelled appointment before editing it.');
  const person=state.students.find(s=>s.id===item.studentId&&!s.archived);
  if(!person)throw Error('Select an active student.');
+ // Preserve existing student-booking behavior while respecting independent
+ // recordings/jams that occupy the calendar. No makeup debit happens on clash.
+ const externalClash=hasCollision(state,item.date,item.time,item.duration,
+  old?lessonKey(old.studentId,old.date,old.time):null);
+ if(externalClash?.kind==='calendar')throw Error('Schedule conflict: '+externalClash.name+' at '+externalClash.time+'.');
  // Prevent using a newly booked date/time in place of a separately cancelled
  // recurring occurrence, which would otherwise inherit its cancellation.
  if(state.cancellations.some(c=>c.studentId===item.studentId&&c.date===item.date&&c.time===item.time&&!c.appointmentId&&
