@@ -1,5 +1,5 @@
 import {createSoundSystem} from './sound.js';
-import {validDate,validTime,DAYS,defaults,localDate,selectScheduled,scheduleType,todayLesson,lessonKey,validateBackup,convertTrial,csv} from './core.js';
+import {validDate,validTime,DAYS,defaults,localDate,selectScheduled,scheduleType,todayLesson,lessonKey,validateBackup,convertTrial,removeTrial,csv} from './core.js';
 import {openDB,readState,mutate,replaceState} from './db.js';
 import {dayEvents,scheduleWeek,availableSlots,holidaysOnDate,cancelLesson,restoreLesson,bookReplacement,bookFreeSlot,saveAppointment,removeAppointment,isMakeupLesson,saveCalendarEvent,removeCalendarEvent} from './schedule.js';
 const sounds=createSoundSystem();sounds.bind();
@@ -381,12 +381,31 @@ try{await openDB();state=await readState();sounds.configure(state.settings);appl
 function trialScheduleHTML(){
  const list=state.trials.slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
  const upcoming=t=>!t.archived&&+new Date(t.date+'T'+t.time+':00')+t.duration*60000>Date.now();
- const rows=items=>items.map(t=>`<div class="studentrow trialrow"><div><strong>${esc(t.name)}</strong><p class="muted">TRIAL · ${niceDate(t.date)} · ${t.time} · ${t.duration} min${t.archived?' · Archived':''}</p></div><div class="toolbar"><button data-trial-open="${esc(t.id)}">Open trial</button><button class="secondary" data-trial-edit="${esc(t.id)}">Edit</button></div></div>`).join('');
+ const rows=items=>items.map(t=>`<div class="studentrow trialrow"><div><strong>${esc(t.name)}</strong><p class="muted">TRIAL · ${niceDate(t.date)} · ${t.time} · ${t.duration} min${t.archived?' · Archived':''}</p></div><div class="toolbar"><button data-trial-open="${esc(t.id)}">Open trial</button><button class="secondary" data-trial-edit="${esc(t.id)}">Edit</button><button type="button" class="danger" data-trial-delete="${esc(t.id)}">Delete</button></div></div>`).join('');
  return `<h3 class="dayheading">Trial lessons / upcoming</h3>${rows(list.filter(upcoming))||'<p class="muted">No upcoming trial lessons.</p>'}<details><summary>Past trials / archive (${list.filter(t=>!upcoming(t)).length})</summary>${rows(list.filter(t=>!upcoming(t)).reverse())||'<p class="muted">No past trials.</p>'}</details>`;
 }
 function bindTrials(){
  document.querySelectorAll('[data-trial-open]').forEach(b=>b.onclick=async()=>{if(!await ready())return;trialId=b.dataset.trialOpen;studentId=null;manual=true;view='journal';render();});
  document.querySelectorAll('[data-trial-edit]').forEach(b=>b.onclick=()=>editTrial(state.trials.find(t=>t.id===b.dataset.trialEdit)));
+ document.querySelectorAll('[data-trial-delete]').forEach(b=>b.onclick=async()=>{
+  if(!await ready())return;
+  const trial=state.trials.find(t=>t.id===b.dataset.trialDelete);
+  if(!trial){notice('This trial no longer exists. Reload the schedule.');return;}
+  confirmDeleteTrial(trial);
+ });
+}
+function confirmDeleteTrial(trial){
+ // Show exact name + slot; delete by ID, never by a potentially repeated name.
+ dialog(`<form><h2>Delete trial lesson?</h2>
+ <p><strong>${esc(trial.name)}</strong> · ${trial.date} at ${trial.time} (${trial.duration} min)</p>
+ <p class="muted">Permanently removes only this trial, including its trial notes and contact details. Other trials, students and make-up lesson balances are unaffected. Use Archive trial instead if you want to keep the record.</p>
+ <div class="toolbar"><button type="submit" class="danger">Delete trial permanently</button><button type="button" class="secondary" data-close>Keep trial</button></div></form>`,
+ async()=>{
+  await change(st=>{removeTrial(st,trial.id);validateBackup(st);});
+  // Leave the trial journal before rendering; there is no longer a selected trial.
+  if(trialId===trial.id){trialId=null;studentId=null;manual=false;}
+  view='schedule';
+ });
 }
 function editTrial(t){
  const x=t||{name:'',date:localDate(),time:'15:00',duration:45,contact:'',remarks:''};
@@ -400,12 +419,13 @@ function renderTrial(){
  const t=state.trials.find(t=>t.id===trialId);if(!t){trialId=null;renderJournal();return;}baseNotes=t.notes;
  const selection=selectScheduled(state.students,new Date(),state.appointments,state.trials,state.cancellations,state.holidays);
  const current=selection.matches.some(x=>x.trial?.id===t.id);
- $('#journal').innerHTML=`<div class="sectionhead"><div><div class="eyebrow">01 / TRIAL LESSON</div><h2>${esc(t.name)}</h2><span class="tag">${t.archived?'Archived trial':manual?'Trial / manual selection':current?'Trial in progress':'Next scheduled trial'}</span></div><button class="secondary" id="trialFollow">Follow schedule</button></div>${selection.matches.length>1?'<p class="warn">Schedule overlap: '+selection.matches.map(x=>esc(x.student.name)).join(', ')+'. Use Schedule to choose the correct record.</p>':''}<div class="mobile-pane-tabs" role="group" aria-label="Lesson workspace"><button type="button" data-mobile-pane="notes" aria-pressed="true">Notes</button><button type="button" data-mobile-pane="history" aria-pressed="false">History / details</button></div><div class="journalgrid"><div class="editor-console"><h3>${niceDate(t.date)} · ${t.time} · ${t.duration} min</h3><div class="toolbar"><button class="secondary" id="trialEdit">Edit trial details</button><button class="secondary" id="trialSchedule">Schedule</button></div><div class="toolbar shortcuts">${state.snippets.map(x=>`<button data-snippet="${esc(x.id)}">${esc(x.label)}</button>`).join('')}</div><label for="notes">TRIAL NOTES</label><textarea id="notes" class="notes" maxlength="200000" placeholder="Experience, exercises, first impressions…">${esc(t.notes)}</textarea><div class="savebar"><span id="saveStatus">Saved on this device</span><span>TRIAL RECORD</span></div><button class="secondary" id="retry">Retry save</button></div><div><article class="panel peach"><h3>Trial record</h3><p class="muted">${t.contact?'Contact: '+esc(t.contact):'No contact details recorded.'}</p><div class="previous">${esc(t.remarks)}</div><p class="muted">Convert this trial when the student joins. Contact details, remarks and lesson notes will be transferred.</p><div class="toolbar"><button id="trialConvert">Convert to student</button><button class="secondary" id="trialArchive">${t.archived?'Restore trial':'Archive trial'}</button></div></article></div></div>`;
+ $('#journal').innerHTML=`<div class="sectionhead"><div><div class="eyebrow">01 / TRIAL LESSON</div><h2>${esc(t.name)}</h2><span class="tag">${t.archived?'Archived trial':manual?'Trial / manual selection':current?'Trial in progress':'Next scheduled trial'}</span></div><button class="secondary" id="trialFollow">Follow schedule</button></div>${selection.matches.length>1?'<p class="warn">Schedule overlap: '+selection.matches.map(x=>esc(x.student.name)).join(', ')+'. Use Schedule to choose the correct record.</p>':''}<div class="mobile-pane-tabs" role="group" aria-label="Lesson workspace"><button type="button" data-mobile-pane="notes" aria-pressed="true">Notes</button><button type="button" data-mobile-pane="history" aria-pressed="false">History / details</button></div><div class="journalgrid"><div class="editor-console"><h3>${niceDate(t.date)} · ${t.time} · ${t.duration} min</h3><div class="toolbar"><button class="secondary" id="trialEdit">Edit trial details</button><button class="secondary" id="trialSchedule">Schedule</button></div><div class="toolbar shortcuts">${state.snippets.map(x=>`<button data-snippet="${esc(x.id)}">${esc(x.label)}</button>`).join('')}</div><label for="notes">TRIAL NOTES</label><textarea id="notes" class="notes" maxlength="200000" placeholder="Experience, exercises, first impressions…">${esc(t.notes)}</textarea><div class="savebar"><span id="saveStatus">Saved on this device</span><span>TRIAL RECORD</span></div><button class="secondary" id="retry">Retry save</button></div><div><article class="panel peach"><h3>Trial record</h3><p class="muted">${t.contact?'Contact: '+esc(t.contact):'No contact details recorded.'}</p><div class="previous">${esc(t.remarks)}</div><p class="muted">Convert this trial when the student joins. Contact details, remarks and lesson notes will be transferred.</p><div class="toolbar"><button id="trialConvert">Convert to student</button><button class="secondary" id="trialArchive">${t.archived?'Restore trial':'Archive trial'}</button><button type="button" class="danger" id="trialDelete">Delete trial</button></div></article></div></div>`;
  $('#notes').oninput=saveTrialNotes;
  $('#retry').onclick=()=>{baseNotes=state.trials.find(x=>x.id===trialId)?.notes||'';saveTrialNotes();};
  $('#trialEdit').onclick=async()=>{if(await ready())editTrial(state.trials.find(x=>x.id===trialId));};
  $('#trialConvert').onclick=async()=>{if(await ready())editStudent(null,state.trials.find(x=>x.id===trialId));};
  $('#trialArchive').onclick=async()=>{if(!await ready())return;await change(st=>{const trial=st.trials.find(x=>x.id===t.id);if(!trial)throw Error('Trial no longer exists.');trial.archived=!trial.archived;});sounds.play('accept');trialId=null;studentId=null;view='schedule';render();};
+ $('#trialDelete').onclick=async()=>{if(!await ready())return;confirmDeleteTrial(t);};
  $('#trialSchedule').onclick=()=>navigate('schedule');$('#trialFollow').onclick=async()=>{if(!await ready())return;automatic();render();};
  document.querySelectorAll('[data-snippet]').forEach(b=>{b.onpointerdown=e=>e.preventDefault();b.onclick=()=>insert(state.snippets.find(x=>x.id===b.dataset.snippet).text);});
 }
