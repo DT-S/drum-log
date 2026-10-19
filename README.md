@@ -259,3 +259,12 @@ Existing journal notes are **left intact at their original record date and time*
 Backups now use **schema 10**; old schema 1–9 JSON backups migrate with an empty overrides collection, and original student history, trials, appointments, holidays, external events and credit balances are retained. New schema-10 backups cannot be imported into older app releases. IndexedDB internal version remains unchanged; the offline cache bumps to **v16**.
 
 **Upgrade:** Keep an external JSON backup before merging, reload online once for PWA cache v16, and verify 45→90→reset on a real phone. Never clear browser data.
+
+
+## v1.10.1 — automatic notice dismissal
+
+**All ordinary status/info banners** generated through the shared \`notice()\` function (persistent-storage outcome, backup exported/download started, backup reminder, teaching hours saved, cross-tab notification and nonblocking planner hints) now clear automatically after **8.5 seconds**. Tap/click the displayed banner or focus it and press Enter, Space or Escape to dismiss immediately. Replacing a notice cancels its prior timeout so no stale callback dismisses a newer message. Opening an editing modal or switching sections clears the old banner too.
+
+**Critical data-safety errors** (especially unsaved lesson or trial notes, storage transaction failures and import failures) remain on their independent \`#error\` channel and require explicit acknowledgement; inline modal validation errors retain their existing 10-second fallback. Permanent operation/status fields such as "OFFLINE READY", persistence info and save status are not transient notifications and remain displayed.
+
+App version **1.10.1** uses PWA shell cache **v17**. No database or backup schema changes. Existing IndexedDB data is untouched. Reload once online after merge so the updated offline JavaScript is cached; never clear browser website data.

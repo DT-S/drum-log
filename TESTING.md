@@ -148,3 +148,13 @@ The repository CI now runs Node 22 syntax checks and all Node regression tests, 
 - Reset after an unrelated recording or booking has occupied the original slot must be refused. Holiday closures still hide ordinary recurring lessons; explicit moved overrides stay visible until reset.
 - JSON export/import must preserve lessonOverrides as well as all old notes and scheduled appointments. A v9 backup migrates to empty overrides; v10 backup is rejected by old releases.
 - iPhone PWA: modal text/date/time controls, 90-min duration field, save/restore/reset flow, legible day/week rows, offline use after v16 update. Run Node unit suite and JS syntax checks; do not clear site data.
+
+
+## v1.10.1 notification / banner dismissal
+- In Data systems press **Request persistent storage**. Whether granted or refused, the top \`#notice\` banner must disappear after about **8.5 seconds**, without closing/reloading the PWA. Verify immediately dismissing by tapping it.
+- Trigger **Export backup**, **Save teaching hours**, **Backup interval exceeded** and an info/warning such as a cross-tab change. Each uses the same timeout. Success (accept) and warning tones remain appropriate and are not replayed when the notice expires.
+- Show notice A, then notice B before A's time expires. A's timer must be cleared; B stays visible for its entire 8.5-second duration.
+- With an active notice, switch between Students, Schedule and Data systems or open a modal. The previous notice is dismissed without affecting the operation or any form input.
+- With a hardware keyboard, focus the notice: Enter/Space/Escape dismiss it; Tab and other keys do not.
+- Simulate invalid holiday form input: validation is dismissible and still expires after 10 seconds. Simulate a real unsaved-note/storage failure: the separate **#error** banner remains visible until acknowledged, so no unsaved data warning is lost.
+- Verify both desktop Firefox and installed iPhone/iPad PWA; service worker v17 must be ready after online refresh, then test offline. No data schema migration for this patch.
