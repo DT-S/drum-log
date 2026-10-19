@@ -78,23 +78,24 @@ test('invalid initiator, duplicate cancellation and max balance do not modify st
  assert.equal(s.students[0].makeupBalance,9999);
 });
 
-test('booking a future make-up appointment never automatically consumes an owed credit',()=>{
+test('planning alone is not proof of attendance, but a make-up booking consumes a credit immediately',()=>{
  const s=defaults();s.students=[student()];
  cancelLesson(s,key(),'cancelled','teacher');
- s.appointments.push({id:'future',studentId:'A',date:'2026-10-20',time:'12:15',duration:45,label:'Make-up lesson'});
  assert.equal(s.students[0].makeupBalance,1);
- assert.equal(validateBackup(s).students[0].makeupBalance,1);
+ // A simple extra booking doesn't use the credit.
+ s.appointments.push({id:'extra',studentId:'A',date:'2026-10-20',time:'12:15',duration:45,label:'Extra lesson'});
+ assert.equal(s.students[0].makeupBalance,1);
 });
 test('legacy schema 6 data and cancellations migrate without inventing past teacher credits',()=>{
  const old=defaults();old.schemaVersion=6;old.students=[student()];
  old.cancellations=[{studentId:'A',date:mon,time:'12:15',reason:'cancelled'}];
  assert.equal(old.students[0].makeupBalance,undefined);
  const imported=validateBackup(JSON.parse(JSON.stringify(old)));
- assert.equal(imported.schemaVersion,7);
+ assert.equal(imported.schemaVersion,8);
  assert.equal(imported.students[0].makeupBalance??0,0);
  assert.equal(imported.cancellations[0].cancelledBy??'student','student');
  const migrated=migrateState(JSON.parse(JSON.stringify(old)));
- assert.equal(migrated.schemaVersion,7);
+ assert.equal(migrated.schemaVersion,8);
  assert.deepEqual(migrated.lessons,[]);
  assert.equal(migrated.students[0].makeupBalance??0,0);
 });
@@ -109,7 +110,7 @@ test('backup roundtrip preserves manual credit values and teacher origin; invali
  for(const value of ['anyone','',null,42]){
   assert.throws(()=>validateBackup({...s,cancellations:[{...s.cancellations[0],cancelledBy:value}]}),/Invalid backup: cancelled lesson/);
  }
- assert.throws(()=>validateBackup({...s,schemaVersion:8}),/unsupported schema/);
+ assert.throws(()=>validateBackup({...s,schemaVersion:9}),/unsupported schema/);
 });
 
 test('mobile caps and cancel UI affordances are present without emoji icons',()=>{
