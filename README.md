@@ -203,3 +203,18 @@ Schedule action buttons now sit immediately **under the SCHEDULE heading**, with
 Modal validation errors (including **"Holiday end date must be on or after the start date"**) appear **only in the dialog**. They vanish when you edit a form field, dismiss the warning, close or cancel the dialog, or after ten seconds. Errors outside a dialog are explicitly dismissible by clicking/tapping their banner or navigating to another view. These changes do not alter any student, holiday, booking or backup records.
 
 Offline asset cache advances to **v12**, still the same schema-v6 local data. Before any upgrade keep an external JSON backup; close/reopen online to let the service worker cache the modified JS/CSS and test offline again.
+
+
+## Make-up lesson credit balances and LCARS phone end caps — v1.8.0
+
+- **Cancelled by** is explicit when cancelling a dated lesson, and when replacing student A with B: **Student cancelled** (default, no credit) or **Me / teacher** (+1 owed make-up lesson). This is independent of the reason (sick, cancelled, vacation, other).
+- Only teacher-initiated cancellations add one make-up lesson credit to the **original student**. Each specific lesson can be cancelled only once. A replacement lesson for B never debits A's balance. Restoring a teacher-cancelled lesson removes one credit, stopping at zero if an intervening manual correction already cleared it. Restoring student-cancelled lessons has no effect.
+- **Edit student → MAKE-UP LESSONS OWED** provides an integer input from 0 to 9999. A displayed zero is a valid balance. The count appears in Student records and the Lesson log. A regular cancellation automatically credits the balance only once; adding or booking an appointment does **not** automatically deduct a credit (booking is not proof of delivery). Adjust the count in Edit student when a makeup lesson has actually been completed.
+- When editing an existing student, an unchanged credit field preserves the current stored count even if another open tab has since credited a teacher cancellation. An explicitly edited balance sets the new value on save.
+- School-wide holiday breaks do not themselves create student-level cancellation credits.
+- Mobile action strip end caps: **Add Trial Lesson** explicitly has a right-rounded end on mobile, and **Holiday Break** a left-rounded beginning, preserving the LCARS 2×2 arrangement.
+
+### Data migration and backups
+The app JSON format is now **schema 7**. Existing schema 1–6 local records and backups remain importable; student balances default to **0** where no count existed, and old cancellations without an origin are treated as **student/unknown** for accounting (never retroactively credited). Once saved in v1.8.0, JSON backups preserve explicit origin plus every balance. New schema-7 backups intentionally cannot be imported into old app versions, preventing them silently discarding credits. IndexedDB's database version remains unchanged; historical notes and existing lessons are not modified. Cache v13 updates the offline shell.
+
+**Before installing:** Export an external JSON backup. Merge/ship all changed files together on the same HTTPS origin, reopen once online, confirm OFFLINE READY and test offline; never clear Safari/Firefox website data.
