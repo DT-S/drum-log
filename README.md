@@ -177,3 +177,21 @@ Version **1.6.0** raises the **application JSON data schema from 4 to 5** to pre
 **Before installing**, export a complete JSON backup and verify it exists somewhere outside the PWA. Deploy all files including \`schedule.js\` and \`schedule.css\` to the same HTTPS origin. Service-worker shell version **v10** updates program assets without clearing IndexedDB. Close/reopen the PWA online for the new cache; confirm OFFLINE READY, check a disposable cancellation and booking, test offline, then rely on real data. Never clear website data during an update.
 
 **Known limits**: no public calendar sync; no automatic rescheduling of B's other weekly lesson; no whole-day holiday/closure editor; no split-shift teaching windows; no proof yet of actual iPhone Safari UI/keyboard/scroll behavior until user device testing.
+
+
+## Rolling weeks and holiday breaks — version 1.7.0
+
+**Rolling week navigator:** The Schedule **Week** view is now a seven-day window beginning on the selected day, not Monday by default. Select Wednesday, 21 October → see Wednesday through Tuesday; the Next/Previous buttons jump by exactly seven days to Wednesday, 28 October / Wednesday, 14 October. Date selection and the Today button keep this same anchor. Day view still advances one day at a time.
+
+**Holiday breaks:** Open **Schedule → Holiday break** (or expand the Holiday breaks section in Schedule). Create and edit a label plus **From**/**To** dates, **inclusive**; each break is saved locally. You can create multiple periods and remove one independently. On closed dates:
+- Regular weekly and every-two-weeks lessons are suppressed in the live planner and automatic upcoming/current lesson selection, without changing student profiles, cancellation records or historical journal notes. When a break ends or is removed, the recurring timetable resumes automatically.
+- One-off extra appointments, make-up lessons, previously booked trials and trial-to-student appointments remain visible and selectable. **Book make-up** on the holiday banner opens an explicit appointment for that date, even though routine lessons are paused.
+- A closed day is **not** advertised as a generally available/free teaching window merely because teaching hours exist. You choose individually when to teach in a break. Independently booked lessons still participate in time collision detection.
+- The calendar banner indicates a school break and retains red trial-lesson highlighting. Break labels may overlap; overlapping ranges still mean regular lessons remain suspended until every covering period ends.
+
+### Safe data updates
+This release upgrades the **application JSON schema to v6** (from v5) with a \`holidays\` collection. It does **not** change IndexedDB database version 1, delete browser storage or rewrite lesson history. Existing backups from schemas 1–5 import with an empty holiday list. Version-6 backups include the periods and are intentionally rejected by old applications. Service-worker cache **v11** includes the updated JS/CSS.
+
+**Before updating:** Export a complete JSON backup outside the browser/PWA, keep it available, then update all app files together at the existing HTTPS origin. Close and reopen the installed app online to load the new offline shell; confirm OFFLINE READY, then test a throwaway holiday and an explicit make-up appointment in airplane mode. Never clear browser data just to refresh the UI.
+
+**Limits:** This is a manual, date-range teaching closure, not a German school-holiday importer, official holiday calendar, or automatic rescheduler. An entire break does not create make-up appointments or cancel already explicitly booked sessions. Existing overlapping appointments may need manual adjustment when a break is removed.
