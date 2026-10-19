@@ -57,7 +57,7 @@ test('free slots reflect working hours, cancelled lessons and one-off appointmen
  s.settings.teachingHours[1]={start:'12:00',end:'14:00'};
  let free=availableSlots(s,monday);
  assert.deepEqual(free,[{start:'12:00',end:'14:00',minutes:120}]);
- bookFreeSlot(s,'A',monday,'13:00',30);
+ bookFreeSlot(s,'A',monday,'13:00',30,'Extra lesson');
  free=availableSlots(s,monday);
  assert.deepEqual(free,[{start:'12:00',end:'13:00',minutes:60},{start:'13:30',end:'14:00',minutes:30}]);
  assert.throws(()=>bookFreeSlot(s,'A',monday,'13:15',45),/not available/);
@@ -94,10 +94,10 @@ test('schema 4 migrates additively, including backups and teaching hours',()=>{
  old.schemaVersion=4;delete old.cancellations;delete old.settings.teachingHours;
  old.students.push(student('A'));
  const migrated=migrateState(old);
- assert.equal(migrated.schemaVersion,7);
+ assert.equal(migrated.schemaVersion,8);
  assert.deepEqual(migrated.cancellations,[]);
  assert.equal(migrated.settings.teachingHours.length,7);
- assert.equal(validateBackup(JSON.parse(JSON.stringify(migrated))).schemaVersion,7);
+ assert.equal(validateBackup(JSON.parse(JSON.stringify(migrated))).schemaVersion,8);
  const file=JSON.parse(JSON.stringify(migrated));file.schemaVersion=4;delete file.cancellations;delete file.settings.teachingHours;
  assert.deepEqual(validateBackup(file),migrated);
 });
