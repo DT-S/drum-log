@@ -1,7 +1,7 @@
 import {createSoundSystem} from './sound.js';
 import {validDate,validTime,DAYS,defaults,localDate,selectScheduled,scheduleType,todayLesson,lessonKey,validateBackup,convertTrial,csv} from './core.js';
 import {openDB,readState,mutate,replaceState} from './db.js';
-import {dayEvents,scheduleWeek,availableSlots,holidaysOnDate,cancelLesson,restoreLesson,bookReplacement,bookFreeSlot,saveAppointment,removeAppointment,isMakeupLesson} from './schedule.js';
+import {dayEvents,scheduleWeek,availableSlots,holidaysOnDate,cancelLesson,restoreLesson,bookReplacement,bookFreeSlot,saveAppointment,removeAppointment,isMakeupLesson,saveCalendarEvent,removeCalendarEvent} from './schedule.js';
 const sounds=createSoundSystem();sounds.bind();
 // Purely visual device preference. Existing backup schemas default to 80% on phones.
 function applyMobileScale(raw){const value=Number(raw);const percent=Number.isFinite(value)?Math.max(65,Math.min(100,value)):80;document.documentElement.style.setProperty('--mobile-ui-scale',String(percent/100));}
@@ -87,17 +87,19 @@ function planDayHTML(day,compact=false){
    const slot=x.free;
    return `<div class="plan-row slot-available"><div class="plan-time">${slot.start}–${slot.end}</div><div class="plan-details"><strong>AVAILABLE</strong><small>${slot.minutes} min · Free teaching time</small></div><button type="button" class="secondary" data-free-book="${day}" data-free-start="${slot.start}" data-free-end="${slot.end}">Book</button></div>`;
   }
-  const e=x.event,kind=e.cancelled?'cancelled':e.kind==='trial'||e.kind==='trial-converted'?'trial':e.kind==='extra'?'extra':'regular';
-  const details=e.cancelled?`Cancelled · ${e.reason}`:e.kind==='regular'?'Regular lesson':e.label;
+  const e=x.event,kind=e.kind==='calendar'?'calendar':e.cancelled?'cancelled':e.kind==='trial'||e.kind==='trial-converted'?'trial':e.kind==='extra'?'extra':'regular';
+  const details=e.kind==='calendar'?`${e.label}${e.people?' · '+e.people:''}${e.notes?' · '+e.notes:''}`:e.cancelled?`Cancelled · ${e.reason}`:e.kind==='regular'?'Regular lesson':e.label;
   const keys=`data-plan-date="${e.date}" data-plan-time="${e.time}" data-plan-student="${esc(e.studentId||'')}"`;
-  const actions=e.kind==='trial'
+  const actions=e.kind==='calendar'
+   ? `<button type="button" class="secondary" data-calendar-event-edit="${esc(e.calendarEventId)}">Edit event</button>`
+   : e.kind==='trial'
    ? `<button type="button" class="secondary" data-plan-task="trial" data-trial-id="${esc(e.trialId)}">Open</button>`
    : e.cancelled
     ? `<button type="button" class="secondary" ${keys} data-plan-task="restore">Restore</button><button type="button" ${keys} data-plan-task="replace">Replace</button>`
     : `<button type="button" class="secondary" ${keys} data-plan-task="open">Open</button><button type="button" class="secondary" ${keys} data-plan-task="cancel">Cancel</button><button type="button" ${keys} data-plan-task="replace">Replace</button>`;
   return `<div class="plan-row slot-${kind}"><div class="plan-time">${e.time}</div><div class="plan-details"><strong>${esc(e.name)}</strong><small>${esc(details)} · ${e.duration} min</small></div><div class="plan-actions">${actions}</div></div>`;
  };
- return `<section class="plan-day ${compact?'plan-compact':''}"><h3>${wd} · ${day}</h3>${closures.length?`<div class="holiday-banner"><strong>NO REGULAR LESSONS · ${closures.map(h=>esc(h.label||'Holiday')).join(', ')}</strong><span>Recurring lessons paused. Extra lessons and trials remain possible.</span><button type="button" class="secondary" data-holiday-book="${day}">Book make-up</button></div>`:''}${!closures.length&&hours?`<p class="muted">Teaching hours ${hours.start}–${hours.end}</p>`:compact?'':'<p class="muted">Set teaching hours under Data systems to display every free gap. Cancellations appear even without hours.</p>'}<div class="plan-list">${list.map(row).join('')||'<p class="muted">No scheduled lessons or known free slots.</p>'}</div></section>`;
+ return `<section class="plan-day ${compact?'plan-compact':''}"><h3>${wd} · ${day}</h3>${closures.length?`<div class="holiday-banner"><strong>NO REGULAR LESSONS · ${closures.map(h=>esc(h.label||'Holiday')).join(', ')}</strong><span>Recurring lessons paused. Extra lessons and trials remain possible.</span><button type="button" class="secondary" data-holiday-book="${day}">Book make-up</button></div>`:''}${!closures.length&&hours?`<p class="muted">Teaching hours ${hours.start}–${hours.end}</p>`:compact?'':'<p class="muted">Set teaching hours under Data systems to display every free gap. Cancellations appear even without hours.</p>'}<div class="plan-list">${list.map(row).join('')||'<p class="muted">No scheduled lessons or events.</p>'}</div></section>`;
 }
 
 function renderSchedule(){
@@ -108,12 +110,20 @@ function renderSchedule(){
   return `<div class="studentrow ${a.label==='Trial lesson'?'trialrow':''}"><div><strong>${esc(s?.name||'Unknown student')}</strong><p class="muted">${niceDate(a.date)} · ${a.time} · ${a.duration} min${s?.archived?' · Archived':''}${wasCancelled?' · CANCELLED':''}</p><p>${esc(a.label||'Extra lesson')}</p></div><div class="toolbar"><button data-appointment-open="${esc(a.id)}">Open log</button><button class="secondary" data-appointment-edit="${esc(a.id)}">Edit appointment</button></div></div>`;
  }).join('');
  const period=plannerMode==='week'?scheduleWeek(state,plannerDate).map(d=>planDayHTML(d.date,true)).join(''):planDayHTML(plannerDate);
+ const externalEvents=(state.calendarEvents||[]).slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+ const eventRows=items=>items.map(e=>`<div class="studentrow calendar-event-row"><div><strong>${esc(e.title)}</strong><p class="muted">${e.date} · ${e.time} · ${e.duration} min · ${e.type==='recording'?'Recording':e.type==='jam'?'Jam session':'Other event'}</p>${e.people?`<p class="muted">People: ${esc(e.people)}</p>`:''}${e.notes?`<p class="muted">${esc(e.notes)}</p>`:''}</div><div class="toolbar"><button type="button" class="secondary" data-calendar-event-edit="${esc(e.id)}">Edit event</button></div></div>`).join('');
  const holidayList=(state.holidays||[]).slice().sort((a,b)=>a.startDate.localeCompare(b.startDate));
  const holidayRows=holidayList.map(h=>`<div class="holiday-row"><div><strong>${esc(h.label||'Holiday break')}</strong><p class="muted">${h.startDate} – ${h.endDate} · inclusive</p></div><div class="toolbar"><button type="button" class="secondary" data-holiday-edit="${esc(h.id)}">Edit</button><button type="button" class="secondary" data-holiday-remove="${esc(h.id)}">Remove</button></div></div>`).join('');
  $('#schedule').innerHTML=`<div class="sectionhead schedule-head"><div class="schedule-heading"><div class="eyebrow">03 / SCHEDULE ACCESS</div><h2>Schedule</h2></div><div class="schedule-actions" role="group" aria-label="Schedule actions"><button id="addAppointment" type="button">Add appointment</button><button id="addTrial" type="button">Add trial lesson</button><button id="addHoliday" type="button">Holiday break</button></div></div>
  <div class="plan-controls"><div class="plan-date-nav" role="group" aria-label="Date navigation"><button type="button" id="planPrev" class="plan-arrow plan-arrow-prev" aria-label="Previous ${plannerMode}" title="Previous ${plannerMode}"><svg viewBox="0 0 38 28" aria-hidden="true" focusable="false"><path d="M31 3H22L9 14L22 25H31L18 14Z" fill="currentColor"/><rect x="2" y="8" width="4" height="12" rx="1" fill="currentColor"/><path d="M34 4V24" stroke="currentColor" stroke-width="1.6" opacity=".52"/></svg></button><label class="plan-date-field">DATE<input id="plannerDate" type="text" data-calendar-date maxlength="10" placeholder="YYYY-MM-DD" value="${plannerDate}"></label><button type="button" id="planNext" class="plan-arrow plan-arrow-next" aria-label="Next ${plannerMode}" title="Next ${plannerMode}"><svg viewBox="0 0 38 28" aria-hidden="true" focusable="false"><path d="M7 3H16L29 14L16 25H7L20 14Z" fill="currentColor"/><rect x="32" y="8" width="4" height="12" rx="1" fill="currentColor"/><path d="M4 4V24" stroke="currentColor" stroke-width="1.6" opacity=".52"/></svg></button></div><div class="plan-mode-switch" role="group" aria-label="Schedule display"><button type="button" id="planToday" class="plan-today">Today</button><button type="button" id="planDay" aria-pressed="${plannerMode==='day'}">Day</button><button type="button" id="planWeek" aria-pressed="${plannerMode==='week'}">Week</button></div></div>
  <div class="plan-legend"><span class="plan-key slot-regular">Regular</span><span class="plan-key slot-trial">Trial lesson</span><span class="plan-key slot-extra">Extra / make-up</span><span class="plan-key slot-cancelled">Cancelled</span><span class="plan-key slot-available">Available</span></div>
  <div class="plan-days">${period}</div>
+ <details class="calendar-events-register"><summary>Other events · Recording / Jam / More (${externalEvents.length})</summary>
+ <p class="muted">Independent calendar events. No student profile, trial-lesson record or make-up credits are created.</p>
+ <div class="toolbar"><button type="button" id="addCalendarEventInline" class="secondary">Add other event</button></div>
+ <h3 class="dayheading">Upcoming</h3>${eventRows(externalEvents.filter(e=>e.date>=localDate()))||'<p class="muted">No upcoming events.</p>'}
+ <details><summary>Past events</summary>${eventRows(externalEvents.filter(e=>e.date<localDate()).reverse())||'<p class="muted">No past events.</p>'}</details>
+ </details>
  <details class="holiday-settings"><summary>Holiday breaks / closures (${holidayList.length})</summary>
  <p class="muted">From–to dates are inclusive. Regular weekly and fortnightly lessons are paused; booked extras and trial lessons stay visible. Removing a break restores the underlying recurring schedule.</p>
  <div class="toolbar"><button id="addHolidayInline" type="button" class="secondary">Add holiday break</button></div>
@@ -127,6 +137,8 @@ function renderSchedule(){
  </details>`;
  $('#addAppointment').onclick=()=>editAppointment(null,plannerDate);
  $('#addTrial').onclick=()=>editTrial();
+ $('#addCalendarEventInline').onclick=()=>editCalendarEvent(null,plannerDate);
+ document.querySelectorAll('[data-calendar-event-edit]').forEach(b=>b.onclick=()=>{const event=(state.calendarEvents||[]).find(e=>e.id===b.dataset.calendarEventEdit);if(event)editCalendarEvent(event);else notice('This event is no longer available.');});
  $('#addHoliday').onclick=()=>editHoliday();
  $('#addHolidayInline').onclick=()=>editHoliday();
  document.querySelectorAll('[data-holiday-edit]').forEach(b=>b.onclick=()=>editHoliday(state.holidays.find(h=>h.id===b.dataset.holidayEdit)));
@@ -223,15 +235,40 @@ function removeHoliday(holiday){
   if(!manual)automatic();
  });
 }
+function editCalendarEvent(existing=null,presetDate=null){
+ const x=existing||{title:'',type:'recording',date:presetDate||plannerDate,time:'15:00',duration:60,people:'',notes:''};
+ dialog(`<form><h2>${existing?'Edit event':'Add other event'}</h2>
+ <p class="muted">Recording, jam sessions and other appointments without a student record. Repeated names are allowed. No trial conversion or make-up credits.</p>
+ <label>TITLE<input name="title" value="${esc(x.title)}" maxlength="200" placeholder="Recording session / Band rehearsal" required autofocus></label>
+ <label>TYPE<select name="type"><option value="recording" ${x.type==='recording'?'selected':''}>Recording session</option><option value="jam" ${x.type==='jam'?'selected':''}>Jam / Making music together</option><option value="other" ${x.type==='other'?'selected':''}>Other event</option></select></label>
+ <label>DATE<input name="date" type="text" data-calendar-date maxlength="10" placeholder="YYYY-MM-DD" value="${x.date}" required></label>
+ <div class="fields holiday-date-fields"><label>START<input name="time" type="text" data-clock-time maxlength="5" placeholder="HH:mm" value="${x.time}" required></label><label>MINUTES<input name="duration" type="number" min="1" max="1440" value="${x.duration}" required></label></div>
+ <label>WHO'S COMING (OPTIONAL)<input name="people" value="${esc(x.people)}" maxlength="2000" placeholder="Names / band"></label>
+ <label>NOTES (OPTIONAL)<textarea name="notes" maxlength="200000" rows="3">${esc(x.notes)}</textarea></label>
+ <p class="muted">Events appear in the Schedule and block availability. Conflicting appointments are rejected before saving. Holidays do not remove them.</p>
+ <div class="toolbar"><button type="submit">Save event</button><button type="button" class="secondary" data-close>Back</button>${existing?'<button type="button" class="danger" id="removeCalendarEvent">Delete event</button>':''}</div></form>`,async fields=>{
+  const item={id:existing?.id||crypto.randomUUID(),title:fields.get('title').trim(),type:fields.get('type'),
+   date:fields.get('date'),time:fields.get('time'),duration:Number(fields.get('duration')),
+   people:fields.get('people').trim(),notes:fields.get('notes')};
+  await change(st=>{if(existing&&!(st.calendarEvents||[]).some(e=>e.id===existing.id))throw Error('Event no longer exists.');saveCalendarEvent(st,item);validateBackup(st);});
+ });
+ if(existing)$('#removeCalendarEvent').onclick=()=>{
+  $('#modal').close();
+  dialog(`<form><h2>Delete event?</h2><p>Remove ${esc(existing.title)} on ${existing.date} at ${existing.time}? No lesson records are affected.</p>
+   <div class="toolbar"><button type="submit" class="danger">Delete event</button><button type="button" class="secondary" data-close>Keep event</button></div></form>`,
+  async()=>{await change(st=>{removeCalendarEvent(st,existing.id);validateBackup(st);});});
+ };
+}
 function editAppointment(a,presetDate=null){
- if(!state.students.length){notice('Add a student before booking an appointment.');return;}
+ if(!state.students.length){editCalendarEvent(null,presetDate);return;}
  const x=a||{studentId:studentId||state.students.find(s=>!s.archived)?.id||state.students[0].id,date:presetDate||localDate(),time:'15:00',duration:45,label:''};
- dialog(`<form><h2>${a?'Edit appointment':'Extra appointment'}</h2><label>STUDENT<select name="studentId" id="appointmentStudent">${state.students.map(s=>`<option value="${esc(s.id)}" ${s.id===x.studentId?'selected':''}>${esc(s.name)}${s.archived?' (archived)':''}</option>`).join('')}</select></label><label>DATE<input name="date" type="text" data-calendar-date placeholder="YYYY-MM-DD" title="Date: YYYY-MM-DD" maxlength="10" autocomplete="off" value="${x.date}" required></label><div class="fields"><label>START<input name="time" type="text" data-clock-time placeholder="HH:mm" title="24-hour time: HH:mm" maxlength="5" autocomplete="off" value="${x.time}" required></label><label>MINUTES<input id="appointmentDuration" name="duration" type="number" min="1" max="1440" value="${a?x.duration:state.students.find(s=>s.id===x.studentId).duration}" required></label></div><label>LESSON TYPE<select id="appointmentType" name="appointmentType"><option value="extra" ${!x.label||x.label==='Extra lesson'?'selected':''}>Extra lesson (no credit)</option><option value="makeup" ${isMakeupLesson(x.label)?'selected':''}>Make-up lesson (redeem 1 credit when booked)</option><option value="custom" ${x.label&&x.label!=='Extra lesson'&&!isMakeupLesson(x.label)?'selected':''}>Other / custom label</option></select></label><label id="customAppointmentLabel">CUSTOM LABEL<input id="appointmentLabel" name="customLabel" maxlength="200" value="${esc(x.label||'')}" placeholder="Optional description"></label><p class="muted">Make-up lessons consume 1 owed credit immediately when booked, not after attendance. Teacher cancellations return it; student cancellations do not. Changing an active booking or removing it before cancellation returns the credit.</p><div class="toolbar"><button type="submit">Save appointment</button><button type="button" class="secondary" data-close>Cancel</button>${a?'<button type="button" class="danger" id="removeAppointment">Remove appointment</button>':''}</div></form>`,async f=>{
+ dialog(`<form><h2>${a?'Edit appointment':'Extra appointment'}</h2>${a?'':'<div class="toolbar"><button type="button" class="secondary" id="switchToCalendarEvent">Recording / Jam / Other (no student)</button></div>'}<label>STUDENT<select name="studentId" id="appointmentStudent">${state.students.map(s=>`<option value="${esc(s.id)}" ${s.id===x.studentId?'selected':''}>${esc(s.name)}${s.archived?' (archived)':''}</option>`).join('')}</select></label><label>DATE<input name="date" type="text" data-calendar-date placeholder="YYYY-MM-DD" title="Date: YYYY-MM-DD" maxlength="10" autocomplete="off" value="${x.date}" required></label><div class="fields"><label>START<input name="time" type="text" data-clock-time placeholder="HH:mm" title="24-hour time: HH:mm" maxlength="5" autocomplete="off" value="${x.time}" required></label><label>MINUTES<input id="appointmentDuration" name="duration" type="number" min="1" max="1440" value="${a?x.duration:state.students.find(s=>s.id===x.studentId).duration}" required></label></div><label>LESSON TYPE<select id="appointmentType" name="appointmentType"><option value="extra" ${!x.label||x.label==='Extra lesson'?'selected':''}>Extra lesson (no credit)</option><option value="makeup" ${isMakeupLesson(x.label)?'selected':''}>Make-up lesson (redeem 1 credit when booked)</option><option value="custom" ${x.label&&x.label!=='Extra lesson'&&!isMakeupLesson(x.label)?'selected':''}>Other / custom label</option></select></label><label id="customAppointmentLabel">CUSTOM LABEL<input id="appointmentLabel" name="customLabel" maxlength="200" value="${esc(x.label||'')}" placeholder="Optional description"></label><p class="muted">Make-up lessons consume 1 owed credit immediately when booked, not after attendance. Teacher cancellations return it; student cancellations do not. Changing an active booking or removing it before cancellation returns the credit.</p><div class="toolbar"><button type="submit">Save appointment</button><button type="button" class="secondary" data-close>Cancel</button>${a?'<button type="button" class="danger" id="removeAppointment">Remove appointment</button>':''}</div></form>`,async f=>{
   const type=f.get('appointmentType');
   const label=type==='makeup'?'Make-up lesson':type==='extra'?'Extra lesson':f.get('customLabel').trim();
   const item={id:a?.id||crypto.randomUUID(),studentId:f.get('studentId'),date:f.get('date'),time:f.get('time'),duration:Number(f.get('duration')),label};
   await change(st=>{saveAppointment(st,item);validateBackup(st);});
  });
+ if(!a)$('#switchToCalendarEvent').onclick=()=>{$('#modal').close();editCalendarEvent(null,presetDate);};
  const showLabel=()=>{const custom=$('#appointmentType').value==='custom';$('#customAppointmentLabel').hidden=!custom;$('#appointmentLabel').disabled=!custom;};
  $('#appointmentType').onchange=showLabel;showLabel();
  $('#appointmentStudent').onchange=e=>{$('#appointmentDuration').value=state.students.find(s=>s.id===e.target.value).duration;};

@@ -212,3 +212,17 @@ dialog .holiday-date-fields{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
  .makeup-credit{font-size:calc(16px * var(--mobile-ui-scale));padding:3px 6px}
  .makeup-credit-row{margin:1px 0 4px}
 }
+
+/* Standalone calendar entries are not trials, lessons or makeup credits. */
+:root{--event-cyan:#78d8cf}
+.slot-calendar{--accent:var(--event-cyan)}
+.plan-row.slot-calendar{background:#0c2222}
+.calendar-events-register{padding:10px 0;border-top:4px solid var(--event-cyan);border-bottom:3px solid var(--purple);margin:16px 0}
+.calendar-events-register>summary{color:var(--event-cyan);font-size:21px}
+.calendar-event-row{border-left:8px solid var(--event-cyan)}
+.calendar-event-row strong{color:var(--event-cyan)}
+.calendar-event-row p{white-space:pre-wrap;overflow-wrap:anywhere}
+@media(max-width:600px){
+ .calendar-events-register>summary{font-size:calc(20px * var(--mobile-ui-scale))}
+ .calendar-event-row{border-left-width:5px}
+}

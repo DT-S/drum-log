@@ -120,11 +120,11 @@ test('pre-existing schema-7 make-up entries do not retroactively debit credits',
  const old=defaults();old.schemaVersion=7;old.students=[person('A',2)];
  old.appointments=[appointment('legacy')];
  const imported=validateBackup(JSON.parse(JSON.stringify(old)));
- assert.equal(imported.schemaVersion,8);
+ assert.equal(imported.schemaVersion,9);
  assert.equal(imported.appointments[0].redeemedCredit,undefined);
  assert.equal(imported.students[0].makeupBalance,2);
  const migrated=migrateState(JSON.parse(JSON.stringify(old)));
- assert.equal(migrated.schemaVersion,8);
+ assert.equal(migrated.schemaVersion,9);
  saveAppointment(migrated,appointment('legacy'));
  assert.equal(migrated.students[0].makeupBalance,2);
  removeAppointment(migrated,'legacy');
@@ -148,7 +148,7 @@ test('appointment credit marker validates and roundtrips in schema 8',()=>{
   {...s.appointments[0],redeemedCredit:'yes'},
   {...s.appointments[0],label:'Extra lesson',redeemedCredit:true}
  ])assert.throws(()=>validateBackup({...s,appointments:[bad]}),/Invalid backup: appointment record/);
- assert.throws(()=>validateBackup({...s,schemaVersion:9}),/unsupported schema/);
+ assert.throws(()=>validateBackup({...s,schemaVersion:10}),/unsupported schema/);
 });
 
 test('standard booking type selector and automatic balance explanatory text are displayed',()=>{
