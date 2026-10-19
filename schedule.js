@@ -31,6 +31,15 @@ export function dayEvents(state,date){
    name:t.name,date,time:t.time,duration:t.duration,label:'Trial lesson'};
   events.set(event.key,event);
  }
+ // These events are not lessons. Their ID is independent of names, student IDs,
+ // trial conversions, and makeup-credit balances; duplicate participants are fine.
+ for(const x of state.calendarEvents||[]){
+  if(x.date!==date)continue;
+  events.set('event:'+x.id,{key:'event:'+x.id,kind:'calendar',calendarEventId:x.id,
+   studentId:null,name:x.title,date,time:x.time,duration:x.duration,
+   label:x.type==='recording'?'Recording session':x.type==='jam'?'Jam session':'Other event',
+   people:x.people,notes:x.notes});
+ }
  return [...events.values()].map(e=>{
   const cancellation=(state.cancellations||[]).find(c=>c.studentId===e.studentId&&
    c.date===e.date&&c.time===e.time&&
@@ -86,6 +95,27 @@ export function hasCollision(state,date,time,duration,excludeKey=null){
   }
  }
  return null;
+}
+export function saveCalendarEvent(state,item){
+ if(!item||!item.id||typeof item.id!=='string'||item.id.length>100||
+  typeof item.title!=='string'||!item.title.trim()||item.title.length>200||
+  !validDate(item.date)||!validTime(item.time)||
+  !Number.isInteger(item.duration)||item.duration<1||item.duration>1440||
+  !['recording','jam','other'].includes(item.type)||
+  typeof item.people!=='string'||item.people.length>2000||
+  typeof item.notes!=='string'||item.notes.length>200000)
+  throw Error('Enter a valid event title, category, date, time and duration.');
+ const old=(state.calendarEvents||[]).find(e=>e.id===item.id);
+ const conflict=hasCollision(state,item.date,item.time,item.duration,old?'event:'+old.id:null);
+ if(conflict)throw Error('Schedule conflict: '+conflict.name+' at '+conflict.time+'. Choose another time.');
+ const next=(state.calendarEvents||[]).filter(e=>e.id!==item.id);
+ next.push({...item,title:item.title.trim()});
+ state.calendarEvents=next;
+ return next.at(-1);
+}
+export function removeCalendarEvent(state,id){
+ if(!(state.calendarEvents||[]).some(e=>e.id===id))throw Error('This event no longer exists.');
+ state.calendarEvents=state.calendarEvents.filter(e=>e.id!==id);
 }
 export function cancelLesson(state,key,reason='cancelled',cancelledBy='student'){
  const target=dayEvents(state,key.date).find(e=>e.studentId===key.studentId&&e.time===key.time);
