@@ -111,13 +111,13 @@ test('holidays survive JSON roundtrip; schema-5 backups upgrade without any data
  const legacy=JSON.parse(JSON.stringify(s));
  legacy.schemaVersion=5;delete legacy.holidays;
  const migrated=validateBackup(legacy);
- assert.equal(migrated.schemaVersion,7);
+ assert.equal(migrated.schemaVersion,8);
  assert.deepEqual(migrated.holidays,[]);
  assert.deepEqual(migrated.students,s.students);
  assert.deepEqual(migrated.appointments,s.appointments);
  assert.deepEqual(migrated.lessons,s.lessons);
  const db=migrateState(JSON.parse(JSON.stringify(legacy)));
- assert.equal(db.schemaVersion,7);
+ assert.equal(db.schemaVersion,8);
  assert.deepEqual(db.holidays,[]);
 });
 
@@ -142,7 +142,7 @@ test('invalid holiday ranges, duplicate ids, missing collection and future schem
  ])assert.throws(()=>validateBackup({...s,holidays:broken}),/Invalid backup/);
  const missing={...s};delete missing.holidays;
  assert.throws(()=>validateBackup(missing),/Invalid backup/);
- assert.throws(()=>validateBackup({...s,schemaVersion:8}),/Invalid backup/);
+ assert.throws(()=>validateBackup({...s,schemaVersion:9}),/Invalid backup/);
 });
 
 test('explicit holiday appointment can itself be cancelled and restored',()=>{
