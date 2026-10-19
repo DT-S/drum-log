@@ -31,11 +31,12 @@ export function dayEvents(state,date){
    name:t.name,date,time:t.time,duration:t.duration,label:'Trial lesson'};
   events.set(event.key,event);
  }
- const cancelled=new Map((state.cancellations||[]).map(c=>[uid(c.studentId,c.date,c.time),c]));
  return [...events.values()].map(e=>{
-  // A booking explicitly made during holidays overrides an old cancellation of
-  // the otherwise absent recurring occurrence at exactly this time.
-  const cancellation=e.studentId&&!(closed&&e.kind!=='regular')?cancelled.get(e.key):null;
+  const cancellation=(state.cancellations||[]).find(c=>c.studentId===e.studentId&&
+   c.date===e.date&&c.time===e.time&&
+   (e.appointmentId?
+    (c.appointmentId?c.appointmentId===e.appointmentId:!closed)
+    :!c.appointmentId));
   return {...e,cancelled:!!cancellation,reason:cancellation?.reason||null};
  }).sort((a,b)=>minutes(a.time)-minutes(b.time)||a.name.localeCompare(b.name));
 }
@@ -91,14 +92,17 @@ export function cancelLesson(state,key,reason='cancelled'){
  if(!target)throw Error('This lesson is no longer scheduled.');
  if(target.cancelled)throw Error('This lesson is already cancelled.');
  if(!['sick','cancelled','vacation','other'].includes(reason))throw Error('Invalid cancellation reason.');
- state.cancellations.push({studentId:key.studentId,date:key.date,time:key.time,reason});
+ state.cancellations.push({studentId:key.studentId,date:key.date,time:key.time,reason,
+  ...(target.appointmentId?{appointmentId:target.appointmentId}:{})});
  return target;
 }
 export function restoreLesson(state,key){
- const i=state.cancellations.findIndex(c=>c.studentId===key.studentId&&c.date===key.date&&c.time===key.time);
- if(i<0)throw Error('Cancellation not found.');
  const source=dayEvents(state,key.date).find(e=>e.studentId===key.studentId&&e.time===key.time);
  if(!source)throw Error('The original booking no longer exists.');
+ const closed=holidaysOnDate(state,key.date).length>0;
+ const i=state.cancellations.findIndex(c=>c.studentId===key.studentId&&c.date===key.date&&c.time===key.time&&
+  (source.appointmentId?(c.appointmentId?c.appointmentId===source.appointmentId:!closed):!c.appointmentId));
+ if(i<0)throw Error('Cancellation not found.');
  const candidate={...state,cancellations:state.cancellations.filter((_,j)=>j!==i)};
  const conflict=hasCollision(candidate,key.date,key.time,source.duration,source.key);
  if(conflict)throw Error('Cannot restore: '+conflict.name+' is booked at '+conflict.time+'. Remove or move that booking first.');
@@ -111,7 +115,8 @@ export function bookReplacement(state,key,newStudentId,reason='cancelled'){
  const replacement=state.students.find(s=>s.id===newStudentId&&!s.archived);
  if(!replacement)throw Error('Choose an active student.');
  if(!['sick','cancelled','vacation','other'].includes(reason))throw Error('Invalid cancellation reason.');
- const proposedCancellation={studentId:key.studentId,date:key.date,time:key.time,reason};
+ const proposedCancellation={studentId:key.studentId,date:key.date,time:key.time,reason,
+  ...(source.appointmentId?{appointmentId:source.appointmentId}:{})};
  const candidate=source.cancelled?state:{...state,cancellations:[...state.cancellations,proposedCancellation]};
  const clash=hasCollision(candidate,key.date,key.time,source.duration);
  if(clash)throw Error('Booking conflict: '+clash.name+' · '+clash.time+'.');
