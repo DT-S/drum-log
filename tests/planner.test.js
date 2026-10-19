@@ -94,10 +94,10 @@ test('schema 4 migrates additively, including backups and teaching hours',()=>{
  old.schemaVersion=4;delete old.cancellations;delete old.settings.teachingHours;
  old.students.push(student('A'));
  const migrated=migrateState(old);
- assert.equal(migrated.schemaVersion,6);
+ assert.equal(migrated.schemaVersion,7);
  assert.deepEqual(migrated.cancellations,[]);
  assert.equal(migrated.settings.teachingHours.length,7);
- assert.equal(validateBackup(JSON.parse(JSON.stringify(migrated))).schemaVersion,6);
+ assert.equal(validateBackup(JSON.parse(JSON.stringify(migrated))).schemaVersion,7);
  const file=JSON.parse(JSON.stringify(migrated));file.schemaVersion=4;delete file.cancellations;delete file.settings.teachingHours;
  assert.deepEqual(validateBackup(file),migrated);
 });

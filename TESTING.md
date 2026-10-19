@@ -106,3 +106,14 @@ The repository CI now runs Node 22 syntax checks and all Node regression tests, 
 - Open Schedule → Holiday break and submit a reverse date range. Confirm the specific validation error is shown in the dialog only, not as a permanent main-page alert. Correct either date, cancel, press Escape or tap the warning; each action dismisses it. With no interaction, the dialog error disappears after 10 seconds.
 - Check other error conditions: errors outside modals are still visible until dismissed by tapping the message or switching views. A critical unsaved-note warning must not be silently lost before it is handled.
 - Automated UI source/isolated dialog simulation tests plus Node syntax checks. Native iPhone/Firefox LCARS CSS and input behavior still require real-device verification.
+
+
+## v1.8.0 credits and LCARS mobile terminal caps
+- Schedule → choose a lesson → Cancel → Cancelled by **Me / teacher** → count increments by exactly one in Student records and Lesson log. Attempting a second cancellation does not duplicate a credit.
+- Cancel another lesson by **Student** → count does not change. Changing the reason from Sick to Vacation must not change this rule: the initiator, not the reason, determines the credit.
+- Restore teacher cancellation → removes exactly one credit; restoring student cancellation has no effect. If count was manually corrected to zero, restoring cannot go negative.
+- Replace student A with B, choose Teacher for original cancellation: A gains one credit, B gains none; double bookings are still rejected atomically. Existing cancellations maintain their previous origin.
+- Edit student → MAKE-UP LESSONS OWED: set 2, 0, 7, save/reopen, JSON export/import roundtrip, confirm exact value. Fractional/negative/out-of-range values are invalid. Booking a future makeup lesson does not deduct a credit. Manually reduce the count when a make-up has been delivered.
+- Import a schema 6 backup with old cancellations lacking cancelledBy: credits default zero; no fabricated past teacher debt. Invalid origin/balance or schema 8 backup is rejected before replacing data.
+- iPhone at 75–80% scale: first mobile command row **Add Trial Lesson** has right curved cap; second row **Holiday Break** has left curved cap, no horizontal clipping. Counters readable at both 75 and 80%.
+- All Node CI tests and syntax checks must pass; real iPhone/Firefox and offline reinstallation require manual acceptance. Keep external JSON backup before update.

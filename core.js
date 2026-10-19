@@ -1,5 +1,5 @@
 export const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-export const defaults=()=>({schemaVersion:6,students:[],trials:[],appointments:[],cancellations:[],holidays:[],lessons:[],snippets:[['WDH','Review: '],['Timing','Timing: '],['Technique','Technique: '],['Grooves','Grooves: '],['Rudiments','Rudiments: '],['Homework','Homework: ']].map(([label,text],i)=>({id:'snippet-'+i,label,text})),settings:{backupReminder:true,lastBackup:null,soundEnabled:true,soundVolume:0.35,uiScale:80,teachingHours:[null,null,null,null,null,null,null]}});
+export const defaults=()=>({schemaVersion:7,students:[],trials:[],appointments:[],cancellations:[],holidays:[],lessons:[],snippets:[['WDH','Review: '],['Timing','Timing: '],['Technique','Technique: '],['Grooves','Grooves: '],['Rudiments','Rudiments: '],['Homework','Homework: ']].map(([label,text],i)=>({id:'snippet-'+i,label,text})),settings:{backupReminder:true,lastBackup:null,soundEnabled:true,soundVolume:0.35,uiScale:80,teachingHours:[null,null,null,null,null,null,null]}});
 export const localDate=(d=new Date())=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 export const minutes=t=>Number(t.slice(0,2))*60+Number(t.slice(3));
 export function appointment(s,date){const d=new Date(date);d.setHours(...s.time.split(':').map(Number),0,0);return d;}
@@ -78,16 +78,16 @@ export function todayLesson(s,lessons,now=new Date()){
  return {date,time:s.time,duration:s.duration};
 }
 // Additive version upgrade: lesson records are deliberately untouched.
-export function migrateState(state){if(state.schemaVersion===1)state.schemaVersion=2;if(state.schemaVersion===2){state.appointments=[];state.schemaVersion=3;}if(state.schemaVersion===3){state.trials=[];state.schemaVersion=4;}if(state.schemaVersion===4){state.cancellations=[];state.settings.teachingHours=[null,null,null,null,null,null,null];state.schemaVersion=5;}if(state.schemaVersion===5){state.holidays=[];state.schemaVersion=6;}if(state.schemaVersion!==6)throw Error('This database needs a newer version of Drum Log.');return state;}
+export function migrateState(state){if(state.schemaVersion===1)state.schemaVersion=2;if(state.schemaVersion===2){state.appointments=[];state.schemaVersion=3;}if(state.schemaVersion===3){state.trials=[];state.schemaVersion=4;}if(state.schemaVersion===4){state.cancellations=[];state.settings.teachingHours=[null,null,null,null,null,null,null];state.schemaVersion=5;}if(state.schemaVersion===5){state.holidays=[];state.schemaVersion=6;}if(state.schemaVersion===6){state.schemaVersion=7;}if(state.schemaVersion!==7)throw Error('This database needs a newer version of Drum Log.');return state;}
 export const lessonKey=(studentId,date,time)=>JSON.stringify([studentId,date,time]);
 export const validDate=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&localDate(new Date(v+'T12:00:00'))===v;
 export const validTime=v=>typeof v==='string'&&/^([01]\d|2[0-3]):[0-5]\d$/.test(v);
 export function validateBackup(raw){
  const fail=m=>{throw Error('Invalid backup: '+m);};const str=(v,max=200000)=>typeof v==='string'&&v.length<=max;
- if(!raw||![1,2,3,4,5,6].includes(raw.schemaVersion))fail('unsupported schema version.');
+ if(!raw||![1,2,3,4,5,6,7].includes(raw.schemaVersion))fail('unsupported schema version.');
  if(!Array.isArray(raw.students)||!Array.isArray(raw.lessons)||!Array.isArray(raw.snippets))fail('missing data collections.');
  const ids=new Set();for(const s of raw.students){
-  if(!s||!str(s.id,100)||!s.id||ids.has(s.id)||!str(s.name,200)||!s.name.trim()||!Number.isInteger(s.duration)||s.duration<1||s.duration>1440||!str(s.remarks)||typeof s.archived!=='boolean')fail('student record.');
+  if(!s||!str(s.id,100)||!s.id||ids.has(s.id)||!str(s.name,200)||!s.name.trim()||!Number.isInteger(s.duration)||s.duration<1||s.duration>1440||!str(s.remarks)||typeof s.archived!=='boolean'||(s.makeupBalance!==undefined&&(!Number.isSafeInteger(s.makeupBalance)||s.makeupBalance<0||s.makeupBalance>9999)))fail('student record.');
   const type=scheduleType(s);if(!['weekly','biweekly','flexible'].includes(type))fail('schedule type.');
   if(type==='flexible'){if(s.day!==null||s.time!==null)fail('flexible schedule must have no fixed day or time.');}
   else if(!Number.isInteger(s.day)||s.day<0||s.day>6||!validTime(s.time))fail('schedule day or time.');
@@ -107,6 +107,7 @@ export function validateBackup(raw){
  const cancellationKeys=new Set();
  for(const c of cancellations){
   if(!c||!ids.has(c.studentId)||!validDate(c.date)||!validTime(c.time)||!['sick','cancelled','vacation','other'].includes(c.reason)||
+   (c.cancelledBy!==undefined&&!['teacher','student'].includes(c.cancelledBy))||
    (c.appointmentId!==undefined&&(!str(c.appointmentId,100)||!c.appointmentId)))fail('cancelled lesson.');
   const key=lessonKey(c.studentId,c.date,c.time)+':'+(c.appointmentId||'regular');
   if(cancellationKeys.has(key))fail('duplicate cancellation.');
@@ -131,7 +132,7 @@ export function validateBackup(raw){
  if(raw.settings.uiScale!==undefined&&(!Number.isInteger(raw.settings.uiScale)||raw.settings.uiScale<65||raw.settings.uiScale>100||raw.settings.uiScale%5!==0))fail('mobile UI scale.');
  const teachingHours=raw.settings.teachingHours??(raw.schemaVersion<5?[null,null,null,null,null,null,null]:null);
  if(!Array.isArray(teachingHours)||teachingHours.length!==7||!teachingHours.every(h=>h===null||(h&&validTime(h.start)&&validTime(h.end)&&h.start<h.end)))fail('teaching hours.');
- return {schemaVersion:6,holidays:holidays.map(({id,startDate,endDate,label})=>({id,startDate,endDate,label})),cancellations:cancellations.map(({studentId,date,time,reason,appointmentId})=>({studentId,date,time,reason,...(appointmentId?{appointmentId}:{})})),trials:trials.map(({id,name,date,time,duration,contact,remarks,notes,archived})=>({id,name,date,time,duration,contact,remarks,notes,archived})),appointments:appointments.map(({id,studentId,date,time,duration,label})=>({id,studentId,date,time,duration,label})),students:raw.students.map(({id,name,day,time,duration,remarks,archived,schedule,anchorDate})=>({id,name,day,time,duration,remarks,archived,...(schedule?{schedule}:{}),...(schedule==='biweekly'?{anchorDate}:{})})),lessons:raw.lessons.map(({id,studentId,date,time,duration,notes})=>({id,studentId,date,time,duration,notes})),snippets:raw.snippets.map(({id,label,text})=>({id,label,text})),settings:{backupReminder:raw.settings.backupReminder,lastBackup:raw.settings.lastBackup,soundEnabled:raw.settings.soundEnabled??true,soundVolume:raw.settings.soundVolume??0.35,uiScale:raw.settings.uiScale??80,teachingHours:teachingHours.map(h=>h?{start:h.start,end:h.end}:null)}};
+ return {schemaVersion:7,holidays:holidays.map(({id,startDate,endDate,label})=>({id,startDate,endDate,label})),cancellations:cancellations.map(({studentId,date,time,reason,appointmentId,cancelledBy})=>({studentId,date,time,reason,...(appointmentId?{appointmentId}:{}),...(cancelledBy?{cancelledBy}:{})})),trials:trials.map(({id,name,date,time,duration,contact,remarks,notes,archived})=>({id,name,date,time,duration,contact,remarks,notes,archived})),appointments:appointments.map(({id,studentId,date,time,duration,label})=>({id,studentId,date,time,duration,label})),students:raw.students.map(({id,name,day,time,duration,remarks,archived,schedule,anchorDate,makeupBalance})=>({id,name,day,time,duration,remarks,archived,...(schedule?{schedule}:{}),...(schedule==='biweekly'?{anchorDate}:{}),...(makeupBalance!==undefined?{makeupBalance}:{})})),lessons:raw.lessons.map(({id,studentId,date,time,duration,notes})=>({id,studentId,date,time,duration,notes})),snippets:raw.snippets.map(({id,label,text})=>({id,label,text})),settings:{backupReminder:raw.settings.backupReminder,lastBackup:raw.settings.lastBackup,soundEnabled:raw.settings.soundEnabled??true,soundVolume:raw.settings.soundVolume??0.35,uiScale:raw.settings.uiScale??80,teachingHours:teachingHours.map(h=>h?{start:h.start,end:h.end}:null)}};
 }
 export function csv(rows){const cell=v=>{let s=String(v??'');if(/^[\s]*[=+@-]/.test(s)||/^[\t\r\n]/.test(s))s="'"+s;return '"'+s.replaceAll('"','""')+'"';};return '\ufeff'+rows.map(r=>r.map(cell).join(';')).join('\r\n');}
 

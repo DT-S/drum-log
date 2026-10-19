@@ -37,7 +37,7 @@ export function dayEvents(state,date){
    (e.appointmentId?
     (c.appointmentId?c.appointmentId===e.appointmentId:!closed)
     :!c.appointmentId));
-  return {...e,cancelled:!!cancellation,reason:cancellation?.reason||null};
+  return {...e,cancelled:!!cancellation,reason:cancellation?.reason||null,cancelledBy:cancellation?.cancelledBy||null};
  }).sort((a,b)=>minutes(a.time)-minutes(b.time)||a.name.localeCompare(b.name));
 }
 export function scheduleWeek(state,date){
@@ -87,13 +87,19 @@ export function hasCollision(state,date,time,duration,excludeKey=null){
  }
  return null;
 }
-export function cancelLesson(state,key,reason='cancelled'){
+export function cancelLesson(state,key,reason='cancelled',cancelledBy='student'){
  const target=dayEvents(state,key.date).find(e=>e.studentId===key.studentId&&e.time===key.time);
  if(!target)throw Error('This lesson is no longer scheduled.');
  if(target.cancelled)throw Error('This lesson is already cancelled.');
  if(!['sick','cancelled','vacation','other'].includes(reason))throw Error('Invalid cancellation reason.');
- state.cancellations.push({studentId:key.studentId,date:key.date,time:key.time,reason,
+ if(!['student','teacher'].includes(cancelledBy))throw Error('Invalid cancellation origin.');
+ const person=state.students.find(s=>s.id===key.studentId);
+ if(!person)throw Error('Student record no longer exists.');
+ if(cancelledBy==='teacher'&&(person.makeupBalance??0)>=9999)throw Error('Make-up credit balance is at its maximum.');
+ // Validate before either write. The IndexedDB transaction commits both or neither.
+ state.cancellations.push({studentId:key.studentId,date:key.date,time:key.time,reason,cancelledBy,
   ...(target.appointmentId?{appointmentId:target.appointmentId}:{})});
+ if(cancelledBy==='teacher')person.makeupBalance=(person.makeupBalance??0)+1;
  return target;
 }
 export function restoreLesson(state,key){
@@ -106,16 +112,22 @@ export function restoreLesson(state,key){
  const candidate={...state,cancellations:state.cancellations.filter((_,j)=>j!==i)};
  const conflict=hasCollision(candidate,key.date,key.time,source.duration,source.key);
  if(conflict)throw Error('Cannot restore: '+conflict.name+' is booked at '+conflict.time+'. Remove or move that booking first.');
+ const record=state.cancellations[i];
+ const person=state.students.find(s=>s.id===record.studentId);
+ if(!person)throw Error('Student record no longer exists.');
  state.cancellations.splice(i,1);
+ // An intervening manual correction may already have set balance to zero.
+ if(record.cancelledBy==='teacher')person.makeupBalance=Math.max(0,(person.makeupBalance??0)-1);
 }
-export function bookReplacement(state,key,newStudentId,reason='cancelled'){
+export function bookReplacement(state,key,newStudentId,reason='cancelled',cancelledBy='student'){
  const source=dayEvents(state,key.date).find(e=>e.studentId===key.studentId&&e.time===key.time);
  if(!source)throw Error('Original lesson no longer exists.');
  if(newStudentId===source.studentId)throw Error('Choose a different student, or restore the original lesson.');
  const replacement=state.students.find(s=>s.id===newStudentId&&!s.archived);
  if(!replacement)throw Error('Choose an active student.');
  if(!['sick','cancelled','vacation','other'].includes(reason))throw Error('Invalid cancellation reason.');
- const proposedCancellation={studentId:key.studentId,date:key.date,time:key.time,reason,
+ if(!['student','teacher'].includes(cancelledBy))throw Error('Invalid cancellation origin.');
+ const proposedCancellation={studentId:key.studentId,date:key.date,time:key.time,reason,cancelledBy,
   ...(source.appointmentId?{appointmentId:source.appointmentId}:{})};
  const candidate=source.cancelled?state:{...state,cancellations:[...state.cancellations,proposedCancellation]};
  const clash=hasCollision(candidate,key.date,key.time,source.duration);
@@ -123,7 +135,7 @@ export function bookReplacement(state,key,newStudentId,reason='cancelled'){
  if(state.appointments.some(a=>a.studentId===newStudentId&&a.date===key.date&&a.time===key.time))throw Error('Student already has an appointment in this slot.');
  // All validation above precedes mutation; caller also writes both in one IndexedDB transaction.
  const appointment={id:crypto.randomUUID(),studentId:newStudentId,date:key.date,time:key.time,duration:source.duration,label:'Replacement lesson'};
- if(!source.cancelled)state.cancellations.push(proposedCancellation);
+ if(!source.cancelled)cancelLesson(state,key,reason,cancelledBy);
  state.appointments.push(appointment);
 }
 export function bookFreeSlot(state,studentId,date,time,duration){
