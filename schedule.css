@@ -89,3 +89,115 @@ dialog .holiday-date-fields{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
  .holiday-row button{font-size:calc(15px * var(--mobile-ui-scale))}
  dialog .holiday-date-fields{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 }
+
+/* LCARS schedule command strip. Flat color panels are shaped by their POSITION,
+   not by the generic rounded-right button default. */
+#schedule .schedule-head{
+ display:flex;flex-direction:column;align-items:stretch;justify-content:start;gap:10px;
+ margin-bottom:14px;padding-bottom:13px;
+}
+#schedule .schedule-heading{min-width:0}
+#schedule .schedule-heading h2{margin:0;line-height:1.04}
+#schedule .schedule-actions{
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;width:100%;
+ min-width:0;
+}
+#schedule .schedule-actions button{
+ position:relative;min-width:0;min-height:51px;max-width:none;flex:none;
+ margin:0;padding:8px 11px;
+ border:0;border-radius:4px;background:var(--segment);color:#070507;
+ font:700 19px/1.05 var(--ui);letter-spacing:.045em;text-align:center;
+ overflow-wrap:normal;hyphens:none;
+}
+/* Functional colors: peach = appointment, red = trial, gold = closure,
+   violet = student. Each segment has one outer terminal and inner junctions. */
+#schedule .schedule-actions #addAppointment{--segment:var(--peach)}
+#schedule .schedule-actions #addTrial{--segment:var(--trial-red)}
+#schedule .schedule-actions #addHoliday{--segment:var(--gold)}
+#schedule .schedule-actions #addStudent{--segment:var(--purple)}
+#schedule .schedule-actions button:first-child{border-radius:27px 4px 4px 27px}
+#schedule .schedule-actions button:last-child{border-radius:4px 27px 27px 4px}
+#schedule .schedule-actions button:not(:first-child):not(:last-child){border-radius:4px}
+#schedule .schedule-actions button::after{
+ content:'';position:absolute;right:8px;bottom:4px;width:23px;height:3px;
+ background:#090609;opacity:.4;pointer-events:none;
+}
+#schedule .schedule-actions button:focus-visible,
+#schedule .plan-controls button:focus-visible{outline:3px solid #fff;outline-offset:3px}
+/* The navigation is two LCARS assemblies, not seven unrelated pill buttons. */
+#schedule .plan-controls{align-items:center;justify-content:space-between;gap:11px;padding:7px 0 11px}
+#schedule .plan-date-nav{
+ display:grid;grid-template-columns:52px minmax(140px,1fr) 52px;
+ flex:1 1 370px;gap:5px;min-width:0;align-items:stretch;
+}
+#schedule .plan-date-nav .plan-arrow{
+ display:grid;place-items:center;min-width:0;height:51px;min-height:51px;
+ padding:4px 8px;background:var(--blue);color:#07070d;border:0;
+}
+#schedule .plan-date-nav .plan-arrow-prev{border-radius:26px 3px 3px 26px}
+#schedule .plan-date-nav .plan-arrow-next{border-radius:3px 26px 26px 3px}
+#schedule .plan-date-nav svg{display:block;width:31px;height:27px;max-width:100%;pointer-events:none}
+#schedule .plan-date-field{
+ align-self:stretch;display:flex;flex-direction:column;justify-content:center;
+ min-width:0;gap:0;padding:3px 12px 4px;
+ border-top:5px solid var(--gold);background:#17131c;
+ font:700 13px/1 var(--ui);color:var(--gold);letter-spacing:.12em;
+}
+#schedule .plan-date-field input{
+ display:block;min-width:0;height:30px;min-height:30px;padding:2px 0;
+ border:0;border-radius:0;background:transparent;
+ color:var(--peach);font:700 21px/1.05 var(--ui);letter-spacing:.025em;
+}
+#schedule .plan-date-field input:focus{outline-offset:0}
+#schedule .plan-mode-switch{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;
+ flex:0 1 310px;min-width:235px;align-items:stretch;
+}
+#schedule .plan-mode-switch button{
+ margin:0;min-width:0;height:51px;min-height:51px;
+ padding:6px 10px;background:var(--purple);color:#06050b;
+ border:0;border-radius:3px;font:700 19px/1.1 var(--ui);
+}
+#schedule .plan-mode-switch #planToday{background:var(--peach);border-radius:24px 3px 3px 24px}
+#schedule .plan-mode-switch #planWeek{border-radius:3px 24px 24px 3px}
+#schedule .plan-mode-switch button[aria-pressed="true"]{background:var(--gold)}
+#schedule .plan-mode-switch button:hover,
+#schedule .plan-date-nav button:hover,
+#schedule .schedule-actions button:hover{filter:brightness(1.13)}
+#schedule .plan-mode-switch button:active,
+#schedule .plan-date-nav button:active,
+#schedule .schedule-actions button:active{filter:brightness(.86)}
+/* Small-screen LCARS segmentation: two complete two-panel rows for actions,
+   and a navigation assembly that doesn't clip at 75–80% phone scaling. */
+@media(max-width:760px){
+ #schedule .schedule-actions button{font-size:16px;min-height:44px;padding:6px 5px}
+ #schedule .plan-date-nav{grid-template-columns:43px minmax(116px,1fr) 43px;flex-basis:285px;gap:4px}
+ #schedule .plan-date-nav .plan-arrow{height:44px;min-height:44px;padding:4px}
+ #schedule .plan-date-nav svg{width:27px;height:26px}
+ #schedule .plan-mode-switch{min-width:200px;flex:1 1 200px;gap:4px}
+ #schedule .plan-mode-switch button{height:44px;min-height:44px;font-size:16px;padding:4px 6px}
+ #schedule .plan-date-field{padding:2px 8px 3px}
+ #schedule .plan-date-field input{font-size:19px}
+}
+@media(max-width:600px){
+ #schedule .schedule-head{gap:5px;margin-bottom:8px;padding-bottom:9px}
+ #schedule .schedule-actions{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
+ #schedule .schedule-actions button{
+  min-height:38px;max-width:none;font-size:calc(17px * var(--mobile-ui-scale));
+  padding:5px 5px;line-height:1.05;
+ }
+ #schedule .schedule-actions button:nth-child(1),
+ #schedule .schedule-actions button:nth-child(3){border-radius:19px 3px 3px 19px}
+ #schedule .schedule-actions button:nth-child(2),
+ #schedule .schedule-actions button:nth-child(4){border-radius:3px 19px 19px 3px}
+ #schedule .schedule-actions button::after{right:6px;bottom:3px;height:2px;width:16px}
+ #schedule .plan-controls{display:grid;grid-template-columns:minmax(0,1fr);gap:5px;padding:5px 0 7px}
+ #schedule .plan-date-nav{grid-template-columns:43px minmax(0,1fr) 43px;flex:none;gap:4px}
+ #schedule .plan-date-nav .plan-arrow{height:40px;min-height:40px}
+ #schedule .plan-date-field{min-height:40px;padding:2px 8px}
+ /* Input stays >= 16 CSS px to prevent iOS zoom on focus. */
+ #schedule .plan-date-field input{font-size:16px;min-height:25px;height:25px}
+ #schedule .plan-mode-switch{min-width:0;flex:none;gap:4px}
+ #schedule .plan-mode-switch button{height:37px;min-height:37px;font-size:calc(17px * var(--mobile-ui-scale))}
+ #schedule .plan-date-nav svg{width:27px;height:24px}
+}
