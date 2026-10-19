@@ -56,7 +56,13 @@ export function selectScheduled(students,now=new Date(),appointments=[],trials=[
   if(start<=now&&now<end)current.push(item);else if(start>now)next.push(item);
  }
  const blocked=new Set(cancellations.map(c=>lessonKey(c.studentId,c.date,c.time)));
- const isAllowed=x=>!blocked.has(lessonKey(x.student.id,localDate(x.start),x.appointment?.time||x.student.time));
+ const isAllowed=x=>{
+  const date=localDate(x.start);
+  // Holidays remove the underlying recurring occurrence, not explicit manual
+  // appointments that happen to reuse the same date/time/student.
+  if(x.appointment&&isHolidayDate(holidays,date))return true;
+  return !blocked.has(lessonKey(x.student.id,date,x.appointment?.time||x.student.time));
+ };
  const active=current.filter(isAllowed),future=next.filter(isAllowed);
  const order=(a,b)=>a.start-b.start||a.student.name.localeCompare(b.student.name)||a.student.id.localeCompare(b.student.id);active.sort(order);future.sort(order);
  return {kind:active.length?'current':'next',matches:active,selected:active[0]||future[0]||null};
