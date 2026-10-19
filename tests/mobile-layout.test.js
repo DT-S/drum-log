@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {defaults,validateBackup} from '../core.js';
 
-test('default phone UI scale is 80% with schema-6 backward compatibility',()=>{
+test('default phone UI scale is 80% with schema-7 backward compatibility',()=>{
  const state=defaults();
- assert.equal(state.schemaVersion,6);
+ assert.equal(state.schemaVersion,7);
  assert.equal(state.settings.uiScale,80);
  assert.equal(validateBackup(state).settings.uiScale,80);
 });
