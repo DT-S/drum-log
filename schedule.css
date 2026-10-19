@@ -114,8 +114,8 @@ dialog .holiday-date-fields{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 #schedule .schedule-actions #addAppointment{--segment:var(--peach)}
 #schedule .schedule-actions #addTrial{--segment:var(--trial-red)}
 #schedule .schedule-actions #addHoliday{--segment:var(--gold)}
-#schedule .schedule-actions button:first-child{border-radius:27px 4px 4px 27px}
-#schedule .schedule-actions button:last-child{border-radius:4px 27px 27px 4px}
+#schedule .schedule-actions button:first-child{border-radius:27px 0 0 27px}
+#schedule .schedule-actions button:last-child{border-radius:0 27px 27px 0}
 #schedule .schedule-actions button:not(:first-child):not(:last-child){border-radius:0}
 #schedule .schedule-actions button::after{
  content:'';position:absolute;right:8px;bottom:4px;width:23px;height:3px;
