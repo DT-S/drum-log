@@ -138,7 +138,62 @@ export function bookReplacement(state,key,newStudentId,reason='cancelled',cancel
  if(!source.cancelled)cancelLesson(state,key,reason,cancelledBy);
  state.appointments.push(appointment);
 }
-export function bookFreeSlot(state,studentId,date,time,duration){
+// The balance is a commitment ledger: booking spends one owed lesson immediately.
+// The exact booking ID records that spending so edits, moves and imports cannot
+// accidentally subtract a second credit. Older appointments without the marker
+// keep their historical balance when re-saved without a change of type or student.
+export const isMakeupLesson=label=>typeof label==='string'&&label.trim().toLowerCase()==='make-up lesson';
+const appointmentCancellation=(state,a)=>state.cancellations.find(c=>c.appointmentId===a.id);
+export function saveAppointment(state,item){
+ const old=state.appointments.find(a=>a.id===item.id);
+ if(!old&&state.appointments.some(a=>a.id===item.id))throw Error('Duplicate appointment identifier.');
+ if(old&&appointmentCancellation(state,old))throw Error('Restore this cancelled appointment before editing it.');
+ const person=state.students.find(s=>s.id===item.studentId&&!s.archived);
+ if(!person)throw Error('Select an active student.');
+ // Prevent using a newly booked date/time in place of a separately cancelled
+ // recurring occurrence, which would otherwise inherit its cancellation.
+ if(state.cancellations.some(c=>c.studentId===item.studentId&&c.date===item.date&&c.time===item.time&&!c.appointmentId&&
+  !(old&&old.studentId===item.studentId&&old.date===item.date&&old.time===item.time)))
+  throw Error('This student was cancelled for that time. Restore the lesson or choose another time.');
+ const requested=isMakeupLesson(item.label);
+ const oldRedeemed=old?.redeemedCredit===true;
+ const changedStudent=!!old&&old.studentId!==item.studentId;
+ const newRedeemed=requested&&(oldRedeemed||!old||!isMakeupLesson(old.label)||changedStudent);
+ const oldPerson=old&&state.students.find(s=>s.id===old.studentId);
+ if(old&&!oldPerson)throw Error('Original student record is missing.');
+ let refund=(oldRedeemed&&(!newRedeemed||changedStudent))?1:0;
+ let debit=(newRedeemed&&(!oldRedeemed||changedStudent))?1:0;
+ const oldBalance=(oldPerson?.makeupBalance??0)+refund;
+ const newBalance=(person.makeupBalance??0)+(oldPerson?.id===person.id?refund:0)-debit;
+ if(oldBalance>9999||newBalance>9999)throw Error('Make-up balance exceeds its maximum. Adjust the student balance first.');
+ if(newBalance<0)throw Error('No outstanding make-up lesson for this student. Change the appointment type to Extra lesson or adjust the balance.');
+ const updated={...item,...(newRedeemed?{redeemedCredit:true}:{})};
+ const collection=state.appointments.filter(a=>a.id!==item.id).concat(updated);
+ // Validate without mutation; the surrounding IndexedDB transaction is also atomic.
+ // Imported legacy appointments may contain outdated free-text labels.
+ if(collection.some((a,i)=>collection.findIndex(b=>b.studentId===a.studentId&&b.date===a.date&&b.time===a.time)!==i))
+  throw Error('This student already has an appointment at the selected date/time.');
+ if(oldRedeemed&&(!newRedeemed||changedStudent))oldPerson.makeupBalance=oldBalance;
+ if(newRedeemed&&(!oldRedeemed||changedStudent))person.makeupBalance=newBalance;
+ state.appointments=collection;
+ return updated;
+}
+export function removeAppointment(state,id){
+ const item=state.appointments.find(a=>a.id===id);
+ if(!item)throw Error('Appointment no longer exists.');
+ const cancelled=!!appointmentCancellation(state,item);
+ const person=state.students.find(s=>s.id===item.studentId);
+ if(!person)throw Error('Student record no longer exists.');
+ // Teacher cancellation has already refunded the credit; student cancellation
+ // forfeits it. Only removing an active redeemed appointment refunds.
+ if(item.redeemedCredit&&!cancelled){
+  if((person.makeupBalance??0)>=9999)throw Error('Make-up credit balance is at its maximum.');
+  person.makeupBalance=(person.makeupBalance??0)+1;
+ }
+ state.cancellations=state.cancellations.filter(c=>c.appointmentId!==item.id);
+ state.appointments=state.appointments.filter(a=>a.id!==id);
+}
+export function bookFreeSlot(state,studentId,date,time,duration,label='Make-up lesson'){
  if(!validDate(date)||!validTime(time)||!Number.isInteger(duration)||duration<1||duration>1440)throw Error('Invalid lesson time or duration.');
  const person=state.students.find(s=>s.id===studentId&&!s.archived);
  if(!person)throw Error('Select an active student.');
@@ -146,6 +201,5 @@ export function bookFreeSlot(state,studentId,date,time,duration){
  if(!availableSlots(state,date).some(slot=>start>=minutes(slot.start)&&start+duration<=minutes(slot.end)))throw Error('That time is not available. Check teaching hours or existing bookings.');
  const clash=hasCollision(state,date,time,duration);
  if(clash)throw Error('Booking conflict: '+clash.name+' · '+clash.time+'.');
- if(state.cancellations.some(c=>c.studentId===studentId&&c.date===date&&c.time===time))throw Error('This student was cancelled for that time. Restore the lesson instead.');
- state.appointments.push({id:crypto.randomUUID(),studentId,date,time,duration,label:'Make-up lesson'});
+ return saveAppointment(state,{id:crypto.randomUUID(),studentId,date,time,duration,label});
 }

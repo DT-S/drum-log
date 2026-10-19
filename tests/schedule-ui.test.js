@@ -47,15 +47,18 @@ function fakeUI(){
  return {error,dialog,clearDialogError,clearGlobalError,modal,banner,getAlert:()=>activeAlert,fireTimer:()=>task?.(),getDelay:()=>timeoutDelay};
 }
 
-test('Schedule actions form one header strip with no redundant subtitle',()=>{
+test('Schedule has exactly three single-row LCARS actions while Students retains Add Student',()=>{
  const schedule=sourceBetween('function renderSchedule(){','function bindPlanActions(){');
  assert.match(schedule,/class="sectionhead schedule-head"/);
  assert.match(schedule,/class="schedule-actions"/);
  assert.doesNotMatch(schedule,/One-off cancellations · Replacement lessons · Available time/);
- for(const id of ['addTrial','addAppointment','addHoliday','addStudent'])assert.match(schedule,new RegExp('id="'+id+'"'));
+ for(const id of ['addAppointment','addTrial','addHoliday'])assert.match(schedule,new RegExp('id="'+id+'"'));
+ assert.doesNotMatch(schedule,/id="addStudent"/);
+ assert.match(app,/function renderStudents\(\)[\s\S]*?id="addStudent"/);
  assert.match(css,/schedule-actions button:first-child/);
  assert.match(css,/schedule-actions button:last-child/);
- assert.match(css,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+ assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+ assert.match(css,/#schedule \.schedule-actions button:not\(:first-child\):not\(:last-child\)\{border-radius:0\}/);
 });
 
 test('date navigation uses two real SVG vector chevrons, not Unicode glyph arrows',()=>{
@@ -120,7 +123,7 @@ test('offline stylesheet cache and release label update together',()=>{
  const pkg=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8'));
  assert.match(html,/schedule\.css/);
  assert.match(sw,/'\.\/schedule\.css'/);
- assert.equal(pkg.version,'1.8.0');
- assert.match(html,/DRUM LOG \/ 1\.8\.0/);
- assert.match(sw,/PREFIX\+'v13'/);
+ assert.equal(pkg.version,'1.8.1');
+ assert.match(html,/DRUM LOG \/ 1\.8\.1/);
+ assert.match(sw,/PREFIX\+'v14'/);
 });

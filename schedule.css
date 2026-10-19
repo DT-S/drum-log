@@ -99,7 +99,7 @@ dialog .holiday-date-fields{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 #schedule .schedule-heading{min-width:0}
 #schedule .schedule-heading h2{margin:0;line-height:1.04}
 #schedule .schedule-actions{
- display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;width:100%;
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;width:100%;
  min-width:0;
 }
 #schedule .schedule-actions button{
@@ -109,15 +109,14 @@ dialog .holiday-date-fields{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
  font:700 19px/1.05 var(--ui);letter-spacing:.045em;text-align:center;
  overflow-wrap:normal;hyphens:none;
 }
-/* Functional colors: peach = appointment, red = trial, gold = closure,
-   violet = student. Each segment has one outer terminal and inner junctions. */
+/* Three segments: peach appointment, red trial, gold closure.
+   Only the exterior terminals are curved; the middle stays straight. */
 #schedule .schedule-actions #addAppointment{--segment:var(--peach)}
 #schedule .schedule-actions #addTrial{--segment:var(--trial-red)}
 #schedule .schedule-actions #addHoliday{--segment:var(--gold)}
-#schedule .schedule-actions #addStudent{--segment:var(--purple)}
-#schedule .schedule-actions button:first-child{border-radius:27px 4px 4px 27px}
-#schedule .schedule-actions button:last-child{border-radius:4px 27px 27px 4px}
-#schedule .schedule-actions button:not(:first-child):not(:last-child){border-radius:4px}
+#schedule .schedule-actions button:first-child{border-radius:27px 0 0 27px}
+#schedule .schedule-actions button:last-child{border-radius:0 27px 27px 0}
+#schedule .schedule-actions button:not(:first-child):not(:last-child){border-radius:0}
 #schedule .schedule-actions button::after{
  content:'';position:absolute;right:8px;bottom:4px;width:23px;height:3px;
  background:#090609;opacity:.4;pointer-events:none;
@@ -167,8 +166,8 @@ dialog .holiday-date-fields{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 #schedule .plan-mode-switch button:active,
 #schedule .plan-date-nav button:active,
 #schedule .schedule-actions button:active{filter:brightness(.86)}
-/* Small-screen LCARS segmentation: two complete two-panel rows for actions,
-   and a navigation assembly that doesn't clip at 75–80% phone scaling. */
+/* Three LCARS action panels stay on one row even on small screens;
+   date navigation stays unclipped at 75–80% phone scaling. */
 @media(max-width:760px){
  #schedule .schedule-actions button{font-size:16px;min-height:44px;padding:6px 5px}
  #schedule .plan-date-nav{grid-template-columns:43px minmax(116px,1fr) 43px;flex-basis:285px;gap:4px}
@@ -181,15 +180,14 @@ dialog .holiday-date-fields{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 }
 @media(max-width:600px){
  #schedule .schedule-head{gap:5px;margin-bottom:8px;padding-bottom:9px}
- #schedule .schedule-actions{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
+ #schedule .schedule-actions{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
  #schedule .schedule-actions button{
   min-height:38px;max-width:none;font-size:calc(17px * var(--mobile-ui-scale));
   padding:5px 5px;line-height:1.05;
  }
- #schedule .schedule-actions button:nth-child(1),
- #schedule .schedule-actions button:nth-child(3){border-radius:19px 3px 3px 19px}
- #schedule .schedule-actions button:nth-child(2),
- #schedule .schedule-actions button:nth-child(4){border-radius:3px 19px 19px 3px}
+ #schedule .schedule-actions button:first-child{border-radius:20px 0 0 20px}
+ #schedule .schedule-actions button:not(:first-child):not(:last-child){border-radius:0}
+ #schedule .schedule-actions button:last-child{border-radius:0 20px 20px 0}
  #schedule .schedule-actions button::after{right:6px;bottom:3px;height:2px;width:16px}
  #schedule .plan-controls{display:grid;grid-template-columns:minmax(0,1fr);gap:5px;padding:5px 0 7px}
  #schedule .plan-date-nav{grid-template-columns:43px minmax(0,1fr) 43px;flex:none;gap:4px}
@@ -202,15 +200,6 @@ dialog .holiday-date-fields{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
  #schedule .plan-date-nav svg{width:27px;height:24px}
 }
 
-/* Mobile row terminal caps: trial closes row one, holidays open row two. */
-@media(max-width:600px){
- #schedule .schedule-actions #addTrial{
-  border-radius:3px 24px 24px 3px;
- }
- #schedule .schedule-actions #addHoliday{
-  border-radius:24px 3px 3px 24px;
- }
-}
 /* Outstanding credit indicator; readable but unobtrusive at mobile scale. */
 .makeup-credit{
  display:inline-block;padding:3px 8px;margin-top:3px;
