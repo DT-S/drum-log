@@ -155,3 +155,12 @@ export function convertTrial(state,trialId,profile,appointmentId){
  const next={...state,students:[...state.students,student],lessons:trial.notes?[...state.lessons,entry]:state.lessons,appointments:[...state.appointments,{id:appointmentId,studentId:student.id,date:trial.date,time:trial.time,duration:trial.duration,label:'Trial lesson'}],trials:state.trials.filter(t=>t.id!==trialId)};
  validateBackup(next);Object.assign(state,next);return entry;
 }
+
+// Removes exactly one unconverted trial by immutable ID. Notes/contact for that
+// particular trial are deleted with it; students and other bookings are untouched.
+export function removeTrial(state,trialId){
+ const trial=state.trials.find(t=>t.id===trialId);
+ if(!trial)throw Error('Trial no longer exists. Reload the schedule.');
+ state.trials=state.trials.filter(t=>t.id!==trialId);
+ return trial;
+}
