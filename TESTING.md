@@ -117,3 +117,13 @@ The repository CI now runs Node 22 syntax checks and all Node regression tests, 
 - Import a schema 6 backup with old cancellations lacking cancelledBy: credits default zero; no fabricated past teacher debt. Invalid origin/balance or schema 8 backup is rejected before replacing data.
 - iPhone at 75–80% scale: first mobile command row **Add Trial Lesson** has right curved cap; second row **Holiday Break** has left curved cap, no horizontal clipping. Counters readable at both 75 and 80%.
 - All Node CI tests and syntax checks must pass; real iPhone/Firefox and offline reinstallation require manual acceptance. Keep external JSON backup before update.
+
+
+## v1.8.1 make-up bookings redeem at scheduling
+- Teacher cancels normal lesson → owes +1; open Schedule → Add appointment → type Make-up lesson → owed count immediately -1. Creating an Extra lesson does not change the count.
+- A zero-credit student may receive an Extra lesson, but saving a Make-up lesson must show a clear error without creating a booking.
+- Cancel a credited make-up as teacher → owed +1 (once); undo cancellation → owed -1. Cancel a credited make-up as student → no refund. Delete the student-cancelled appointment → still no refund.
+- Delete an active make-up booking → owed +1; deleting a teacher-cancelled booking after the credit was returned → no second refund.
+- Edit existing make-up time or date → no extra debit; change label to Extra → refund; change back to Make-up → spend. Change student: refund previous student's credit and spend from the new student or reject the change.
+- Import schema-7 backup containing historical \`Make-up lesson\` appointments → no retroactive credit change. New v8 backups preserve \`redeemedCredit\` for every new credited appointment.
+- Check iPhone Safari PWA modal options and error dismissal, service-worker v14 offline update, no changes to journal or regular timetable.
