@@ -11,14 +11,40 @@ let state,trialId=null,studentId=null,date=localDate(),time='15:00',duration=45,
 const channel=globalThis.BroadcastChannel?new BroadcastChannel('drum-log'):null;
 const student=()=>state.students.find(s=>s.id===studentId),key=()=>lessonKey(studentId,date,time),lesson=()=>state.lessons.find(l=>l.id===key());
 const niceDate=d=>d;
-function error(e){const m=$('#modal');if(m?.open){let alert=m.querySelector('[data-dialog-error]');if(!alert){alert=document.createElement('p');alert.dataset.dialogError='';alert.setAttribute('role','alert');m.prepend(alert);}alert.textContent=e.message||String(e);}sounds.play('invalid');$('#error').textContent=e.message||String(e);$('#error').hidden=false;}
+let dialogErrorTimeout=null;
+function clearDialogError(){
+ if(dialogErrorTimeout!==null){clearTimeout(dialogErrorTimeout);dialogErrorTimeout=null;}
+ $('#modal')?.querySelector('[data-dialog-error]')?.remove();
+}
+function clearGlobalError(){
+ const banner=$('#error');if(!banner)return;
+ banner.textContent='';banner.hidden=true;
+}
+function error(e){
+ const message=e?.message||String(e),m=$('#modal');
+ sounds.play('invalid');
+ if(m?.open){
+  // Modal validation belongs to this dialog, not the global page banner.
+  clearDialogError();
+  const alert=document.createElement('p');alert.dataset.dialogError='';
+  alert.setAttribute('role','alert');alert.tabIndex=0;
+  alert.title='Tap to dismiss this message';
+  alert.textContent=message;alert.onclick=clearDialogError;
+  alert.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();clearDialogError();}};
+  m.prepend(alert);
+  // Closing, fixing a field or clicking dismisses immediately; timer is a fallback.
+  dialogErrorTimeout=setTimeout(clearDialogError,10000);
+  return;
+ }
+ const banner=$('#error');banner.textContent=message;banner.hidden=false;
+}
 function notice(text,tone='warning'){if(text)sounds.play(tone);$('#notice').textContent=text;$('#notice').hidden=!text;}
 async function change(fn){state=await mutate(fn);sounds.configure(state.settings);channel?.postMessage('changed');}
 function automatic(){const m=selectScheduled(state.students,new Date(),state.appointments,state.trials,state.cancellations,state.holidays);manual=false;trialId=null;if(m.selected?.trial){const t=m.selected.trial;trialId=t.id;studentId=null;date=t.date;time=t.time;duration=t.duration;return;}if(m.selected){studentId=m.selected.student.id;date=localDate(m.selected.start);time=m.selected.appointment?.time||m.selected.student.time;duration=m.selected.appointment?.duration||m.selected.student.duration;}else {const flexible=state.students.find(s=>!s.archived&&scheduleType(s)==='flexible');studentId=flexible?.id||null;if(flexible){manual=true;({date,time,duration}=todayLesson(flexible,state.lessons));}}}
 async function ready(){await saveQueue;if(saveFailure){error(Error('Your last edit is not saved. Copy the note somewhere safe, then use Retry save before navigating.'));return false;}return true;}
 function scheduleSave(){if(trialId){saveTrialNotes();return;}const field=$('#notes');if(!field)return;const item={id:key(),studentId,date,time,duration:$('#duration').checkValidity()?Number($('#duration').value):duration,notes:field.value};duration=item.duration;const expected=baseNotes;baseNotes=item.notes;pending++;saveFailure=false;$('#saveStatus').textContent='Saving…';saveQueue=saveQueue.then(async()=>{await change(s=>{const index=s.lessons.findIndex(l=>l.id===item.id);const old=index<0?'':s.lessons[index].notes;if(old!==expected&&old!==item.notes)throw Error('This lesson changed in another tab. Your text is still here. Copy it before reloading to reconcile both versions.');if(!s.students.some(s=>s.id===item.studentId))throw Error('This student was removed in another tab. Copy your note before reloading.');if(index<0)s.lessons.push(item);else s.lessons[index]=item;});}).catch(e=>{saveFailure=true;error(e);}).finally(()=>{pending--;if(!saveFailure&&!pending)$('#error').hidden=true;if($('#saveStatus'))$('#saveStatus').textContent=saveFailure?'NOT SAVED — copy your note':pending?'Saving…':'Saved on this device';});}
 function render(){ $('#studentCount').textContent=String(state.students.filter(s=>!s.archived).length).padStart(2,'0');$('#lessonCount').textContent=String(state.lessons.length).padStart(2,'0');for(const el of document.querySelectorAll('.view'))el.hidden=el.id!==view;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===view));({journal:renderJournal,students:renderStudents,schedule:renderSchedule,settings:renderSettings})[view]();bindMobilePanes();bindDateTimeFields(document);}
-async function navigate(next){if(!await ready())return;state=await readState();sounds.configure(state.settings);if(view!==next)sounds.play('menu');else sounds.play('press');view=next;render();}
+async function navigate(next){if(!await ready())return;clearGlobalError();state=await readState();sounds.configure(state.settings);if(view!==next)sounds.play('menu');else sounds.play('press');view=next;render();}
 function renderJournal(){if(trialId&&state.trials.some(t=>t.id===trialId)){renderTrial();return;}trialId=null;const root=$('#journal'),s=student();if(!s){root.innerHTML='<div class="eyebrow">01 / INSTRUCTION LOG</div><div class="empty"><h2>Student database / empty</h2><p class="muted">Create a student record to initialize automatic lesson selection.</p><div class="toolbar"><button id="firstStudent">Add student</button><button id="firstTrial" class="secondary">Add trial lesson</button></div></div>';$('#firstStudent').onclick=()=>editStudent();$('#firstTrial').onclick=()=>editTrial();return;}
  const match=selectScheduled(state.students,new Date(),state.appointments,state.trials,state.cancellations,state.holidays),isCurrent=match.matches.some(x=>x.student.id===s.id),l=lesson();duration=l?.duration||duration;baseNotes=l?.notes||'';
  const previous=state.lessons.filter(x=>x.studentId===s.id&&x.date+'T'+x.time<date+'T'+time).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time))[0];
@@ -84,8 +110,8 @@ function renderSchedule(){
  const period=plannerMode==='week'?scheduleWeek(state,plannerDate).map(d=>planDayHTML(d.date,true)).join(''):planDayHTML(plannerDate);
  const holidayList=(state.holidays||[]).slice().sort((a,b)=>a.startDate.localeCompare(b.startDate));
  const holidayRows=holidayList.map(h=>`<div class="holiday-row"><div><strong>${esc(h.label||'Holiday break')}</strong><p class="muted">${h.startDate} – ${h.endDate} · inclusive</p></div><div class="toolbar"><button type="button" class="secondary" data-holiday-edit="${esc(h.id)}">Edit</button><button type="button" class="secondary" data-holiday-remove="${esc(h.id)}">Remove</button></div></div>`).join('');
- $('#schedule').innerHTML=`<div class="sectionhead"><div><div class="eyebrow">03 / SCHEDULE ACCESS</div><h2>Schedule</h2><p class="muted">One-off cancellations · Replacement lessons · Available time</p></div><div class="toolbar"><button id="addTrial">Add trial lesson</button><button id="addAppointment">Add appointment</button><button id="addHoliday" class="secondary">Holiday break</button><button class="secondary" id="addStudent">Add student</button></div></div>
- <div class="plan-controls"><div class="toolbar"><button type="button" id="planPrev" class="secondary" aria-label="Previous ${plannerMode}">◀</button><button type="button" id="planToday" class="secondary">Today</button><button type="button" id="planNext" class="secondary" aria-label="Next ${plannerMode}">▶</button></div><label>Date<input id="plannerDate" type="text" data-calendar-date maxlength="10" placeholder="YYYY-MM-DD" value="${plannerDate}"></label><div class="toolbar"><button type="button" id="planDay" aria-pressed="${plannerMode==='day'}">Day</button><button type="button" id="planWeek" aria-pressed="${plannerMode==='week'}">Week</button></div></div>
+ $('#schedule').innerHTML=`<div class="sectionhead schedule-head"><div class="schedule-heading"><div class="eyebrow">03 / SCHEDULE ACCESS</div><h2>Schedule</h2></div><div class="schedule-actions" role="group" aria-label="Schedule actions"><button id="addAppointment" type="button">Add appointment</button><button id="addTrial" type="button">Add trial lesson</button><button id="addHoliday" type="button">Holiday break</button><button id="addStudent" type="button">Add student</button></div></div>
+ <div class="plan-controls"><div class="plan-date-nav" role="group" aria-label="Date navigation"><button type="button" id="planPrev" class="plan-arrow plan-arrow-prev" aria-label="Previous ${plannerMode}" title="Previous ${plannerMode}"><svg viewBox="0 0 38 28" aria-hidden="true" focusable="false"><path d="M31 3H22L9 14L22 25H31L18 14Z" fill="currentColor"/><rect x="2" y="8" width="4" height="12" rx="1" fill="currentColor"/><path d="M34 4V24" stroke="currentColor" stroke-width="1.6" opacity=".52"/></svg></button><label class="plan-date-field">DATE<input id="plannerDate" type="text" data-calendar-date maxlength="10" placeholder="YYYY-MM-DD" value="${plannerDate}"></label><button type="button" id="planNext" class="plan-arrow plan-arrow-next" aria-label="Next ${plannerMode}" title="Next ${plannerMode}"><svg viewBox="0 0 38 28" aria-hidden="true" focusable="false"><path d="M7 3H16L29 14L16 25H7L20 14Z" fill="currentColor"/><rect x="32" y="8" width="4" height="12" rx="1" fill="currentColor"/><path d="M4 4V24" stroke="currentColor" stroke-width="1.6" opacity=".52"/></svg></button></div><div class="plan-mode-switch" role="group" aria-label="Schedule display"><button type="button" id="planToday" class="plan-today">Today</button><button type="button" id="planDay" aria-pressed="${plannerMode==='day'}">Day</button><button type="button" id="planWeek" aria-pressed="${plannerMode==='week'}">Week</button></div></div>
  <div class="plan-legend"><span class="plan-key slot-regular">Regular</span><span class="plan-key slot-trial">Trial lesson</span><span class="plan-key slot-extra">Extra / make-up</span><span class="plan-key slot-cancelled">Cancelled</span><span class="plan-key slot-available">Available</span></div>
  <div class="plan-days">${period}</div>
  <details class="holiday-settings"><summary>Holiday breaks / closures (${holidayList.length})</summary>
@@ -203,7 +229,25 @@ function editAppointment(a,presetDate=null){
  $('#appointmentStudent').onchange=e=>{$('#appointmentDuration').value=state.students.find(s=>s.id===e.target.value).duration;};
  if(a)$('#removeAppointment').onclick=()=>{$('#modal').close();dialog(`<form><h2>Remove appointment</h2><p>Remove this appointment on ${niceDate(a.date)} at ${a.time}? Existing lesson notes remain available in the journal.</p><div class="toolbar"><button class="danger" type="submit">Remove appointment</button><button type="button" class="secondary" data-close>Cancel</button></div></form>`,async()=>{await change(st=>st.appointments=st.appointments.filter(x=>x.id!==a.id));});};
 }
-function dialog(html,onSubmit){const m=$('#modal');m.innerHTML=html;bindDateTimeFields(m);m.showModal();if(m.querySelector('.danger'))sounds.play('warning');m.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>m.close());const f=m.querySelector('form');if(f)f.onsubmit=async e=>{e.preventDefault();if(!f.reportValidity())return;const button=f.querySelector('[type=submit]');if(button)button.disabled=true;try{await onSubmit(new FormData(f));sounds.play('accept');m.close();render();}catch(e){error(e);}finally{if(button)button.disabled=false;}};}
+function dialog(html,onSubmit){
+ const m=$('#modal');clearDialogError();clearGlobalError();
+ m.innerHTML=html;bindDateTimeFields(m);m.showModal();
+ // Reassigned (not accumulated) each time. Escape, Cancel and successful
+ // submit all fire 'close', and editing any field clears stale validation.
+ m.onclose=clearDialogError;
+ m.oninput=clearDialogError;
+ m.onchange=clearDialogError;
+ if(m.querySelector('.danger'))sounds.play('warning');
+ m.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>m.close());
+ const f=m.querySelector('form');
+ if(f)f.onsubmit=async e=>{
+  e.preventDefault();if(!f.reportValidity())return;
+  const button=f.querySelector('[type=submit]');if(button)button.disabled=true;
+  try{await onSubmit(new FormData(f));sounds.play('accept');m.close();clearGlobalError();render();}
+  catch(e){error(e);}
+  finally{if(button)button.disabled=false;}
+ };
+}
 function editStudent(s,trial=null){
  const x=s||(trial?{name:trial.name,day:new Date(trial.date+'T12:00:00').getDay(),time:trial.time,duration:trial.duration,remarks:'',archived:false}:{name:'',day:1,time:'15:00',duration:45,remarks:'',archived:false});
  dialog(`<form><h2>${trial?'Convert trial to student':s?'Edit student':'New student'}</h2><label>NAME<input name="name" value="${esc(x.name)}" maxlength="200" required autofocus></label>
@@ -269,6 +313,10 @@ async function storageInfo(){try{const persistent=await navigator.storage?.persi
 function editSnippet(x){dialog(`<form><h2>${x?'Edit shortcut':'New shortcut'}</h2><label>BUTTON LABEL<input name="label" maxlength="50" value="${esc(x?.label||'')}" required></label><label>TEXT TO INSERT<textarea name="text" rows="6" maxlength="10000" required>${esc(x?.text||'')}</textarea></label><div class="toolbar"><button type="submit">Save shortcut</button><button type="button" class="secondary" data-close>Cancel</button>${x?'<button type="button" class="danger" id="deleteSnippet">Delete</button>':''}</div></form>`,async f=>{const item={id:x?.id||crypto.randomUUID(),label:f.get('label').trim(),text:f.get('text')};if(!item.label)throw Error('Enter a button label.');await change(s=>{const i=s.snippets.findIndex(y=>y.id===item.id);if(i<0)s.snippets.push(item);else s.snippets[i]=item;});});if(x)$('#deleteSnippet').onclick=async()=>{await change(s=>s.snippets=s.snippets.filter(y=>y.id!==x.id));$('#modal').close();renderSettings();};}
 async function previewImport(file){if(!file)return;try{if(file.size>20*1024*1024)throw Error('Backup exceeds the 20 MB import limit.');const next=validateBackup(JSON.parse(await file.text()));dialog(`<form><h2>Review backup import</h2><p>This replaces the complete database on this device. It does not merge devices.</p><p><strong>${next.students.length} students · ${next.lessons.length} lessons · ${next.appointments.length} appointments · ${next.trials.length} trials · ${next.snippets.length} shortcuts</strong></p><p>Currently on this device: ${state.students.length} students and ${state.lessons.length} lessons, plus ${state.appointments.length} appointments and ${state.trials.length} trials.</p><button type="button" class="secondary" id="safetyBackup">Download current backup first</button><label class="check"><input type="checkbox" required>I understand that existing data will be replaced.</label><label>TYPE REPLACE TO CONFIRM<input name="confirmation" pattern="REPLACE" required autocomplete="off"></label><div class="toolbar"><button class="danger" type="submit">Replace data</button><button class="secondary" type="button" data-close>Cancel</button></div></form>`,async()=>{if(!await ready())throw Error('Save pending edits first.');state=await replaceState(next);channel?.postMessage('changed');automatic();sounds.configure(state.settings);applyMobileScale(state.settings.uiScale);notice('Backup restored successfully.','accept');});$('#safetyBackup').onclick=()=>exportBackup().catch(error);}catch(e){error(e);}}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>navigate(b.dataset.view));
+$('#error').title='Tap to dismiss this error';
+$('#error').tabIndex=0;
+$('#error').onclick=clearGlobalError;
+$('#error').onkeydown=e=>{if(e.key==='Enter'||e.key===' '||e.key==='Escape'){e.preventDefault();clearGlobalError();}};
 window.addEventListener('unhandledrejection',e=>{error(e.reason||Error('An operation failed.'));});
 window.addEventListener('beforeunload',e=>{if(pending||saveFailure){e.preventDefault();e.returnValue='';}});
 channel&&(channel.onmessage=()=>{notice('Data changed in another tab. Finish this note before navigating. Avoid editing the same lesson in two tabs.');});
