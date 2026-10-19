@@ -195,3 +195,11 @@ This release upgrades the **application JSON schema to v6** (from v5) with a \`h
 **Before updating:** Export a complete JSON backup outside the browser/PWA, keep it available, then update all app files together at the existing HTTPS origin. Close and reopen the installed app online to load the new offline shell; confirm OFFLINE READY, then test a throwaway holiday and an explicit make-up appointment in airplane mode. Never clear browser data just to refresh the UI.
 
 **Limits:** This is a manual, date-range teaching closure, not a German school-holiday importer, official holiday calendar, or automatic rescheduler. An entire break does not create make-up appointments or cancel already explicitly booked sessions. Existing overlapping appointments may need manual adjustment when a break is removed.
+
+
+## LCARS schedule polish 1.7.1
+Schedule action buttons now sit immediately **under the SCHEDULE heading**, with a coherent LCARS four-color segmented toolbar (two double segments on phones) and individually appropriate end-cap shapes. The generic grey feature-summary sentence is removed. The date selector uses hand-coded inline vector/SVG control graphics rather than Unicode/emoji arrows, with labelled previous/next controls and unchanged Day/Week/Today behavior.
+
+Modal validation errors (including **"Holiday end date must be on or after the start date"**) appear **only in the dialog**. They vanish when you edit a form field, dismiss the warning, close or cancel the dialog, or after ten seconds. Errors outside a dialog are explicitly dismissible by clicking/tapping their banner or navigating to another view. These changes do not alter any student, holiday, booking or backup records.
+
+Offline asset cache advances to **v12**, still the same schema-v6 local data. Before any upgrade keep an external JSON backup; close/reopen online to let the service worker cache the modified JS/CSS and test offline again.

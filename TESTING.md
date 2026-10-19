@@ -98,3 +98,11 @@ The repository CI now runs Node 22 syntax checks and all Node regression tests, 
 - Never list a closed day as AVAILABLE solely from teaching hours, but allow **Book make-up** on its holiday banner. Verify overlapping manual bookings remain subject to collision warning.
 - Backup migration: old schema-5 JSON loads into schema 6 with \`holidays: []\`; new schema-6 backup roundtrips all periods. Invalid dates, duplicate IDs and missing holiday arrays are rejected. Older releases cannot safely import schema 6.
 - iPhone PWA portrait: switch Day/Week after selecting Wednesday; navigate Next/Previous, add/edit/remove a holiday, create a make-up, check red trial colors, verify all text inputs/dialog controls visible and scrolling within the single-window layout. Reopen online after cache update, test offline in airplane mode.
+
+
+## Schedule LCARS toolbar and validation cleanup — 1.7.1
+- Schedule heading contains the 4 action buttons **directly beneath SCHEDULE** in a single desktop LCARS segmented strip; the former grey explanatory subtitle is removed. On phones it becomes two two-panel strips with position-specific outer rounded ends; no clipped controls at 75–80% mobile scale.
+- Navigation arrows are SVG paths, not emoji glyphs or Unicode black triangles. Left/right controls are labeled for screen readers. Date text remains editable and Day/Week/Today behavior stays unchanged.
+- Open Schedule → Holiday break and submit a reverse date range. Confirm the specific validation error is shown in the dialog only, not as a permanent main-page alert. Correct either date, cancel, press Escape or tap the warning; each action dismisses it. With no interaction, the dialog error disappears after 10 seconds.
+- Check other error conditions: errors outside modals are still visible until dismissed by tapping the message or switching views. A critical unsaved-note warning must not be silently lost before it is handled.
+- Automated UI source/isolated dialog simulation tests plus Node syntax checks. Native iPhone/Firefox LCARS CSS and input behavior still require real-device verification.
