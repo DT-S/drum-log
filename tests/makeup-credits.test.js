@@ -113,11 +113,13 @@ test('backup roundtrip preserves manual credit values and teacher origin; invali
  assert.throws(()=>validateBackup({...s,schemaVersion:9}),/unsupported schema/);
 });
 
-test('mobile caps and cancel UI affordances are present without emoji icons',()=>{
+test('three mobile terminal caps and cancellation UI affordances are present',()=>{
  const css=readFileSync(new URL('../schedule.css',import.meta.url),'utf8');
  const app=readFileSync(new URL('../app.js',import.meta.url),'utf8');
- assert.match(css,/#schedule \.schedule-actions #addTrial\s*\{\s*border-radius:3px 24px 24px 3px/);
- assert.match(css,/#schedule \.schedule-actions #addHoliday\s*\{\s*border-radius:24px 3px 3px 24px/);
+ assert.match(css,/#schedule \.schedule-actions button:first-child\{border-radius:20px 0 0 20px\}/);
+ assert.match(css,/#schedule \.schedule-actions button:not\(:first-child\):not\(:last-child\)\{border-radius:0\}/);
+ assert.match(css,/#schedule \.schedule-actions button:last-child\{border-radius:0 20px 20px 0\}/);
+ assert.match(css,/#schedule \.schedule-actions\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\);gap:4px\}/);
  assert.match(app,/name="cancelledBy"/);
  assert.match(app,/Me \/ teacher \(\+1 make-up lesson\)/);
  assert.match(app,/name="makeupBalance" type="number"/);
