@@ -11,11 +11,21 @@ export function dayEvents(state,date){
  const events=new Map(),students=state.students.filter(s=>!s.archived);
  const closed=isHolidayDate(state.holidays||[],date);
  for(const student of students){
-  if(!closed&&isTeachingDay(student,date)){
+  if(!closed&&isTeachingDay(student,date)&&!(state.lessonOverrides||[]).some(o=>o.studentId===student.id&&o.originalDate===date&&o.originalTime===student.time)){
    const event={key:uid(student.id,date,student.time),kind:'regular',studentId:student.id,
     name:student.name,date,time:student.time,duration:student.duration,label:'Regular lesson'};
    events.set(event.key,event);
   }
+ }
+ // Recurring occurrence edits remain visible on their rescheduled date, even
+ // when the original weekly occurrence was suppressed or in a holiday break.
+ for(const o of state.lessonOverrides||[]){
+  if(o.date!==date)continue;
+  const person=students.find(s=>s.id===o.studentId);if(!person)continue;
+  const event={key:uid(person.id,date,o.time),kind:'regular',studentId:person.id,
+   name:person.name,date,time:o.time,duration:o.duration,label:'Adjusted lesson',
+   originalDate:o.originalDate,originalTime:o.originalTime,isOverride:true};
+  events.set(event.key,event);
  }
  for(const a of state.appointments){
   if(a.date!==date)continue;
@@ -116,6 +126,57 @@ export function saveCalendarEvent(state,item){
 export function removeCalendarEvent(state,id){
  if(!(state.calendarEvents||[]).some(e=>e.id===id))throw Error('This event no longer exists.');
  state.calendarEvents=state.calendarEvents.filter(e=>e.id!==id);
+}
+// An occurrence edit is a one-time plan change, not a cancellation and not a
+// credit transaction. Its immutable origin anchors the overridden recurrence.
+// Detect clashes on the *destination* projection with the original suppressed,
+// before touching IndexedDB state. No duplicate weekly event or ghost slot.
+export function saveLessonOverride(state,key,edit){
+ if(!key||!validDate(key.date)||!validTime(key.time)||!validDate(edit?.date)||!validTime(edit?.time)||
+  !Number.isInteger(edit.duration)||edit.duration<1||edit.duration>1440)
+  throw Error('Enter a valid lesson date, start time and duration.');
+ const overrides=state.lessonOverrides||[];
+ let old=overrides.find(o=>o.studentId===key.studentId&&o.originalDate===key.date&&o.originalTime===key.time);
+ const actual=old?dayEvents(state,old.date).find(e=>e.isOverride&&e.studentId===key.studentId&&e.originalDate===key.date&&e.originalTime===key.time):
+  dayEvents(state,key.date).find(e=>e.kind==='regular'&&!e.isOverride&&e.studentId===key.studentId&&e.time===key.time);
+ const profile=state.students.find(s=>s.id===key.studentId&&!s.archived&&s.schedule!=='flexible');
+ if(!profile||!actual)throw Error('This recurring lesson is no longer scheduled. Reload the schedule.');
+ if(actual.cancelled)throw Error('Restore the cancelled lesson before changing its time.');
+ if(state.cancellations.some(c=>c.studentId===key.studentId&&c.date===key.date&&c.time===key.time&&!c.appointmentId))
+  throw Error('This original lesson is cancelled. Restore it first.');
+ // Do not allow the new slot to adopt an unrelated cancellation.
+ if(state.cancellations.some(c=>c.studentId===key.studentId&&c.date===edit.date&&c.time===edit.time&&!c.appointmentId))
+  throw Error('Another cancelled lesson occupies the target slot. Restore it first.');
+ const item={studentId:key.studentId,originalDate:key.date,originalTime:key.time,
+  date:edit.date,time:edit.time,duration:edit.duration};
+ const others=overrides.filter(o=>!(o.studentId===key.studentId&&o.originalDate===key.date&&o.originalTime===key.time));
+ const proposed={...state,lessonOverrides:[...others,{...item,date:'1970-01-01'}]};
+ const clash=hasCollision(proposed,edit.date,edit.time,edit.duration);
+ if(clash)throw Error('Schedule conflict: '+clash.name+' at '+clash.time+'. Choose another time.');
+ state.lessonOverrides=[...others,item];
+ return item;
+}
+export function resetLessonOverride(state,key){
+ const overrides=state.lessonOverrides||[];
+ const item=overrides.find(o=>o.studentId===key.studentId&&o.originalDate===key.date&&o.originalTime===key.time);
+ if(!item)throw Error('This lesson has no one-time adjustment.');
+ const event=dayEvents(state,item.date).find(e=>e.isOverride&&e.studentId===key.studentId&&
+  e.originalDate===item.originalDate&&e.originalTime===item.originalTime);
+ if(!event)throw Error('Adjusted lesson no longer exists.');
+ if(event.cancelled)throw Error('Restore the cancelled lesson before resetting it.');
+ const others=overrides.filter(o=>o!==item);
+ const candidate={...state,lessonOverrides:others};
+ const person=state.students.find(s=>s.id===item.studentId);
+ if(!person)throw Error('Student profile no longer exists.');
+ const regular=isTeachingDay(person,item.originalDate)&&!isHolidayDate(state.holidays||[],item.originalDate);
+ if(regular){
+  // Keep the restored original recurrence out of the collision calculation
+  // without accidentally hiding unrelated appointments with the same name.
+  const check={...state,lessonOverrides:[...others,{...item,date:'1970-01-01'}]};
+  const clash=hasCollision(check,item.originalDate,item.originalTime,person.duration);
+  if(clash)throw Error('Cannot reset: '+clash.name+' is now booked at '+clash.time+'.');
+ }
+ state.lessonOverrides=others;
 }
 export function cancelLesson(state,key,reason='cancelled',cancelledBy='student'){
  const target=dayEvents(state,key.date).find(e=>e.studentId===key.studentId&&e.time===key.time);

@@ -1,5 +1,5 @@
 export const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-export const defaults=()=>({schemaVersion:9,students:[],trials:[],appointments:[],calendarEvents:[],cancellations:[],holidays:[],lessons:[],snippets:[['WDH','Review: '],['Timing','Timing: '],['Technique','Technique: '],['Grooves','Grooves: '],['Rudiments','Rudiments: '],['Homework','Homework: ']].map(([label,text],i)=>({id:'snippet-'+i,label,text})),settings:{backupReminder:true,lastBackup:null,soundEnabled:true,soundVolume:0.35,uiScale:80,teachingHours:[null,null,null,null,null,null,null]}});
+export const defaults=()=>({schemaVersion:10,lessonOverrides:[],students:[],trials:[],appointments:[],calendarEvents:[],cancellations:[],holidays:[],lessons:[],snippets:[['WDH','Review: '],['Timing','Timing: '],['Technique','Technique: '],['Grooves','Grooves: '],['Rudiments','Rudiments: '],['Homework','Homework: ']].map(([label,text],i)=>({id:'snippet-'+i,label,text})),settings:{backupReminder:true,lastBackup:null,soundEnabled:true,soundVolume:0.35,uiScale:80,teachingHours:[null,null,null,null,null,null,null]}});
 export const localDate=(d=new Date())=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 export const minutes=t=>Number(t.slice(0,2))*60+Number(t.slice(3));
 export function appointment(s,date){const d=new Date(date);d.setHours(...s.time.split(':').map(Number),0,0);return d;}
@@ -14,7 +14,7 @@ export function isTeachingDay(s,date){
 export function isHolidayDate(holidays,date){
  return holidays.some(h=>h.startDate<=date&&date<=h.endDate);
 }
-export function selectScheduled(students,now=new Date(),appointments=[],trials=[],cancellations=[],holidays=[]){
+export function selectScheduled(students,now=new Date(),appointments=[],trials=[],cancellations=[],holidays=[],lessonOverrides=[]){
  const current=[],next=[];
  for(const s of students.filter(s=>!s.archived&&scheduleType(s)!=='flexible')){
   const base=new Date(now);base.setDate(base.getDate()-1);base.setHours(12,0,0,0);
@@ -38,10 +38,17 @@ export function selectScheduled(students,now=new Date(),appointments=[],trials=[
    if(!extended)break;
   }
   for(let offset=0;offset<=horizon;offset++){
-   const day=new Date(base);day.setDate(day.getDate()+offset);if(!isTeachingDay(s,localDate(day))||isHolidayDate(holidays,localDate(day)))continue;
+   const day=new Date(base);day.setDate(day.getDate()+offset);if(!isTeachingDay(s,localDate(day))||isHolidayDate(holidays,localDate(day))||lessonOverrides.some(o=>o.studentId===s.id&&o.originalDate===localDate(day)&&o.originalTime===s.time))continue;
    const start=appointment(s,day),end=new Date(+start+s.duration*60000);
    if(start<=now&&now<end)current.push({student:s,start});else if(start>now)next.push({student:s,start});
   }
+ }
+ for(const change of lessonOverrides){
+  const person=students.find(s=>s.id===change.studentId&&!s.archived);
+  if(!person)continue;
+  const start=new Date(change.date+'T'+change.time+':00'),end=new Date(+start+change.duration*60000);
+  const item={student:person,start,override:change};
+  if(start<=now&&now<end)current.push(item);else if(start>now)next.push(item);
  }
  for(const extra of appointments){
   const student=students.find(s=>s.id===extra.studentId&&!s.archived);if(!student)continue;
@@ -56,7 +63,7 @@ export function selectScheduled(students,now=new Date(),appointments=[],trials=[
   if(start<=now&&now<end)current.push(item);else if(start>now)next.push(item);
  }
  const isAllowed=x=>{
-  const date=localDate(x.start),time=x.appointment?.time||x.student.time;
+  const date=localDate(x.start),time=x.appointment?.time||x.override?.time||x.student.time;
   return !cancellations.some(c=>c.studentId===x.student.id&&c.date===date&&c.time===time&&
    (x.appointment?
     // Legacy cancellations without an appointmentId still affect explicit
@@ -78,13 +85,13 @@ export function todayLesson(s,lessons,now=new Date()){
  return {date,time:s.time,duration:s.duration};
 }
 // Additive version upgrade: lesson records are deliberately untouched.
-export function migrateState(state){if(state.schemaVersion===1)state.schemaVersion=2;if(state.schemaVersion===2){state.appointments=[];state.schemaVersion=3;}if(state.schemaVersion===3){state.trials=[];state.schemaVersion=4;}if(state.schemaVersion===4){state.cancellations=[];state.settings.teachingHours=[null,null,null,null,null,null,null];state.schemaVersion=5;}if(state.schemaVersion===5){state.holidays=[];state.schemaVersion=6;}if(state.schemaVersion===6){state.schemaVersion=7;}if(state.schemaVersion===7){state.schemaVersion=8;}if(state.schemaVersion===8){state.calendarEvents=[];state.schemaVersion=9;}if(state.schemaVersion!==9)throw Error('This database needs a newer version of Drum Log.');return state;}
+export function migrateState(state){if(state.schemaVersion===1)state.schemaVersion=2;if(state.schemaVersion===2){state.appointments=[];state.schemaVersion=3;}if(state.schemaVersion===3){state.trials=[];state.schemaVersion=4;}if(state.schemaVersion===4){state.cancellations=[];state.settings.teachingHours=[null,null,null,null,null,null,null];state.schemaVersion=5;}if(state.schemaVersion===5){state.holidays=[];state.schemaVersion=6;}if(state.schemaVersion===6){state.schemaVersion=7;}if(state.schemaVersion===7){state.schemaVersion=8;}if(state.schemaVersion===8){state.calendarEvents=[];state.schemaVersion=9;}if(state.schemaVersion===9){state.lessonOverrides=[];state.schemaVersion=10;}if(state.schemaVersion!==10)throw Error('This database needs a newer version of Drum Log.');return state;}
 export const lessonKey=(studentId,date,time)=>JSON.stringify([studentId,date,time]);
 export const validDate=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&localDate(new Date(v+'T12:00:00'))===v;
 export const validTime=v=>typeof v==='string'&&/^([01]\d|2[0-3]):[0-5]\d$/.test(v);
 export function validateBackup(raw){
  const fail=m=>{throw Error('Invalid backup: '+m);};const str=(v,max=200000)=>typeof v==='string'&&v.length<=max;
- if(!raw||![1,2,3,4,5,6,7,8,9].includes(raw.schemaVersion))fail('unsupported schema version.');
+ if(!raw||![1,2,3,4,5,6,7,8,9,10].includes(raw.schemaVersion))fail('unsupported schema version.');
  if(!Array.isArray(raw.students)||!Array.isArray(raw.lessons)||!Array.isArray(raw.snippets))fail('missing data collections.');
  const ids=new Set();for(const s of raw.students){
   if(!s||!str(s.id,100)||!s.id||ids.has(s.id)||!str(s.name,200)||!s.name.trim()||!Number.isInteger(s.duration)||s.duration<1||s.duration>1440||!str(s.remarks)||typeof s.archived!=='boolean'||(s.makeupBalance!==undefined&&(!Number.isSafeInteger(s.makeupBalance)||s.makeupBalance<0||s.makeupBalance>9999)))fail('student record.');
@@ -101,6 +108,19 @@ export function validateBackup(raw){
  for(const a of appointments){
   if(!a||!str(a.id,100)||!a.id||appointmentIds.has(a.id)||!ids.has(a.studentId)||!validDate(a.date)||!validTime(a.time)||!Number.isInteger(a.duration)||a.duration<1||a.duration>1440||!str(a.label,200)||(a.redeemedCredit!==undefined&&typeof a.redeemedCredit!=='boolean')||(a.redeemedCredit===true&&a.label.trim().toLowerCase()!=='make-up lesson'))fail('appointment record.');
   const slot=lessonKey(a.studentId,a.date,a.time);if(appointmentSlots.has(slot))fail('duplicate appointment.');appointmentIds.add(a.id);appointmentSlots.add(slot);
+ }
+ const lessonOverrides=raw.lessonOverrides??(raw.schemaVersion<10?[]:null);
+ if(!Array.isArray(lessonOverrides)||lessonOverrides.length>10000)fail('lesson overrides collection.');
+ const overrideKeys=new Set();
+ for(const o of lessonOverrides){
+  if(!o||!ids.has(o.studentId)||!validDate(o.originalDate)||!validTime(o.originalTime)||
+   !validDate(o.date)||!validTime(o.time)||
+   !Number.isInteger(o.duration)||o.duration<1||o.duration>1440)fail('lesson override.');
+  const profile=raw.students.find(s=>s.id===o.studentId);
+  if(scheduleType(profile)==='flexible')fail('lesson override requires recurring student.');
+  const origin=lessonKey(o.studentId,o.originalDate,o.originalTime);
+  if(overrideKeys.has(origin))fail('duplicate lesson override.');
+  overrideKeys.add(origin);
  }
  const calendarEvents=raw.calendarEvents??(raw.schemaVersion<9?[]:null);
  if(!Array.isArray(calendarEvents)||calendarEvents.length>10000)fail('calendar events collection.');
@@ -142,7 +162,7 @@ export function validateBackup(raw){
  if(raw.settings.uiScale!==undefined&&(!Number.isInteger(raw.settings.uiScale)||raw.settings.uiScale<65||raw.settings.uiScale>100||raw.settings.uiScale%5!==0))fail('mobile UI scale.');
  const teachingHours=raw.settings.teachingHours??(raw.schemaVersion<5?[null,null,null,null,null,null,null]:null);
  if(!Array.isArray(teachingHours)||teachingHours.length!==7||!teachingHours.every(h=>h===null||(h&&validTime(h.start)&&validTime(h.end)&&h.start<h.end)))fail('teaching hours.');
- return {schemaVersion:9,calendarEvents:calendarEvents.map(({id,title,date,time,duration,type,people,notes})=>({id,title,date,time,duration,type,people,notes})),holidays:holidays.map(({id,startDate,endDate,label})=>({id,startDate,endDate,label})),cancellations:cancellations.map(({studentId,date,time,reason,appointmentId,cancelledBy})=>({studentId,date,time,reason,...(appointmentId?{appointmentId}:{}),...(cancelledBy?{cancelledBy}:{})})),trials:trials.map(({id,name,date,time,duration,contact,remarks,notes,archived})=>({id,name,date,time,duration,contact,remarks,notes,archived})),appointments:appointments.map(({id,studentId,date,time,duration,label,redeemedCredit})=>({id,studentId,date,time,duration,label,...(redeemedCredit?{redeemedCredit:true}:{})})),students:raw.students.map(({id,name,day,time,duration,remarks,archived,schedule,anchorDate,makeupBalance})=>({id,name,day,time,duration,remarks,archived,...(schedule?{schedule}:{}),...(schedule==='biweekly'?{anchorDate}:{}),...(makeupBalance!==undefined?{makeupBalance}:{})})),lessons:raw.lessons.map(({id,studentId,date,time,duration,notes})=>({id,studentId,date,time,duration,notes})),snippets:raw.snippets.map(({id,label,text})=>({id,label,text})),settings:{backupReminder:raw.settings.backupReminder,lastBackup:raw.settings.lastBackup,soundEnabled:raw.settings.soundEnabled??true,soundVolume:raw.settings.soundVolume??0.35,uiScale:raw.settings.uiScale??80,teachingHours:teachingHours.map(h=>h?{start:h.start,end:h.end}:null)}};
+ return {schemaVersion:10,lessonOverrides:lessonOverrides.map(({studentId,originalDate,originalTime,date,time,duration})=>({studentId,originalDate,originalTime,date,time,duration})),calendarEvents:calendarEvents.map(({id,title,date,time,duration,type,people,notes})=>({id,title,date,time,duration,type,people,notes})),holidays:holidays.map(({id,startDate,endDate,label})=>({id,startDate,endDate,label})),cancellations:cancellations.map(({studentId,date,time,reason,appointmentId,cancelledBy})=>({studentId,date,time,reason,...(appointmentId?{appointmentId}:{}),...(cancelledBy?{cancelledBy}:{})})),trials:trials.map(({id,name,date,time,duration,contact,remarks,notes,archived})=>({id,name,date,time,duration,contact,remarks,notes,archived})),appointments:appointments.map(({id,studentId,date,time,duration,label,redeemedCredit})=>({id,studentId,date,time,duration,label,...(redeemedCredit?{redeemedCredit:true}:{})})),students:raw.students.map(({id,name,day,time,duration,remarks,archived,schedule,anchorDate,makeupBalance})=>({id,name,day,time,duration,remarks,archived,...(schedule?{schedule}:{}),...(schedule==='biweekly'?{anchorDate}:{}),...(makeupBalance!==undefined?{makeupBalance}:{})})),lessons:raw.lessons.map(({id,studentId,date,time,duration,notes})=>({id,studentId,date,time,duration,notes})),snippets:raw.snippets.map(({id,label,text})=>({id,label,text})),settings:{backupReminder:raw.settings.backupReminder,lastBackup:raw.settings.lastBackup,soundEnabled:raw.settings.soundEnabled??true,soundVolume:raw.settings.soundVolume??0.35,uiScale:raw.settings.uiScale??80,teachingHours:teachingHours.map(h=>h?{start:h.start,end:h.end}:null)}};
 }
 export function csv(rows){const cell=v=>{let s=String(v??'');if(/^[\s]*[=+@-]/.test(s)||/^[\t\r\n]/.test(s))s="'"+s;return '"'+s.replaceAll('"','""')+'"';};return '\ufeff'+rows.map(r=>r.map(cell).join(';')).join('\r\n');}
 

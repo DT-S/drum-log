@@ -120,12 +120,12 @@ test('schema-8 backups import with empty independent event list and unchanged ex
  s.schemaVersion=8;delete s.calendarEvents;
  const old=json(s);
  const imported=validateBackup(old);
- assert.equal(imported.schemaVersion,9);
+ assert.equal(imported.schemaVersion,10);
  assert.deepEqual(imported.calendarEvents,[]);
  assert.deepEqual(imported.students,old.students);
  assert.deepEqual(imported.lessons,old.lessons);
  const migrated=migrateState(json(s));
- assert.equal(migrated.schemaVersion,9);
+ assert.equal(migrated.schemaVersion,10);
  assert.deepEqual(migrated.calendarEvents,[]);
  assert.deepEqual(migrated.lessons,old.lessons);
 });
@@ -146,7 +146,7 @@ test('invalid and malformed independent calendar events reject whole backup',()=
  for(const collection of invalid)assert.throws(()=>validateBackup({...s,calendarEvents:collection}),/Invalid backup: calendar event/);
  const noEvents=json(s);delete noEvents.calendarEvents;
  assert.throws(()=>validateBackup(noEvents),/Invalid backup: calendar events collection/);
- assert.throws(()=>validateBackup({...s,schemaVersion:10}),/unsupported schema/);
+ assert.throws(()=>validateBackup({...s,schemaVersion:11}),/unsupported schema/);
 });
 
 test('UI offers a studentless event editor without adding another Schedule header button',()=>{

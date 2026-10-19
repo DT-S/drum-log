@@ -137,3 +137,14 @@ The repository CI now runs Node 22 syntax checks and all Node regression tests, 
 - During a holiday break an independent event stays visible, but regular recurring lessons remain suspended.
 - Export a full JSON backup; confirm event collection/title/type/people/notes survive reimport. Import a schema-8 backup; event collection defaults empty and old lesson notes remain intact. Schema-9 backups should be refused by versions 1.8.x or lower.
 - At iPhone scale 75–80% confirm no horizontal clipping in the new modal, Schedule events remain readable, and offline reopen after cache v15 displays saved events. Verify the original three LCARS Schedule buttons are unchanged.
+
+
+## v1.10.0 single-occurrence lesson editing
+- On a weekly 45-minute lesson, Schedule → **Edit lesson** → Minutes: 90 → Save this lesson only. The chosen date is now 90 min, next week's normal lesson stays 45 min. The student timetable and credit balance do not change.
+- Edit the same adjusted lesson again, moving it to a new date and time. Its original weekly occurrence disappears (no duplicate); the moved event appears once in Day and rolling Week. **Follow schedule** may automatically select it at its new date/time.
+- **Reset to regular schedule** restores the original date, start and current regular duration without losing existing journal notes. Open the changed lesson in Lesson log: the note editor must still display the original lesson record; the label states its original date/time.
+- Try extension into the next student's lesson, a trial, an independently booked recording/jam, another one-off lesson or an overnight session. Save must fail without changing bookings, cancellation rows or make-up balances.
+- If a moved lesson is explicitly cancelled, restore that cancellation before editing/resetting. Normal teacher/student cancellation credit policy must still work; a pure move or duration change does not add or consume credits.
+- Reset after an unrelated recording or booking has occupied the original slot must be refused. Holiday closures still hide ordinary recurring lessons; explicit moved overrides stay visible until reset.
+- JSON export/import must preserve lessonOverrides as well as all old notes and scheduled appointments. A v9 backup migrates to empty overrides; v10 backup is rejected by old releases.
+- iPhone PWA: modal text/date/time controls, 90-min duration field, save/restore/reset flow, legible day/week rows, offline use after v16 update. Run Node unit suite and JS syntax checks; do not clear site data.

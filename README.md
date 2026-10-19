@@ -245,3 +245,17 @@ Calendar entries display as **cyan LCARS blocks** in the Day and rolling Week sc
 **Database schema 9** adds an independent \`calendarEvents[]\` collection. Existing schema 1–8 backups import safely with an empty collection, while new backups contain every event, attendee description and note. IndexedDB's internal version remains 1. Old application releases cannot import new schema-9 backups. App v1.9.0 updates the offline cache to **v15**.
 
 Before upgrading, store a full external JSON backup. Reopen once online after publishing, verify the Schedule editor and backup export/import, and test offline on iPhone/iPad without clearing browser data. General events are single-date appointments, not recurring bookings or notification alerts.
+
+
+## v1.10.0 — edit one scheduled lesson without changing the weekly schedule
+Schedule → a **regular weekly or fortnightly lesson** → **Edit lesson** edits its date, start time or duration **only for the chosen occurrence**. For a spontaneous double lesson set **90 minutes**, for example. The following weeks retain their original 45-minute duration. Explicit extra / make-up appointments already have their own Edit appointment workflow, which remains unchanged.
+
+Each one-off change is stored as a distinct **lessonOverrides[]** entry keyed by **student ID + original date + original time**, recording the new date, start and duration. The old weekly slot is *suppressed rather than cancelled*, and the new slot is displayed exactly once in the Schedule (Day and Week) and automatic journal selection. A changed lesson can later be edited again. **Reset to regular schedule** removes the one-time adjustment if the original slot is still free. Reset and edit are blocked while that adjusted booking is cancelled; first restore it.
+
+All target slots are checked for conflicts with lessons, trials, recording/jam events and other overrides, including bookings crossing midnight. Conflict rejection leaves original data untouched. **Edits, moves and resets do not create cancellations, appointments or make-up credit changes.** A separately initiated genuine cancellation of an adjusted lesson follows the usual teacher/student credit policy.
+
+Existing journal notes are **left intact at their original record date and time**, rather than moved or overwritten. Opening the moved occurrence in Lesson log reads/writes that original note record, with a label explaining the link. This preserves historical note IDs and data; the history index retains the original record date/time.
+
+Backups now use **schema 10**; old schema 1–9 JSON backups migrate with an empty overrides collection, and original student history, trials, appointments, holidays, external events and credit balances are retained. New schema-10 backups cannot be imported into older app releases. IndexedDB internal version remains unchanged; the offline cache bumps to **v16**.
+
+**Upgrade:** Keep an external JSON backup before merging, reload online once for PWA cache v16, and verify 45→90→reset on a real phone. Never clear browser data.
