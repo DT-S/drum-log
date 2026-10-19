@@ -232,3 +232,16 @@ The app JSON format is now **schema 7**. Existing schema 1–6 local records and
 - Backup format moves **v7 → v8**, without wiping the existing IndexedDB database. Old v1–v7 backups can still be imported. New v8 backups cannot be read by releases before 1.8.1. Offline app-shell cache v14.
 
 This deliberately supersedes the v1.8.0 manual-after-completion assumption in the earlier documentation. **Before updating, export an external JSON backup**, then reopen the app online so the service worker can cache updated files; confirm OFFLINE READY, then test in airplane mode. Never clear browser website data.
+
+
+## Standalone recording, jam and other calendar events — v1.9.0
+
+**Schedule → Add appointment → Recording / Jam / Other (no student)** opens a separate event editor. You can also expand **Other events · Recording / Jam / More** in Schedule to add or edit an event, even with no student profiles in the database. Each event has a **title**, type (**Recording session**, **Jam / Making music together**, or **Other event**), date, 24-hour start time, duration in minutes, and optional people/band and notes. Records can be edited, moved or deleted.
+
+These events have unique identifiers independent of their text: **the same person or identical session title may appear on any number of different dates**. They are never trials or student lessons, cannot be converted into students, and never change make-up credit balances or student lesson logs. Existing trial functionality stays intact: trial record names are not used as IDs, but trials are meant for potential students rather than ordinary music sessions.
+
+Calendar entries display as **cyan LCARS blocks** in the Day and rolling Week schedule and remain visible during holiday breaks. Their occupied time reduces free availability. New events and student appointments are checked for conflicts with an already booked recording/jam (including events crossing midnight); saving a conflict is rejected without modifying student balances or previous records. The **Other events** section lists upcoming and past entries for editing.
+
+**Database schema 9** adds an independent \`calendarEvents[]\` collection. Existing schema 1–8 backups import safely with an empty collection, while new backups contain every event, attendee description and note. IndexedDB's internal version remains 1. Old application releases cannot import new schema-9 backups. App v1.9.0 updates the offline cache to **v15**.
+
+Before upgrading, store a full external JSON backup. Reopen once online after publishing, verify the Schedule editor and backup export/import, and test offline on iPhone/iPad without clearing browser data. General events are single-date appointments, not recurring bookings or notification alerts.
