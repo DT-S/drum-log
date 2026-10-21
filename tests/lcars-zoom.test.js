@@ -39,7 +39,8 @@ test('zoom guard never binds on desktop pointer devices',()=>{
 test('coarse touch CSS blocks pinch but allows scrolling and 16px input text',()=>{
  const css=read('lcars-zoom.css'),html=read('index.html'),app=read('app.js'),sw=read('sw.js');
  assert.match(css,/touch-action:\s*pan-x pan-y/);
- assert.doesNotMatch(css,/touch-action:\s*none|touch-action:\s*manipulation/);
+ const declarations=css.replace(/\/\*[\s\S]*?\*\//g,'');
+ assert.doesNotMatch(declarations,/touch-action:\s*none|touch-action:\s*manipulation/);
  assert.match(css,/@media\s*\(any-pointer:\s*coarse\)/);
  assert.match(css,/font-size:\s*max\(16px,\s*1em\)/);
  assert.match(app,/installZoomGuard\(document\)/);
