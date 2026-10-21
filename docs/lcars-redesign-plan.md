@@ -22,7 +22,7 @@ The two apps remain independent. Do not import the metronome's scheduler, chart 
 ### M0. Audit and release baseline [complete]
 Review `index.html`, `style.css`, `mobile.css`, `schedule.css`, `sound.js`, `app.js`, `core.js`, `db.js`, SW, current tests and metronome's LCARS cue registry. Record that `sounds/soundsv2/` already contains the new 15 supplied MP3s. Confirm `main` currently passes GitHub Actions.
 
-### M1. Design tokens + sound foundation [in progress]
+### M1. Design tokens + sound foundation [code complete; device acceptance pending]
 - Add `lcars-refresh.css` *after* existing styles to give the app the same lavender/orange/amber/peach/blue family and recognizable segmented LCARS surface, retaining established desktop/phone layout geometry.
 - Connect original `sounds/soundsv2/*.mp3` files to semantic UI events. Keep legacy `Acceptsound.mp3` for success.
 - Navigation: short `keypress_standart` plus the original menu/window-change sample, without cutting the first sound off. Other controls: hover, secondary toggle, modal dismiss, warnings, invalid input and confirmation where appropriate.
@@ -50,4 +50,5 @@ Drum Log is already used for real teaching records. A full-screen gate and new s
 
 ## Milestone log
 - Baseline GitHub Actions on `main`: success for commit `a99428f0845b7844e8dcc5e8f686f6b4c36830f1`.
-- M1 source and test results: update when CI completes.
+- M1 branch commit before acceptance notes: `fec1d7afcdb4267d2c44e9c7b734c512ee4e71a0`. `npm test` in GitHub Actions: **139 of 139 passing** on both branch push and draft-PR, including original audio/data regressions and new layered-navigation/offline file tests. Check GitHub Actions for subsequent commits.
+- M1 manual browser acceptance remains pending (see `TESTING.md`). The live `main` site has not changed and should not be used to test experimental code.
