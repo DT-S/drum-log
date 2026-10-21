@@ -145,6 +145,13 @@ try{
    await page.locator('#students [data-open]').first().click();
    assert.equal(await page.locator('#journal.lcars-view-enter').count(),1,
     `${label}: Student to Journal also requires LCARS construction`);
+   if(vp.width<=600){
+    const history=page.locator('#journal [data-mobile-pane="history"]');
+    await history.click();
+    assert.equal(await history.evaluate(el=>el.classList.contains('lcars-pane-ack')),true,
+     `${label}: history key needs LCARS mode feedback`);
+    await page.locator('#journal [data-mobile-pane="notes"]').click();
+   }
    const notes=page.locator('#notes');
    await notes.waitFor({state:'visible'});
    assert.equal(await notes.count(),1,`${label}: journal missing after opening synthetic student`);
@@ -164,6 +171,12 @@ try{
     assert.ok(schedule[i].width>=35&&schedule[i].height>=35,`${label}: schedule touch target ${i} too small`);
     if(i>0)assert.ok(schedule[i].x>=schedule[i-1].right-1,`${label}: schedule actions overlap`);
    }
+   await page.locator('#planWeek').click();
+   assert.equal(await page.locator('#schedule.lcars-view-enter').count(),1,
+    `${label}: Week mode should rebuild the LCARS schedule`);
+   await page.locator('#planDay').click();
+   assert.equal(await page.locator('#schedule.lcars-view-enter').count(),1,
+    `${label}: Day mode should rebuild the LCARS schedule`);
    await page.locator('nav [data-view="settings"]').click();
    await page.locator('#soundEnabled').waitFor({state:'visible'});
    assert.equal(await page.locator('#soundEnabled').count(),1);
