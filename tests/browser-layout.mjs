@@ -106,7 +106,7 @@ try{
    assert.equal(launchPhase.booting,true,`${label}: main chassis not assembling`);
    assert.equal(launchPhase.viewBoot,true,`${label}: first page missing long boot`);
    assert.match(launchPhase.elbow,/dl-assembly-elbow/);
-   assert.match(launchPhase.rail,/dl-assembly-extend/);
+   assert.match(launchPhase.rail,/dl-assembly-appear/);
    assert.equal(launchPhase.versionVisible,true,`${label}: mobile version hidden`);
    assert.match(launchPhase.version,/1\.11\.0/);
    assert.ok(launchPhase.navWidth>=40,`${label}: nav button collapsed during assembly`);
