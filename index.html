@@ -1,3 +1,105 @@
-<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#000000"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="description" content="Private offline drum lesson journal"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="mobile.css"><link rel="stylesheet" href="schedule.css"><title>DRUM LOG • Teaching console</title></head><body>
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#000000"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="description" content="Private offline drum lesson journal"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="mobile.css"><link rel="stylesheet" href="schedule.css"><link rel="stylesheet" href="lcars-refresh.css"><link rel="stylesheet" href="lcars-components.css"><link rel="stylesheet" href="lcars-navigation-motion.css"><link rel="stylesheet" href="lcars-startup.css"><link rel="stylesheet" href="lcars-zoom.css"><link rel="stylesheet" href="lcars-slider.css"><link rel="stylesheet" href="lcars-effects.css"><link rel="stylesheet" href="lcars-sequence.css"><title>DRUM LOG • Teaching console</title></head><body>
+<div id="lcarsStartup" class="lcars-start-screen" data-theme="voyager" role="dialog" aria-modal="true" aria-labelledby="lcarsStartupHeading" aria-describedby="lcarsStartupNote" hidden>
+
+  <!-- TOP LCARS FRAME -->
+  <div class="lcars-start-top" aria-hidden="true">
+    <div class="lcars-elbow-top">47-01</div>
+    <div class="lcars-top-right">
+      <div class="lcars-rail-segments">
+        <div class="lcars-seg s1">01 / LCARS</div>
+        <div class="lcars-seg s2">DL-00001</div>
+        <div class="lcars-seg s3"><span>INSTRUCTION LOG</span><span>CORE 01</span></div>
+        <div class="lcars-seg s4">LOCAL DATA</div>
+        <div class="lcars-seg s5">AUDIO</div>
+      </div>
+      <div class="lcars-top-subbar">
+        <span class="lcars-sub-title">USS VOYAGER // <strong>INSTRUCTION RECORDS</strong></span>
+        <div class="lcars-cascade" id="lcarsCascade">
+          <span>47982.4</span><span>99-044</span><span class="lit">120.0</span><span>04/04</span><span>884-A</span><span>2377.9</span>
+          <span>00412.8</span><span class="lit">SYNC</span><span>64-BIT</span><span>Q-REF</span><span>74656</span><span>READY</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MIDDLE BODY: INTERACTIVE LEFT RAIL + MAIN CONSOLE -->
+  <div class="lcars-start-body">
+    <div class="lcars-left-column" role="group" aria-label="LCARS display theme preview">
+      <button type="button" class="lcars-side-block b1" data-set-theme="voyager" aria-pressed="true">
+        <small>01-VOY</small>
+        <span>VOYAGER</span>
+      </button>
+      <button type="button" class="lcars-side-block b2" data-set-theme="elite" aria-pressed="false">
+        <small>02-HAZ</small>
+        <span>ELITE FORCE</span>
+      </button>
+      <button type="button" class="lcars-side-block b3" data-set-theme="redalert" aria-pressed="false">
+        <small>03-TAC</small>
+        <span>RED ALERT</span>
+      </button>
+      <div class="lcars-side-block b4" id="logStatusPreview" title="Drum Log telemetry display">
+        <small>04-LOG</small>
+        <span>DATA READY</span>
+      </div>
+      <div class="lcars-side-filler" aria-hidden="true">
+        <span>LOG // 001<br>LOCAL READY</span>
+      </div>
+    </div>
+
+    <!-- CENTER CONSOLE -->
+    <div class="lcars-start-console">
+      <div class="lcars-console-frame">
+        <span class="lcars-start-kicker">STARFLEET // INSTRUCTION DATABASE</span>
+
+        <!-- LCARS DATA CORE // ring motion, original Drum Log logo -->
+        <div class="lcars-emblem-wrap">
+          <div class="drum-log-emblem" role="img" aria-label="Drum Log LCARS emblem">
+            <span class="drum-log-ring drum-log-ring-outer"></span>
+            <span class="drum-log-ring drum-log-ring-inner"></span>
+            <img class="drum-log-symbol" src="./icon.svg" width="120" height="120" alt="">
+          </div>
+        </div>
+        <!-- BRANDING STACK -->
+        <div class="lcars-title-stack">
+          <h2 id="lcarsStartupHeading">DRUM <span>LOG</span></h2>
+          <div class="lcars-subbrand-bar"><span class="lcars-subbrand-label">LCARS TEACHING CONSOLE // STUDENT RECORDS</span></div>
+          <div class="lcars-studio-badge">
+            <span class="lcars-studio-dot"></span>
+            <span>DRUMTRACK STUDIOS</span>
+            <span class="lcars-studio-dot"></span>
+          </div>
+        </div>
+
+        <p id="lcarsStartupNote">SYSTEM STANDBY // LOCAL DATABASE &amp; AUDIO READY</p>
+
+        <!-- INITIALIZE BUTTON -->
+        <div class="lcars-activate-wrap">
+          <div class="lcars-activate-cap" aria-hidden="true">01</div>
+          <button id="lcarsInitialize" type="button" class="lcars-start-activate">
+            <span id="lcarsInitText">INITIALIZE DRUM LOG</span>
+            <span class="btn-sub" id="lcarsInitCode">ENGAGE // 47</span>
+          </button>
+        </div>
+
+        <div class="lcars-boot-bar" id="lcarsBootBar" aria-hidden="true">
+          <div class="lcars-boot-fill" id="lcarsBootFill"></div>
+        </div>
+
+        <span class="lcars-start-footer">OFFLINE PWA // PRIVATE INSTRUCTION RECORDS // DRUMTRACK STUDIOS</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM LCARS FRAME -->
+  <div class="lcars-start-bottom-wrap" aria-hidden="true">
+    <div class="lcars-elbow-bottom">01-A</div>
+    <div class="lcars-bottom-segments">
+      <div class="lcars-seg s-b1">LESSON JOURNAL</div>
+      <div class="lcars-seg s-b2">STUDENT DIRECTORY</div>
+      <div class="lcars-seg s-b3">SCHEDULE</div>
+      <div class="lcars-seg s-b4">04 // DATA SYSTEMS</div>
+    </div>
+  </div>
+</div>
 <header><div class="elbow"><span>DL—01</span></div><div class="mast"><div class="topline"><span>LCARS / INSTRUCTION RECORDS</span><span id="clock"></span></div><h1>DRUM LOG <small>LCARS 01</small></h1><div class="telemetry" aria-label="Database overview"><span>ACTIVE STUDENTS <b id="studentCount">00</b></span><span>LESSON RECORDS <b id="lessonCount">00</b></span><span>DATABASE <b>LOCAL</b></span></div><div class="rail"><i></i><i></i><i></i><span>LOCAL / PRIVATE</span></div></div></header>
 <div class="layout"><aside><nav aria-label="Main navigation"><button data-view="journal" class="active">01 <span>Lesson log</span></button><button data-view="students">02 <span>Students</span></button><button data-view="schedule">03 <span>Schedule</span></button><button data-view="settings">04 <span>Data systems</span></button></nav><div class="sidebarfill"><span>INSTRUCTION<br>DATABASE</span><b>47—01</b></div><div class="sidetail">OFFLINE FIRST</div></aside><main><div id="notice" role="status" hidden></div><div id="error" role="alert" hidden></div><section id="journal" class="view"></section><section id="students" class="view" hidden></section><section id="schedule" class="view" hidden></section><section id="settings" class="view" hidden></section></main></div><footer><span id="storageStatus">INITIALIZING LOCAL STORAGE</span><span>DRUM LOG / 1.10.1</span></footer><dialog id="modal"></dialog><script type="module" src="app.js"></script></body></html>

@@ -1,12 +1,21 @@
 import {createSoundSystem} from './sound.js';
+import {createViewMotion,createShellMotion} from './lcars-motion.js';
+import {createStartupConsole} from './lcars-startup.js';
+import {installZoomGuard} from './lcars-zoom.js';
+import {createUpdateManager} from './lcars-updater.js';
+import {mountLcarsSlider} from './lcars-slider.js';
 import {validDate,validTime,DAYS,defaults,localDate,selectScheduled,scheduleType,todayLesson,lessonKey,validateBackup,convertTrial,csv} from './core.js';
 import {openDB,readState,mutate,replaceState} from './db.js';
 import {dayEvents,scheduleWeek,availableSlots,holidaysOnDate,cancelLesson,restoreLesson,bookReplacement,bookFreeSlot,saveAppointment,removeAppointment,isMakeupLesson,saveCalendarEvent,removeCalendarEvent,saveLessonOverride,resetLessonOverride} from './schedule.js';
 const sounds=createSoundSystem();sounds.bind();
+const viewMotion=createViewMotion(document);
+const shellMotion=createShellMotion(document);
+const startupConsole=createStartupConsole(document);
+installZoomGuard(document);
 // Purely visual device preference. Existing backup schemas default to 80% on phones.
 function applyMobileScale(raw){const value=Number(raw);const percent=Number.isFinite(value)?Math.max(65,Math.min(100,value)):80;document.documentElement.style.setProperty('--mobile-ui-scale',String(percent/100));}
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let plannerDate=localDate(),plannerMode='day';
+let plannerDate=localDate(),plannerMode='day',lastRenderedView=null;
 let state,trialId=null,studentId=null,date=localDate(),time='15:00',duration=45,view='journal',manual=false,saveQueue=Promise.resolve(),pending=0,saveFailure=false,baseNotes='',search='',filter='active';
 const channel=globalThis.BroadcastChannel?new BroadcastChannel('drum-log'):null;
 const student=()=>state.students.find(s=>s.id===studentId);
@@ -17,6 +26,7 @@ const noteKey=()=>lessonKey(studentId,noteSlot().date,noteSlot().time);
 const lesson=()=>state.lessons.find(l=>l.id===noteKey());
 const niceDate=d=>d;
 let dialogErrorTimeout=null;
+
 function clearDialogError(){
  if(dialogErrorTimeout!==null){clearTimeout(dialogErrorTimeout);dialogErrorTimeout=null;}
  $('#modal')?.querySelector('[data-dialog-error]')?.remove();
@@ -74,8 +84,8 @@ async function change(fn){state=await mutate(fn);sounds.configure(state.settings
 function automatic(){const m=selectScheduled(state.students,new Date(),state.appointments,state.trials,state.cancellations,state.holidays,state.lessonOverrides);manual=false;trialId=null;if(m.selected?.trial){const t=m.selected.trial;trialId=t.id;studentId=null;date=t.date;time=t.time;duration=t.duration;return;}if(m.selected){studentId=m.selected.student.id;date=localDate(m.selected.start);time=m.selected.appointment?.time||m.selected.override?.time||m.selected.student.time;duration=m.selected.appointment?.duration||m.selected.override?.duration||m.selected.student.duration;}else {const flexible=state.students.find(s=>!s.archived&&scheduleType(s)==='flexible');studentId=flexible?.id||null;if(flexible){manual=true;({date,time,duration}=todayLesson(flexible,state.lessons));}}}
 async function ready(){await saveQueue;if(saveFailure){error(Error('Your last edit is not saved. Copy the note somewhere safe, then use Retry save before navigating.'));return false;}return true;}
 function scheduleSave(){if(trialId){saveTrialNotes();return;}const field=$('#notes');if(!field)return;const slot=noteSlot();const item={id:noteKey(),studentId,date:slot.date,time:slot.time,duration:$('#duration').checkValidity()?Number($('#duration').value):duration,notes:field.value};duration=item.duration;const expected=baseNotes;baseNotes=item.notes;pending++;saveFailure=false;$('#saveStatus').textContent='Saving…';saveQueue=saveQueue.then(async()=>{await change(s=>{const index=s.lessons.findIndex(l=>l.id===item.id);const old=index<0?'':s.lessons[index].notes;if(old!==expected&&old!==item.notes)throw Error('This lesson changed in another tab. Your text is still here. Copy it before reloading to reconcile both versions.');if(!s.students.some(s=>s.id===item.studentId))throw Error('This student was removed in another tab. Copy your note before reloading.');if(index<0)s.lessons.push(item);else s.lessons[index]=item;});}).catch(e=>{saveFailure=true;error(e);}).finally(()=>{pending--;if(!saveFailure&&!pending)$('#error').hidden=true;if($('#saveStatus'))$('#saveStatus').textContent=saveFailure?'NOT SAVED — copy your note':pending?'Saving…':'Saved on this device';});}
-function render(){ $('#studentCount').textContent=String(state.students.filter(s=>!s.archived).length).padStart(2,'0');$('#lessonCount').textContent=String(state.lessons.length).padStart(2,'0');for(const el of document.querySelectorAll('.view'))el.hidden=el.id!==view;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===view));({journal:renderJournal,students:renderStudents,schedule:renderSchedule,settings:renderSettings})[view]();bindMobilePanes();bindDateTimeFields(document);}
-async function navigate(next){if(!await ready())return;clearNotice();clearGlobalError();state=await readState();sounds.configure(state.settings);if(view!==next)sounds.play('menu');else sounds.play('press');view=next;render();}
+function render(){const entering=lastRenderedView!==null&&lastRenderedView!==view;lastRenderedView=view;$('#studentCount').textContent=String(state.students.filter(s=>!s.archived).length).padStart(2,'0');$('#lessonCount').textContent=String(state.lessons.length).padStart(2,'0');for(const el of document.querySelectorAll('.view'))el.hidden=el.id!==view;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===view));({journal:renderJournal,students:renderStudents,schedule:renderSchedule,settings:renderSettings})[view]();bindMobilePanes();bindDateTimeFields(document);if(entering)viewMotion.play(view);}
+async function navigate(next){if(!await ready())return;clearNotice();clearGlobalError();state=await readState();sounds.configure(state.settings);if(view!==next)sounds.transition();else sounds.play('press');view=next;render();}
 function renderJournal(){if(trialId&&state.trials.some(t=>t.id===trialId)){renderTrial();return;}trialId=null;const root=$('#journal'),s=student();if(!s){root.innerHTML='<div class="eyebrow">01 / INSTRUCTION LOG</div><div class="empty"><h2>Student database / empty</h2><p class="muted">Create a student record to initialize automatic lesson selection.</p><div class="toolbar"><button id="firstStudent">Add student</button><button id="firstTrial" class="secondary">Add trial lesson</button></div></div>';$('#firstStudent').onclick=()=>editStudent();$('#firstTrial').onclick=()=>editTrial();return;}
  const match=selectScheduled(state.students,new Date(),state.appointments,state.trials,state.cancellations,state.holidays,state.lessonOverrides),isCurrent=match.matches.some(x=>x.student.id===s.id),l=lesson();duration=selectedOverride()?.duration||l?.duration||duration;baseNotes=l?.notes||'';
  const previous=state.lessons.filter(x=>x.studentId===s.id&&x.date+'T'+x.time<date+'T'+time).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time))[0];
@@ -96,6 +106,12 @@ function bindMobilePanes(){
  root.querySelectorAll('[data-mobile-pane]').forEach(button=>button.onclick=()=>{
   root.dataset.mobilePane=button.dataset.mobilePane;
   root.querySelectorAll('[data-mobile-pane]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
+  button.classList.remove('lcars-pane-ack');
+  void button.offsetWidth;
+  if(!(typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches)){
+   button.classList.add('lcars-pane-ack');
+   button.addEventListener('animationend',()=>button.classList.remove('lcars-pane-ack'),{once:true});
+  }
  });
 }
 function insert(text){const n=$('#notes');n.setRangeText(text,n.selectionStart,n.selectionEnd,'end');n.focus();scheduleSave();}
@@ -175,12 +191,13 @@ function renderSchedule(){
  document.querySelectorAll('[data-holiday-edit]').forEach(b=>b.onclick=()=>editHoliday(state.holidays.find(h=>h.id===b.dataset.holidayEdit)));
  document.querySelectorAll('[data-holiday-remove]').forEach(b=>b.onclick=()=>removeHoliday(state.holidays.find(h=>h.id===b.dataset.holidayRemove)));
  document.querySelectorAll('[data-holiday-book]').forEach(b=>b.onclick=()=>editAppointment(null,b.dataset.holidayBook));
- $('#planPrev').onclick=()=>{plannerDate=planDateShift(plannerDate,plannerMode==='week'?-7:-1);renderSchedule();};
- $('#planNext').onclick=()=>{plannerDate=planDateShift(plannerDate,plannerMode==='week'?7:1);renderSchedule();};
- $('#planToday').onclick=()=>{plannerDate=localDate();renderSchedule();};
- $('#planDay').onclick=()=>{plannerMode='day';renderSchedule();};
- $('#planWeek').onclick=()=>{plannerMode='week';renderSchedule();};
- $('#plannerDate').onchange=e=>{if(!e.target.value||!e.target.reportValidity())return;plannerDate=e.target.value;renderSchedule();};
+ const rebuildPlanner=()=>{renderSchedule();viewMotion.play('schedule');};
+ $('#planPrev').onclick=()=>{plannerDate=planDateShift(plannerDate,plannerMode==='week'?-7:-1);rebuildPlanner();};
+ $('#planNext').onclick=()=>{plannerDate=planDateShift(plannerDate,plannerMode==='week'?7:1);rebuildPlanner();};
+ $('#planToday').onclick=()=>{plannerDate=localDate();rebuildPlanner();};
+ $('#planDay').onclick=()=>{plannerMode='day';rebuildPlanner();};
+ $('#planWeek').onclick=()=>{plannerMode='week';rebuildPlanner();};
+ $('#plannerDate').onchange=e=>{if(!e.target.value||!e.target.reportValidity())return;plannerDate=e.target.value;rebuildPlanner();};
  bindTrials();bindRows();
  document.querySelectorAll('[data-appointment-edit]').forEach(b=>b.onclick=()=>editAppointment(state.appointments.find(a=>a.id===b.dataset.appointmentEdit)));
  document.querySelectorAll('[data-appointment-open]').forEach(b=>b.onclick=()=>{const a=state.appointments.find(a=>a.id===b.dataset.appointmentOpen);trialId=null;studentId=a.studentId;date=a.date;time=a.time;duration=a.duration;manual=true;view='journal';render();});
@@ -387,12 +404,28 @@ function teachingHoursHTML(){
  ${[1,2,3,4,5,6,0].map(day=>{const h=hours[day];return `<div class="teaching-hours-row"><label class="check"><input type="checkbox" name="enabled${day}" data-hours-toggle="${day}" ${h?'checked':''}>${DAYS[day]}</label><label>From<input type="text" name="start${day}" data-clock-time maxlength="5" placeholder="HH:mm" value="${h?.start||'09:00'}" ${h?'':'disabled'} required></label><label>To<input type="text" name="end${day}" data-clock-time maxlength="5" placeholder="HH:mm" value="${h?.end||'18:00'}" ${h?'':'disabled'} required></label></div>`}).join('')}
  <div class="toolbar"><button type="submit">Save teaching hours</button></div><p class="muted">Times can be adjusted independently for each day. Existing lessons outside those hours stay in the schedule.</p></form></article>`;
 }
-function renderSettings(){$('#settings').innerHTML=`<div class="sectionhead"><div><div class="eyebrow">04 / SYSTEM OPERATIONS</div><h2>Data systems</h2><p class="muted">Local database / manual transfer only</p></div></div><div class="settingsgrid"><div><article class="panel"><h3>Audio interface</h3><label class="check"><input id="soundEnabled" type="checkbox" ${state.settings.soundEnabled!==false?'checked':''}>Enable LCARS sounds</label><label for="soundVolume">Output level <output id="volumeValue">${Math.round((state.settings.soundVolume??0.35)*100)}%</output></label><input id="soundVolume" type="range" min="0" max="100" step="1" value="${Math.round((state.settings.soundVolume??0.35)*100)}"><button id="testSound" class="secondary">Test sound</button><p id="audioStatus" class="muted" role="status">${esc(sounds.status())}</p><p class="muted">Hover / touch · commands · confirmations · alerts. Audio activates after your first tap or key press.</p></article><article class="panel"><h3>Mobile display</h3><p class="muted">Compact one-window layout on phones only. Tablet and desktop stay at normal size. Scroll inside lists or history when necessary.</p><label for="mobileScale">Phone UI size <output id="mobileScaleValue">${state.settings.uiScale??80}%</output></label><input id="mobileScale" type="range" min="65" max="100" step="5" value="${state.settings.uiScale??80}"><p class="muted">Recommended: 75–80%. Text entry stays readable to prevent iPhone Safari zooming when the keyboard opens.</p></article>${teachingHoursHTML()}<article class="panel peach"><h3>Archive / transfer</h3><p class="muted">A full JSON backup restores students, lessons, shortcuts and settings. Devices keep separate databases.</p><div class="toolbar"><button id="exportJSON">Export JSON backup</button><button class="secondary" id="importJSON">Import backup</button></div><p class="muted">Last backup download: ${state.settings.lastBackup?formatTimestamp(new Date(state.settings.lastBackup)):'Not yet'}</p><label class="check"><input id="reminder" type="checkbox" ${state.settings.backupReminder?'checked':''}>Remind me to back up every 7 days</label><h3>CSV data export</h3><p class="muted">UTF-8 CSV · semicolon separated · Excel / LibreOffice</p><div class="toolbar"><button class="secondary" id="csvLessons">Export lessons CSV</button><button class="secondary" id="csvStudents">Export students CSV</button><button class="secondary" id="csvAppointments">Export appointments CSV</button><button class="secondary" id="csvTrials">Export trials CSV</button></div><input id="importFile" type="file" accept=".json,application/json" hidden></article><article class="panel"><h3>Storage status</h3><p id="storageInfo" class="muted">Checking storage…</p><button class="secondary" id="persist">Request persistent storage</button><p class="muted">Browser storage is not a backup. Clearing site data can delete everything. Use your device passcode and disk encryption for access protection. This app does not encrypt local records or exported files.</p><h3>Offline deployment</h3><p class="muted">Host these files over HTTPS. On iPhone, open in Safari → Share → Add to Home Screen. Open the installed app once online and wait for “Offline ready”. Then test in airplane mode. On Firefox, bookmark the app; a desktop installation is optional.</p><p id="offlineInfo" class="muted"></p></article></div><article class="panel"><h3>Text commands</h3><p class="muted">Cursor insertion / configurable text commands</p><div id="snippetList">${state.snippets.map((x,i)=>`<div class="snippetrow"><strong>${esc(x.label)}</strong><button class="secondary" data-up="${esc(x.id)}" aria-label="Move ${esc(x.label)} up" ${i===0?'disabled':''}>↑</button><button class="secondary" data-down="${esc(x.id)}" aria-label="Move ${esc(x.label)} down" ${i===state.snippets.length-1?'disabled':''}>↓</button><button class="secondary" data-snippet-edit="${esc(x.id)}">Edit</button></div>`).join('')}</div><button id="addSnippet">Add shortcut</button></article></div>`;
+function renderSettings(){$('#settings').innerHTML=`<div class="sectionhead"><div><div class="eyebrow">04 / SYSTEM OPERATIONS</div><h2>Data systems</h2><p class="muted">Local database / manual transfer only</p></div></div><div class="settingsgrid"><div><article class="panel"><h3>Audio interface</h3><label class="check"><input id="soundEnabled" type="checkbox" ${state.settings.soundEnabled!==false?'checked':''}>Enable LCARS sounds</label><label class="check"><input id="launchScreen" type="checkbox" ${state.settings.launchScreen!==false?'checked':''}>Show INITIALIZE DRUM LOG on startup</label><p class="muted">On by default. Disable to open the teaching console directly. The initialize button enables launch audio where browsers permit it.</p><label for="soundVolume">Output level <output id="volumeValue">${Math.round((state.settings.soundVolume??0.35)*100)}%</output></label><input id="soundVolume" type="range" min="0" max="100" step="1" value="${Math.round((state.settings.soundVolume??0.35)*100)}"><button id="testSound" class="secondary">Test sound</button><p id="audioStatus" class="muted" role="status">${esc(sounds.status())}</p><p class="muted">Hover / touch · commands · confirmations · alerts. Audio activates after your first tap or key press.</p></article><article class="panel"><h3>Mobile display</h3><p class="muted">Compact one-window layout on phones only. Tablet and desktop stay at normal size. Scroll inside lists or history when necessary.</p><label for="mobileScale">Phone UI size <output id="mobileScaleValue">${state.settings.uiScale??80}%</output></label><input id="mobileScale" type="range" min="65" max="100" step="5" value="${state.settings.uiScale??80}"><p class="muted">Recommended: 75–80%. Text entry stays readable to prevent iPhone Safari zooming when the keyboard opens.</p></article>${teachingHoursHTML()}<article class="panel peach"><h3>Archive / transfer</h3><p class="muted">A full JSON backup restores students, lessons, shortcuts and settings. Devices keep separate databases.</p><div class="toolbar"><button id="exportJSON">Export JSON backup</button><button class="secondary" id="importJSON">Import backup</button></div><p class="muted">Last backup download: ${state.settings.lastBackup?formatTimestamp(new Date(state.settings.lastBackup)):'Not yet'}</p><label class="check"><input id="reminder" type="checkbox" ${state.settings.backupReminder?'checked':''}>Remind me to back up every 7 days</label><h3>CSV data export</h3><p class="muted">UTF-8 CSV · semicolon separated · Excel / LibreOffice</p><div class="toolbar"><button class="secondary" id="csvLessons">Export lessons CSV</button><button class="secondary" id="csvStudents">Export students CSV</button><button class="secondary" id="csvAppointments">Export appointments CSV</button><button class="secondary" id="csvTrials">Export trials CSV</button></div><input id="importFile" type="file" accept=".json,application/json" hidden></article><article class="panel"><h3>Storage status</h3><p id="storageInfo" class="muted">Checking storage…</p><button class="secondary" id="persist">Request persistent storage</button><p class="muted">Browser storage is not a backup. Clearing site data can delete everything. Use your device passcode and disk encryption for access protection. This app does not encrypt local records or exported files.</p><h3>Offline deployment</h3><p class="muted">Host these files over HTTPS. On iPhone, open in Safari → Share → Add to Home Screen. Open the installed app once online and wait for “Offline ready”. Then test in airplane mode. On Firefox, bookmark the app; a desktop installation is optional.</p><p id="offlineInfo" class="muted" role="status"></p><button id="updateCheck" class="secondary" type="button">Check for updates</button><p class="muted">Updates change app files only, never student records. Save notes and close other Drum Log tabs before installing. No automatic reload.</p></article></div><article class="panel"><h3>Text commands</h3><p class="muted">Cursor insertion / configurable text commands</p><div id="snippetList">${state.snippets.map((x,i)=>`<div class="snippetrow"><strong>${esc(x.label)}</strong><button class="secondary" data-up="${esc(x.id)}" aria-label="Move ${esc(x.label)} up" ${i===0?'disabled':''}>↑</button><button class="secondary" data-down="${esc(x.id)}" aria-label="Move ${esc(x.label)} down" ${i===state.snippets.length-1?'disabled':''}>↓</button><button class="secondary" data-snippet-edit="${esc(x.id)}">Edit</button></div>`).join('')}</div><button id="addSnippet">Add shortcut</button></article></div>`;
+ $('#launchScreen').onchange=async e=>{
+  const newValue=e.target.checked;
+  try{await change(s=>{s.settings.launchScreen=newValue;});}
+  catch(ex){e.target.checked=!newValue;error(ex);}
+ };
  $('#soundEnabled').onchange=async e=>{const enabled=e.target.checked;sounds.configure({...state.settings,soundEnabled:enabled});if(enabled){sounds.unlock();sounds.play('accept');}await change(s=>s.settings.soundEnabled=enabled);};
  $('#soundVolume').oninput=e=>{const v=Number(e.target.value)/100;$('#volumeValue').textContent=Math.round(v*100)+'%';sounds.configure({...state.settings,soundVolume:v});};
  $('#soundVolume').onchange=async e=>{const v=Number(e.target.value)/100;await change(s=>s.settings.soundVolume=v);sounds.play('hover');};
  $('#mobileScale').oninput=e=>{const value=Number(e.target.value);$('#mobileScaleValue').textContent=value+'%';applyMobileScale(value);};
  $('#mobileScale').onchange=async e=>{const value=Number(e.target.value);try{await change(s=>{s.settings.uiScale=value;});}catch(ex){applyMobileScale(state.settings.uiScale);error(ex);}};
+ // Visually identical to Rhythm PADD: native range inputs are MOVED into
+ // their segmented shells, so keyboard, touch and save handlers stay intact.
+ for(const {id,title,kind,code} of [
+  {id:'soundVolume',title:'SOUND / VOLUME',kind:'percent',code:'47-A7'},
+  {id:'mobileScale',title:'MOBILE / SIZE',kind:'scale',code:'47-U1'}
+ ]){
+  const input=$('#'+id),mount=document.createElement('div');
+  mount.className='lcars-slider-mount';
+  input.before(mount);mount.append(input);
+  mountLcarsSlider(input,{kind,title,code});
+ }
 
  const hoursForm=$('#teachingHoursForm');
  hoursForm.querySelectorAll('[data-hours-toggle]').forEach(box=>box.onchange=()=>{
@@ -420,7 +453,7 @@ function renderSettings(){$('#settings').innerHTML=`<div class="sectionhead"><di
  $('#csvStudents').onclick=()=>download('drum-log-students.csv',csv([['Name','Schedule','Cycle start','Day','Time','Duration (minutes)','Remarks','Archived'],...state.students.map(s=>[s.name,scheduleType(s),s.anchorDate||'',scheduleType(s)==='flexible'?'':DAYS[s.day],s.time||'',s.duration,s.remarks,s.archived?'Yes':'No'])]),'text/csv;charset=utf-8');
  $('#persist').onclick=async()=>{try{const yes=await navigator.storage?.persist?.();notice(yes?'Persistent storage granted. Keep making backups.':'Persistent storage was not granted by this browser. Keep regular backups.',yes?'accept':'warning');storageInfo();}catch(e){error(e);}};
  $('#addSnippet').onclick=()=>editSnippet();document.querySelectorAll('[data-snippet-edit]').forEach(b=>b.onclick=()=>editSnippet(state.snippets.find(x=>x.id===b.dataset.snippetEdit)));
- for(const direction of ['up','down'])document.querySelectorAll('[data-'+direction+']').forEach(b=>b.onclick=async()=>{await change(s=>{const i=s.snippets.findIndex(x=>x.id===b.dataset[direction]),j=i+(direction==='up'?-1:1);if(i>=0&&j>=0&&j<s.snippets.length)[s.snippets[i],s.snippets[j]]=[s.snippets[j],s.snippets[i]];});renderSettings();});storageInfo();$('#offlineInfo').textContent=$('#storageStatus').textContent;
+ for(const direction of ['up','down'])document.querySelectorAll('[data-'+direction+']').forEach(b=>b.onclick=async()=>{await change(s=>{const i=s.snippets.findIndex(x=>x.id===b.dataset[direction]),j=i+(direction==='up'?-1:1);if(i>=0&&j>=0&&j<s.snippets.length)[s.snippets[i],s.snippets[j]]=[s.snippets[j],s.snippets[i]];});renderSettings();});storageInfo();updater.mount($('#updateCheck'),$('#offlineInfo'));
 }
 async function storageInfo(){try{const persistent=await navigator.storage?.persisted?.(),estimate=await navigator.storage?.estimate?.();if($('#storageInfo'))$('#storageInfo').textContent=`Persistence: ${persistent?'granted':'not granted / browser managed'}. ${estimate?.usage!==undefined?'Used: '+(estimate.usage/1024/1024).toFixed(2)+' MB.':''}`;}catch{if($('#storageInfo'))$('#storageInfo').textContent='Storage estimate unavailable.';}}
 function editSnippet(x){dialog(`<form><h2>${x?'Edit shortcut':'New shortcut'}</h2><label>BUTTON LABEL<input name="label" maxlength="50" value="${esc(x?.label||'')}" required></label><label>TEXT TO INSERT<textarea name="text" rows="6" maxlength="10000" required>${esc(x?.text||'')}</textarea></label><div class="toolbar"><button type="submit">Save shortcut</button><button type="button" class="secondary" data-close>Cancel</button>${x?'<button type="button" class="danger" id="deleteSnippet">Delete</button>':''}</div></form>`,async f=>{const item={id:x?.id||crypto.randomUUID(),label:f.get('label').trim(),text:f.get('text')};if(!item.label)throw Error('Enter a button label.');await change(s=>{const i=s.snippets.findIndex(y=>y.id===item.id);if(i<0)s.snippets.push(item);else s.snippets[i]=item;});});if(x)$('#deleteSnippet').onclick=async()=>{await change(s=>s.snippets=s.snippets.filter(y=>y.id!==x.id));$('#modal').close();renderSettings();};}
@@ -434,8 +467,32 @@ window.addEventListener('unhandledrejection',e=>{error(e.reason||Error('An opera
 window.addEventListener('beforeunload',e=>{if(pending||saveFailure){e.preventDefault();e.returnValue='';}});
 channel&&(channel.onmessage=()=>{notice('Data changed in another tab. Finish this note before navigating. Avoid editing the same lesson in two tabs.');});
 function tick(){$('#clock').textContent=new Date().toLocaleString('en-GB',{weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).toUpperCase();}tick();setInterval(tick,30000);
-async function offline(){if(!('serviceWorker'in navigator)||!isSecureContext){$('#storageStatus').textContent='OFFLINE UNAVAILABLE — USE HTTPS OR LOCALHOST';return;}try{await navigator.serviceWorker.register('./sw.js');await navigator.serviceWorker.ready;$('#storageStatus').textContent='OFFLINE READY / DATA ON THIS DEVICE';}catch(e){$('#storageStatus').textContent='OFFLINE SETUP FAILED — REOPEN ONLINE';error(e);}}
-try{await openDB();state=await readState();sounds.configure(state.settings);applyMobileScale(state.settings.uiScale);automatic();render();if(state.settings.backupReminder&&(state.students.length||state.trials.length)&&(!state.settings.lastBackup||Date.now()-Date.parse(state.settings.lastBackup)>7*86400000))notice('Backup interval exceeded. Open Data systems to export a JSON backup.');offline();}catch(e){error(Error('Cannot open local storage. '+e.message));}
+const updater=createUpdateManager({serviceWorker:navigator.serviceWorker,online:()=>navigator.onLine,
+ canProceed:async()=>!$('#modal')?.open&&!pending&&!saveFailure&&await ready(),
+ reload:()=>location.reload(),onStatus:message=>{
+  const e=$('#offlineInfo');if(e)e.textContent=message;
+  if(message.startsWith('New LCARS system installed'))sounds.play('update');
+ }});
+async function offline(){
+ if(!('serviceWorker'in navigator)||!isSecureContext){
+  $('#storageStatus').textContent='OFFLINE UNAVAILABLE — USE HTTPS OR LOCALHOST';
+  return;
+ }
+ try{
+  await updater.register();
+  $('#storageStatus').textContent='OFFLINE READY / DATA ON THIS DEVICE';
+ }catch(e){
+  $('#storageStatus').textContent='OFFLINE SETUP FAILED — REOPEN ONLINE';error(e);
+ }
+}
+try{await openDB();state=await readState();sounds.configure(state.settings);applyMobileScale(state.settings.uiScale);automatic();render();
+  if(state.settings.launchScreen!==false){
+   startupConsole.show({
+    startAudio:()=>sounds.startLaunch(),
+    onEnter:()=>{shellMotion.play();viewMotion.play(view);}
+   });
+  }else {shellMotion.play();viewMotion.play(view);}
+  if(state.settings.backupReminder&&(state.students.length||state.trials.length)&&(!state.settings.lastBackup||Date.now()-Date.parse(state.settings.lastBackup)>7*86400000))notice('Backup interval exceeded. Open Data systems to export a JSON backup.');offline();}catch(e){error(Error('Cannot open local storage. '+e.message));}
 
 function trialScheduleHTML(){
  const list=state.trials.slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));

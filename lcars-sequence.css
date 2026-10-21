@@ -1,0 +1,135 @@
+/* RC27 / DRUM LOG — five-stage Voyager LCARS construction.
+   Ported by visual philosophy from Rhythm PADD's real-content choreography:
+   the shell stays put while only the active view's own title, frame,
+   controls and REAL data rows power up. Never animate field values or notes.
+   No indefinite effect, no floating circle, no clip-path on input controls. */
+@keyframes dl-sequence-head {
+  0% {opacity:0;filter:brightness(1.9)}
+  42% {opacity:.66;filter:brightness(1.5)}
+  100% {opacity:1;filter:brightness(1)}
+}
+@keyframes dl-sequence-frame{
+  0%{opacity:.05;filter:brightness(1.9)}
+  30%{opacity:.44;filter:brightness(1.6)}
+  100%{opacity:1;filter:brightness(1)}
+}
+@keyframes dl-sequence-element {
+  0%{opacity:0;filter:brightness(1.75)}
+  56%{opacity:1;filter:brightness(1.15)}
+  100%{opacity:1;filter:none}
+}
+@keyframes dl-sequence-steps{
+  0%{opacity:0;filter:brightness(2)}
+  45%{opacity:.72;filter:brightness(1.4)}
+  100%{opacity:1;filter:none}
+}
+@keyframes dl-sequence-bar{
+  0%{transform:scaleX(0);opacity:.3;filter:brightness(2)}
+  55%{transform:scaleX(.72);opacity:.95}
+  100%{transform:scaleX(1);opacity:1;filter:none}
+}
+@keyframes dl-sequence-lamp{
+  0%{opacity:.08;filter:brightness(1.7)}
+  35%{opacity:.9;filter:brightness(1.4)}
+  100%{opacity:1;filter:none}
+}
+/* Phase 1: title and its colored command rail. Never animate the view
+   container or a scrolling/text-input parent while an editor has focus. */
+.view.lcars-view-enter>.sectionhead{
+ animation:dl-sequence-head 390ms cubic-bezier(.22,1,.36,1) 20ms both!important;
+}
+.view.lcars-view-enter>.sectionhead::after,
+.view.lcars-view-enter>.sectionhead::before{
+ transform-origin:left center;
+ animation:dl-sequence-bar 570ms cubic-bezier(.22,1,.36,1) 80ms both!important;
+}
+.view.lcars-view-enter>.eyebrow,
+.view.lcars-view-enter>.empty h2{
+ animation:dl-sequence-head 360ms steps(6,end) 60ms both!important;
+}
+/* Phase 2: real structural page bodies. The borders illuminate before data. */
+.view.lcars-view-enter>.journalgrid,
+.view.lcars-view-enter>.list,
+.view.lcars-view-enter>.settingsgrid,
+.view.lcars-view-enter>.plan-days,
+.view.lcars-view-enter>.empty,
+.view.lcars-view-enter>.calendar-events-register,
+.view.lcars-view-enter>.plan-controls{
+ animation:dl-sequence-frame 500ms cubic-bezier(.22,1,.36,1) 180ms both!important;
+}
+/* Phase 3: high-value controls and metadata become visible in order. */
+.view.lcars-view-enter>.searchbar,
+.view.lcars-view-enter>.makeup-credit-row,
+.view.lcars-view-enter>.mobile-pane-tabs,
+.view.lcars-view-enter>.plan-legend,
+.view.lcars-view-enter>.sectionhead :is(button,.tag){
+ animation:dl-sequence-element 330ms ease-out 380ms both!important;
+}
+#schedule.lcars-view-enter .schedule-actions>button{
+ animation:dl-sequence-steps 300ms steps(5,end) 390ms both!important;
+}
+#schedule.lcars-view-enter .schedule-actions>button:nth-child(2){animation-delay:485ms!important}
+#schedule.lcars-view-enter .schedule-actions>button:nth-child(3){animation-delay:580ms!important}
+#schedule.lcars-view-enter .plan-mode-switch>button,
+#schedule.lcars-view-enter .plan-date-nav>button{
+ animation:dl-sequence-steps 280ms steps(5,end) 570ms both!important;
+}
+#schedule.lcars-view-enter .plan-mode-switch>button:nth-child(2){animation-delay:635ms!important}
+#schedule.lcars-view-enter .plan-mode-switch>button:nth-child(3){animation-delay:700ms!important}
+/* Phase 4: data-backed rows illuminate. Limit per-item animations to
+   first eight, so a huge class roster never creates 300 animations. */
+#students.lcars-view-enter .list>.studentrow:nth-child(-n+8),
+#schedule.lcars-view-enter .plan-days>.plan-day:nth-child(-n+8),
+#settings.lcars-view-enter .settingsgrid .panel:nth-child(-n+8),
+#journal.lcars-view-enter .journalgrid .editor-console,
+#journal.lcars-view-enter .journalgrid .panel{
+ animation:dl-sequence-element 340ms steps(6,end) 590ms both!important;
+}
+#students.lcars-view-enter .list>.studentrow:nth-child(2),
+#schedule.lcars-view-enter .plan-days>.plan-day:nth-child(2),
+#settings.lcars-view-enter .settingsgrid .panel:nth-child(2){animation-delay:670ms!important}
+#students.lcars-view-enter .list>.studentrow:nth-child(3),
+#schedule.lcars-view-enter .plan-days>.plan-day:nth-child(3),
+#settings.lcars-view-enter .settingsgrid .panel:nth-child(3){animation-delay:750ms!important}
+#students.lcars-view-enter .list>.studentrow:nth-child(4),
+#schedule.lcars-view-enter .plan-days>.plan-day:nth-child(4),
+#settings.lcars-view-enter .settingsgrid .panel:nth-child(4){animation-delay:830ms!important}
+#students.lcars-view-enter .list>.studentrow:nth-child(n+5):nth-child(-n+8),
+#schedule.lcars-view-enter .plan-days>.plan-day:nth-child(n+5):nth-child(-n+8),
+#settings.lcars-view-enter .settingsgrid .panel:nth-child(n+5):nth-child(-n+8){animation-delay:910ms!important}
+/* Phase 5: inner data structures complete the console. Nothing moves:
+   native scroll areas, inputs and click regions keep their geometry. */
+#schedule.lcars-view-enter .plan-days .plan-row:nth-child(-n+6),
+#journal.lcars-view-enter .journalgrid :is(.shortcuts,.savebar,.history),
+#settings.lcars-view-enter .settingsgrid .lcars-slide,
+#students.lcars-view-enter .list>.studentrow:nth-child(-n+8) .toolbar{
+ animation:dl-sequence-lamp 270ms ease-out 965ms both!important;
+}
+#schedule.lcars-view-enter .plan-days .plan-row:nth-child(2){animation-delay:1010ms!important}
+#schedule.lcars-view-enter .plan-days .plan-row:nth-child(3){animation-delay:1055ms!important}
+#schedule.lcars-view-enter .plan-days .plan-row:nth-child(n+4):nth-child(-n+6){animation-delay:1100ms!important}
+/* No artificial data and no covering the note textarea. When the phone
+   keyboard is active, the actual notes field stays opaque and stationary. */
+#journal.lcars-view-enter #notes{animation:none!important;filter:none!important}
+@media(prefers-reduced-motion:reduce){
+ .view.lcars-view-enter *,
+ .view.lcars-view-enter::before,
+ .view.lcars-view-enter::after,
+ .view.lcars-view-enter>.sectionhead::before,
+ .view.lcars-view-enter>.sectionhead::after{
+  animation:none!important;filter:none!important;
+ }
+}
+
+/* Schedule date/week commands rebuild actual lesson rows in place. */
+@keyframes dl-pane-ack{
+ 0%{filter:brightness(1.7);box-shadow:inset 0 -4px 0 var(--gold)}
+ 45%{filter:brightness(1.3)}
+ 100%{filter:brightness(1);box-shadow:inset 0 -2px 0 transparent}
+}
+#journal [data-mobile-pane].lcars-pane-ack{
+ animation:dl-pane-ack 410ms steps(6,end) both;
+}
+@media(prefers-reduced-motion:reduce){
+ #journal [data-mobile-pane].lcars-pane-ack{animation:none!important}
+}

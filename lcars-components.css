@@ -1,0 +1,179 @@
+/* DRUM LOG // LCARS COMPONENT SYSTEM, M2
+   Rhythm PADD's segmented brackets, dense console typography and high-contrast
+   status treatments, adapted to a teaching database. This is a visual-only layer.
+   DO NOT change pane grid, journal scroll, input sizes, or lesson hit targets. */
+:root{
+ --lcars-shadow:rgba(255,153,0,.17);
+ --lcars-wash:rgba(204,153,204,.085);
+ --lcars-dim:#121018;
+ --lcars-ink:#080609;
+ --lcars-rule:rgba(204,153,204,.42);
+}
+body{background-color:#000;letter-spacing:.002em;}
+/* Primary construction rails: Voyager segmented surfaces, no page movement. */
+header .rail{gap:5px;}
+header .rail i:first-child{flex:4;background:var(--gold);}
+header .rail i:nth-child(2){flex:1.5;background:var(--orange);}
+header .rail i:nth-child(3){flex:2;background:var(--purple);}
+.topline>span:first-child{color:var(--gold);letter-spacing:.085em;}
+h1 small{color:var(--purple);}
+.telemetry span{background:linear-gradient(90deg,rgba(204,153,204,.08),transparent);}
+.telemetry span:nth-child(2){background:linear-gradient(90deg,rgba(255,204,102,.1),transparent);}
+.telemetry span:nth-child(3){background:linear-gradient(90deg,rgba(153,153,255,.08),transparent);}
+.sidebarfill{background:linear-gradient(180deg,var(--orange) 0%,#e48208 100%);}
+.sidetail{background:var(--purple);color:var(--lcars-ink);border-radius:0 0 16px 0;}
+nav button{position:relative;isolation:isolate;border-bottom:3px solid #000;}
+nav button span{letter-spacing:.05em;}
+nav button.active{box-shadow:inset 0 -5px 0 var(--orange);}
+nav button:focus-visible{outline:3px solid var(--gold);outline-offset:2px;}
+footer{color:var(--gold);}
+footer::after{background:var(--blue);}
+
+/* Every screen: narrow command line below the LCARS section heading. */
+.view>.sectionhead{
+ position:relative;
+ border-bottom-color:var(--purple);
+ background-image:linear-gradient(90deg,transparent 0%,rgba(255,153,0,.045) 58%,rgba(204,153,204,.12) 100%);
+ background-repeat:no-repeat;
+}
+.view>.sectionhead::before{
+ content:'';position:absolute;pointer-events:none;
+ right:0;top:0;width:min(125px,24%);height:4px;
+ background:linear-gradient(90deg,var(--orange) 0% 48%,#000 48% 53%,var(--blue) 53% 100%);
+ border-radius:0 0 0 7px;
+}
+.sectionhead h2{color:var(--peach);text-wrap:balance;}
+.eyebrow{color:var(--blue);letter-spacing:.075em;}
+.dayheading::before{background:var(--orange);}
+.dayheading::after{background:var(--purple);border-right-color:var(--gold);}
+.tag{color:var(--gold);}
+
+/* Tactile controls, no overlays that intercept touch or steal keyboard focus. */
+button:not(:disabled){-webkit-tap-highlight-color:transparent;}
+button:not(:disabled):hover{filter:brightness(1.13);}
+button:active:not(:disabled){filter:brightness(.91);}
+button.primary,
+button:not(.secondary):not(.danger){text-shadow:none;}
+.toolbar button,.shortcuts button,.plan-actions button{
+ box-shadow:inset 0 -3px 0 rgba(0,0,0,.2);
+}
+.toolbar button:focus-visible,.shortcuts button:focus-visible,
+.plan-actions button:focus-visible{outline:3px solid var(--gold);outline-offset:2px;}
+input:not([type=checkbox]):not([type=radio]):not([type=range]),
+select,textarea{
+ background-color:#09070e;
+ border-bottom-color:var(--purple);
+}
+input:not([type=checkbox]):not([type=radio]):not([type=range]):focus,
+select:focus,textarea:focus{
+ border-bottom-color:var(--gold);
+ box-shadow:inset 0 -2px 0 rgba(255,204,102,.35);
+}
+input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--gold);}
+input:disabled,select:disabled,textarea:disabled{opacity:.55;}
+label{color:var(--purple);}
+label.check{color:var(--gold);}
+summary{position:relative;text-decoration-color:var(--orange);}
+details[open]>summary{color:var(--gold);}
+summary:focus-visible{outline:3px solid var(--gold);outline-offset:3px;}
+
+/* LCARS cards: live content is never clipped, never covered by animation. */
+.panel{background-image:linear-gradient(120deg,rgba(204,153,204,.09),transparent 46%);}
+.panel.peach{background-image:linear-gradient(120deg,rgba(255,153,102,.1),transparent 48%);}
+.panel::after{
+ content:'';position:absolute;pointer-events:none;
+ right:0;bottom:0;width:clamp(20px,6vw,55px);height:5px;
+ background:var(--accent,var(--purple));
+ opacity:.68;border-radius:10px 0 0 0;
+}
+.panel>h3:first-child{letter-spacing:.045em;}
+.panel .muted{color:var(--muted);}
+
+/* 01 / Lesson log. The original editor and history pane sizes are sacred. */
+#journal .editor-console{
+ background:linear-gradient(145deg,rgba(255,153,102,.055),transparent 60%);
+ border-top-color:var(--gold);
+ border-left-color:var(--peach);
+ border-bottom-color:var(--purple);
+}
+#journal .editor-console::before{color:var(--gold);}
+#journal .fields label{color:var(--purple);}
+#journal .fields label:nth-child(1){border-top-color:var(--gold);}
+#journal .fields label:nth-child(2){border-top-color:var(--peach);}
+#journal .fields label:nth-child(3){border-top-color:var(--blue);}
+#journal .shortcuts button{color:#000;letter-spacing:.045em;}
+#journal .shortcuts button:nth-child(3n+1){background:var(--gold);}
+#journal .shortcuts button:nth-child(3n+2){background:var(--purple);}
+#journal .shortcuts button:nth-child(3n){background:var(--blue);}
+#journal .notes{background:#050408;color:#ffddb3;caret-color:var(--gold);}
+#journal .savebar{color:var(--blue);}
+#journal .history button{background:linear-gradient(90deg,rgba(153,153,255,.09),transparent 72%);}
+#journal .history button.selected{background:linear-gradient(90deg,rgba(255,204,102,.14),transparent 75%);color:var(--gold);border-right-color:var(--gold);}
+#journal .history button.selected::before{background:var(--gold);color:#000;}
+#journal .previous{color:var(--peach);}
+
+/* 02 / Students. Preserve archive indicators and original row targeting. */
+#students .searchbar{border-left-color:var(--purple);}
+#students .studentrow{background:linear-gradient(90deg,rgba(153,153,255,.11),rgba(8,6,12,.02) 70%);}
+#students .studentrow:nth-child(3n+2){background:linear-gradient(90deg,rgba(204,153,204,.13),transparent 70%);}
+#students .studentrow:nth-child(3n){background:linear-gradient(90deg,rgba(255,153,102,.1),transparent 70%);}
+#students .studentrow strong{color:#ffd5a6;letter-spacing:.03em;}
+#students .studentrow p{color:var(--blue);}
+#students .studentrow .toolbar button{color:#000;}
+
+/* 03 / Schedule. Slot colors are semantic data and must NOT be recolored. */
+#schedule .schedule-actions button{
+ box-shadow:inset 0 -4px 0 rgba(0,0,0,.23);
+ letter-spacing:.04em;
+}
+#schedule .plan-controls{border-bottom-color:var(--purple);}
+#schedule .plan-controls button[aria-pressed=true]{background:var(--gold);}
+#schedule .plan-day{
+ background:linear-gradient(90deg,rgba(204,153,204,.08),transparent 26%);
+}
+#schedule .plan-row{
+ background-image:linear-gradient(90deg,rgba(255,255,255,.035),transparent 85%);
+}
+#schedule .plan-row.slot-trial{background-color:#21090e;}
+#schedule .plan-row.slot-available{background-color:#0d1a28;}
+#schedule .plan-row.slot-calendar{background-color:#0c2222;}
+#schedule .plan-key{border-radius:0 8px 8px 0;}
+#schedule .plan-time,#schedule .plan-details strong{font-variant-numeric:tabular-nums;}
+#schedule .plan-actions button{box-shadow:inset 0 -2px 0 rgba(0,0,0,.3);}
+#schedule .plan-arrow svg{pointer-events:none;}
+#schedule .plan-archives,#schedule .holiday-settings{border-top-color:var(--gold);}
+
+/* 04 / Data systems. Consistent section hierarchy and explicit warnings. */
+#settings .settingsgrid .panel:nth-child(even){--accent:var(--blue);}
+#settings .settingsgrid .panel.peach{--accent:var(--peach);}
+#settings .settingsgrid .panel h3{color:var(--accent,var(--purple));}
+#settings .settingsgrid .panel .check{color:var(--gold);}
+#settings .snippetrow{border-bottom-color:var(--lcars-rule);}
+#settings .snippetrow strong{color:var(--peach);}
+#settings #testSound{background:var(--purple);}
+#settings #volumeValue,#settings #mobileScaleValue{color:var(--gold);}
+
+/* Modal confirmation hierarchy: errors remain visible and focusable. */
+dialog{background-image:linear-gradient(125deg,rgba(255,153,0,.055),transparent 55%);}
+dialog h2{color:var(--gold);border-bottom-color:var(--purple);}
+dialog button.danger{background:var(--salmon);color:#090609;}
+dialog [data-dialog-error]{color:var(--salmon);}
+#notice{border-left-color:var(--gold);border-top-color:var(--gold);}
+#error{border-left-color:var(--salmon);border-top-color:var(--salmon);}
+
+/* 1-window iPhone policy: no added columns, no moving keyboard fields, no
+   overflow hacks that would hide form inputs, and no reduction below the
+   existing 16px readable text-editor font. */
+@media(max-width:600px){
+ .view>.sectionhead::before{height:3px;width:min(72px,22%);}
+ .topline>span:first-child{letter-spacing:.02em;}
+ #journal .editor-console{background-image:none;}
+ #journal .shortcuts button{letter-spacing:normal;}
+ #journal .notes{font-size:16px;line-height:1.42;}
+ .panel::after{height:3px;width:22px;}
+ #schedule .plan-row{background-image:none;}
+ nav button.active{box-shadow:inset 0 -3px 0 var(--orange);}
+}
+@media(prefers-reduced-motion:reduce){
+ button,nav button,input,select,textarea{animation:none!important;transition:none!important;}
+}

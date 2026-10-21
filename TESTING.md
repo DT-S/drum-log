@@ -158,3 +158,25 @@ The repository CI now runs Node 22 syntax checks and all Node regression tests, 
 - With a hardware keyboard, focus the notice: Enter/Space/Escape dismiss it; Tab and other keys do not.
 - Simulate invalid holiday form input: validation is dismissible and still expires after 10 seconds. Simulate a real unsaved-note/storage failure: the separate **#error** banner remains visible until acknowledged, so no unsaved data warning is lost.
 - Verify both desktop Firefox and installed iPhone/iPad PWA; service worker v17 must be ready after online refresh, then test offline. No data schema migration for this patch.
+
+
+## Experimental LCARS Metronome-inspired audio/design transfer (M1)
+Branch: `feature/lcars-2-design-audio-foundations`, draft PR #11. **Do not deploy to production / merge without sign-off.** Current release `main` remains version 1.10.1, PWA cache v17.
+
+M1 adds a safe visual override and semantic cue map using existing original `sounds/soundsv2/*.mp3` recordings. The two navigation sounds use one user interaction: keypress immediately, menu build at +55ms. New shell v18 adds their offline files, without changing any database schema. GitHub Actions 139/139 Node tests passed on the implementation as of 21 October 2026.
+
+### Manual beta gate for this milestone
+Use a **separate browser profile with fake students** and an isolated preview origin; do not overwrite the deployed app's origin or IndexedDB.
+
+1. Firefox/Arch: confirm the Voyager palette, header rails, readable contrast, four navigation tabs, keyboard focus, dialogs, schedule actions and untouched journal layout.
+2. Listen to menu navigation for two distinguishable overlapping samples, with no clipping or repeated sound on same-tab activation. Test rapid tab changes and alerts during playback.
+3. Confirm hover, click, switch/toggle, warning, invalid form, success and Close samples. Ensure silent mode, app mute and zero app volume stop all playing UI sounds.
+4. In settings, alter volume, reload, and verify same preference. Test first-interaction Web Audio unlock on Firefox and iOS; no autoplay guarantee before a gesture.
+5. With an offline-ready PWA, disable network and reload; test every updated sound and all four views. Confirm the service worker installs cache v18 successfully and does not touch IndexedDB.
+6. Use fake recurring, fortnightly and flexible students, trial lessons, makeups, holiday breaks and recording/jam entries. Verify schedule selection and date/time behavior matches the stable main build.
+7. Edit a journal note, wait for Saved, reload, and compare the original contents. Export and preview JSON and CSV; confirm records and settings survive unchanged.
+8. On iPhone 13/iPad check safe areas, no clipped controls, readable 16px editable text, software keyboard focus, scroll/one-window behavior, Safari silent mode and offline reopening.
+9. Force Web Audio decode errors or denied playback and verify all storage, forms, schedule and export actions still work.
+10. Test rapid switching with an unsaved note: the existing save gate, warning and cross-tab conflict protection must remain intact. Test `prefers-reduced-motion` and keyboard-only navigation.
+
+Only after M1 manual approval should M2 reshape more elaborate page components. No automatic `main` merge is authorized.

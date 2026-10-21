@@ -1,0 +1,14 @@
+/* Mobile Drum Log input/gesture control.
+   Keep one-finger scrolling, controls and editable text selection.
+   Unlike touch-action: manipulation, pan-x pan-y excludes pinch-zoom. */
+@media (any-pointer: coarse) {
+ html,body,.layout,main,.view,dialog,.lcars-start-screen {
+   touch-action: pan-x pan-y;
+ }
+ /* iOS can auto-zoom when text inputs render below 16 CSS pixels.
+    Exclude range/checkbox/radio/buttons so tactile controls keep their size. */
+ input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]),
+ textarea,select {
+   font-size: max(16px, 1em);
+ }
+}
