@@ -25,3 +25,25 @@ jobs:
           node --check sw.js
       - name: Automated regression tests
         run: npm test
+
+  browser-layout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated Chromium browser tester
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Check LCARS layout, local records and view navigation
+        run: node tests/browser-layout.mjs
+      - name: Upload synthetic-layout screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: drum-log-layout-debug
+          path: /tmp/drum-log-layout-*.png
+          if-no-files-found: ignore
