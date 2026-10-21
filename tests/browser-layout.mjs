@@ -89,8 +89,21 @@ try{
     `${label}: LCARS subtitle outside colored bar`);
    assert.ok(startup.badge.top>=startup.center.bottom-1,
     `${label}: studio badge overlaps subtitle`);
+   const start=Date.now();
    await page.locator('#lcarsInitialize').click();
+   await page.waitForTimeout(240);
+   const launchPhase=await page.evaluate(()=>({
+    visible:!document.querySelector('#lcarsStartup').hidden,
+    active:document.querySelector('#lcarsStartup').classList.contains('lcars-initializing'),
+    fill:getComputedStyle(document.querySelector('#lcarsBootFill')).animationName,
+    segments:getComputedStyle(document.querySelector('#lcarsStartup .lcars-rail-segments .lcars-seg')).animationName
+   }));
+   assert.equal(launchPhase.visible,true,`${label}: LCARS startup is gone before construction`);
+   assert.equal(launchPhase.active,true);
+   assert.match(launchPhase.fill,/dl-init-progress/);
+   assert.match(launchPhase.segments,/dl-init-segment/);
    await page.waitForFunction(()=>document.querySelector('#lcarsStartup').hidden,{timeout:10000});
+   assert.ok(Date.now()-start>=1200,`${label}: startup stage disappeared prematurely`);
    // Chassis lighting is an activation effect, never a continuous animation.
    const chassisStyle=await page.evaluate(()=>{
     const el=document.querySelector('body');
@@ -116,6 +129,12 @@ try{
    await page.locator('#students.lcars-view-enter').waitFor({state:'visible'});
    assert.equal(await page.locator('#students.lcars-view-enter').count(),1,
     `${label}: animation did not acknowledge Students navigation`);
+   const built=await page.evaluate(()=>({
+    title:getComputedStyle(document.querySelector('#students>.sectionhead')).animationName,
+    list:getComputedStyle(document.querySelector('#students>.list')).animationName
+   }));
+   assert.match(built.title,/dl-sequence-head/);
+   assert.match(built.list,/dl-sequence-frame/);
    await page.locator('#addStudent').click();
    assert.equal(await page.locator('#modal').evaluate(el=>el.open),true);
    await page.locator('#modal [name="name"]').fill('VISUAL TEST STUDENT');
@@ -124,6 +143,8 @@ try{
    // Explicitly open the newly saved profile rather than assuming the
    // scheduler automatically selects an arbitrary weekday's first student.
    await page.locator('#students [data-open]').first().click();
+   assert.equal(await page.locator('#journal.lcars-view-enter').count(),1,
+    `${label}: Student to Journal also requires LCARS construction`);
    const notes=page.locator('#notes');
    await notes.waitFor({state:'visible'});
    assert.equal(await notes.count(),1,`${label}: journal missing after opening synthetic student`);
