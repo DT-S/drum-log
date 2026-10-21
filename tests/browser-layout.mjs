@@ -108,7 +108,7 @@ try{
    assert.match(launchPhase.elbow,/dl-assembly-elbow/);
    assert.match(launchPhase.rail,/dl-assembly-extend/);
    assert.equal(launchPhase.versionVisible,true,`${label}: mobile version hidden`);
-   assert.match(launchPhase.version,/1\\.11\\.0/);
+   assert.match(launchPhase.version,/1\.11\.0/);
    assert.ok(launchPhase.navWidth>=40,`${label}: nav button collapsed during assembly`);
    await page.waitForFunction(()=>!document.body.classList.contains('lcars-chassis-assembling') &&
     !document.querySelector('#journal').classList.contains('lcars-view-boot'));
