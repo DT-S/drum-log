@@ -11,7 +11,7 @@ export function createViewMotion(root,{
  let active=null,activeClass=null,timer=null;
  const stop=()=>{
   if(timer!==null){clear(timer);timer=null;}
-  if(active){active.classList.remove('lcars-view-enter','lcars-view-boot');active=null;}
+  if(active){active.classList.remove('lcars-view-enter');active.classList.remove('lcars-view-boot');active=null;}
   activeClass=null;
  };
  const play=(id,{boot=false}={})=>{
@@ -21,7 +21,7 @@ export function createViewMotion(root,{
   active=page;
   activeClass=boot?'lcars-view-boot':'lcars-view-enter';
   // Flush a removed class so quick page transitions do not lose the restart.
-  page.classList.remove('lcars-view-enter','lcars-view-boot');
+  page.classList.remove('lcars-view-enter');page.classList.remove('lcars-view-boot');
   void page.offsetWidth;
   page.classList.add(activeClass);
   timer=schedule(()=>{
