@@ -1,6 +1,6 @@
 // LCARS one-shot view assembly, strictly user-initiated. No idle animation,
 // DOM layout changes, loops or changes to the scheduler / student records.
-export const LCARS_VIEW_DURATION_MS=760;
+export const LCARS_VIEW_DURATION_MS=1480;
 export function createViewMotion(root,{
  schedule=(fn,ms)=>setTimeout(fn,ms),
  clear=id=>clearTimeout(id),
@@ -18,6 +18,10 @@ export function createViewMotion(root,{
   // Animate only the destination section. The header/side rail are stable.
   // Opacity / filter do not change the actual touch or keyboard hit targets.
   active=page;
+  // Like the metronome, restart only for an actual navigation. The section
+  // remains in place, and its own header/panels/lists power up in phases.
+  page.classList.remove('lcars-view-enter');
+  void page.offsetWidth;
   page.classList.add('lcars-view-enter');
   timer=schedule(()=>{
    if(active===page){page.classList.remove('lcars-view-enter');active=null;}

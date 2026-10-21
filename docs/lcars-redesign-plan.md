@@ -128,3 +128,20 @@ References:
 - Use `option_toggle_or_secondary_menu_pops_up.mp3` for actual checkboxes and expanding summaries, `windowcloses.mp3` for dialog close, and `update&restart.mp3` only after a successful update installation.
 - Navigation continues to use the distinct paired `keypress_standart + menu_or_window_change` cue; no metronome audio engine or 60fps animation imported.
 - Further QoL remains subject to real usage feedback, especially iOS keyboard handling, notices and backup workflow. The custom full LCARS keyboard is **strictly last**, after M5–M9 acceptance.
+
+## RC27 correction — visible LCARS choreography (user beta feedback)
+- Root cause of seemingly missing launch: `startLaunch()` normally fulfills as soon
+  as an AudioBufferSource starts, so `lcars-startup.js` dismissed its full-screen
+  console in milliseconds. The app now holds the 1.45 s staged visual build
+  while playing the original recording immediately from the user gesture,
+  with a hard 2.35 s fail-open limit and no delay when reduced motion is on.
+- The former 320ms, high-opacity page fade was hardly visible. Add explicit
+  **five-stage actual-data build**: heading rails, panel frames, operational
+  controls, bounded student/day/settings rows, and final readouts/buttons.
+  No fake data, scroll displacement, wandering circle or ongoing idle pulse.
+- Crucial routing fix: animate whenever the rendered view *really changes*,
+  including opening a student's journal from Students/Schedule. Not just via
+  the four nav buttons. The state-tracked `render()` skips repeated same-view
+  renders and note saves. `createViewMotion` retains bounded cancellation.
+- New separate `lcars-sequence.css`, precached in v27. Browser tests verify
+  computed animation properties and launch screen's minimum visible time.
