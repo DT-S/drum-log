@@ -37,5 +37,5 @@ test('M8 modal/light bar animations are finite, offline cached and do not move i
  assert.match(css,/prefers-reduced-motion:reduce/);
  assert.doesNotMatch(css,/infinite|translate\(|scale\(|pointer-events:\s*none/);
  assert.match(sw,/'\.\/lcars-effects\.css'/);
- assert.match(sw,/v26-context-sounds/);
+ assert.match(sw,/v27-visible-sequences/);
 });

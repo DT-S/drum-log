@@ -34,7 +34,7 @@ test('Contextual cues use bundled original sounds and cache version is updated',
   assert.ok(SOUND_FILES[name]?.startsWith('soundsv2/'),name);
  const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
  const app=readFileSync(new URL('../app.js',import.meta.url),'utf8');
- assert.match(sw,/v26-context-sounds/);
+ assert.match(sw,/v27-visible-sequences/);
  assert.match(sw,/'\.\/sound\.js'/);
  assert.match(app,/sounds\.play\('update'\)/);
 });

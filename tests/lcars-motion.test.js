@@ -45,13 +45,13 @@ test('M3 CSS cannot shift hit targets and uses a one-shot app-navigation trigger
  const css=read('lcars-navigation-motion.css'),app=read('app.js'),
        html=read('index.html'),sw=read('sw.js');
  assert.match(app,/import \{createViewMotion,createShellMotion\} from '\.\/lcars-motion\.js'/);
- assert.match(app,/if\(changed\)viewMotion\.play\(next\)/);
+ assert.match(app,/if\(entering\)viewMotion\.play\(view\)/);
  assert.match(css,/prefers-reduced-motion:reduce/);
  assert.match(css,/\.view\.lcars-view-enter/);
   const declarations=css.replace(/\/\*[\s\S]*?\*\//g,'');
  assert.doesNotMatch(declarations,/translate\(|scale\(|clip-path|pointer-events\s*:\s*none|infinite|position\s*:\s*(?:fixed|absolute)/);
  assert.match(html,/href="lcars-navigation-motion\.css"/);
- assert.match(sw,/lcars-core-v2|v26-context-sounds/);
+ assert.match(sw,/lcars-core-v2|v27-visible-sequences/);
  assert.match(sw,/'\.\/lcars-navigation-motion\.css'/);
  assert.match(sw,/'\.\/lcars-motion\.js'/);
 });
