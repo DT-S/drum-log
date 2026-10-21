@@ -106,6 +106,12 @@ function bindMobilePanes(){
  root.querySelectorAll('[data-mobile-pane]').forEach(button=>button.onclick=()=>{
   root.dataset.mobilePane=button.dataset.mobilePane;
   root.querySelectorAll('[data-mobile-pane]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
+  button.classList.remove('lcars-pane-ack');
+  void button.offsetWidth;
+  if(!(typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches)){
+   button.classList.add('lcars-pane-ack');
+   button.addEventListener('animationend',()=>button.classList.remove('lcars-pane-ack'),{once:true});
+  }
  });
 }
 function insert(text){const n=$('#notes');n.setRangeText(text,n.selectionStart,n.selectionEnd,'end');n.focus();scheduleSave();}
@@ -185,12 +191,13 @@ function renderSchedule(){
  document.querySelectorAll('[data-holiday-edit]').forEach(b=>b.onclick=()=>editHoliday(state.holidays.find(h=>h.id===b.dataset.holidayEdit)));
  document.querySelectorAll('[data-holiday-remove]').forEach(b=>b.onclick=()=>removeHoliday(state.holidays.find(h=>h.id===b.dataset.holidayRemove)));
  document.querySelectorAll('[data-holiday-book]').forEach(b=>b.onclick=()=>editAppointment(null,b.dataset.holidayBook));
- $('#planPrev').onclick=()=>{plannerDate=planDateShift(plannerDate,plannerMode==='week'?-7:-1);renderSchedule();};
- $('#planNext').onclick=()=>{plannerDate=planDateShift(plannerDate,plannerMode==='week'?7:1);renderSchedule();};
- $('#planToday').onclick=()=>{plannerDate=localDate();renderSchedule();};
- $('#planDay').onclick=()=>{plannerMode='day';renderSchedule();};
- $('#planWeek').onclick=()=>{plannerMode='week';renderSchedule();};
- $('#plannerDate').onchange=e=>{if(!e.target.value||!e.target.reportValidity())return;plannerDate=e.target.value;renderSchedule();};
+ const rebuildPlanner=()=>{renderSchedule();viewMotion.play('schedule');};
+ $('#planPrev').onclick=()=>{plannerDate=planDateShift(plannerDate,plannerMode==='week'?-7:-1);rebuildPlanner();};
+ $('#planNext').onclick=()=>{plannerDate=planDateShift(plannerDate,plannerMode==='week'?7:1);rebuildPlanner();};
+ $('#planToday').onclick=()=>{plannerDate=localDate();rebuildPlanner();};
+ $('#planDay').onclick=()=>{plannerMode='day';rebuildPlanner();};
+ $('#planWeek').onclick=()=>{plannerMode='week';rebuildPlanner();};
+ $('#plannerDate').onchange=e=>{if(!e.target.value||!e.target.reportValidity())return;plannerDate=e.target.value;rebuildPlanner();};
  bindTrials();bindRows();
  document.querySelectorAll('[data-appointment-edit]').forEach(b=>b.onclick=()=>editAppointment(state.appointments.find(a=>a.id===b.dataset.appointmentEdit)));
  document.querySelectorAll('[data-appointment-open]').forEach(b=>b.onclick=()=>{const a=state.appointments.find(a=>a.id===b.dataset.appointmentOpen);trialId=null;studentId=a.studentId;date=a.date;time=a.time;duration=a.duration;manual=true;view='journal';render();});

@@ -145,3 +145,9 @@ References:
   renders and note saves. `createViewMotion` retains bounded cancellation.
 - New separate `lcars-sequence.css`, precached in v27. Browser tests verify
   computed animation properties and launch screen's minimum visible time.
+
+## RC27 continuation: high-value in-view commands
+- Schedule date shift, Today, Day/Week and date input now replay the bounded
+  five-stage build of real schedule data without reanimating the outer shell.
+- Notes/History triggers short stepped LCARS acknowledgement only on the
+  selected tab, never on the editable textarea/caret or scroll container.
