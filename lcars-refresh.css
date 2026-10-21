@@ -1,0 +1,64 @@
+/* Drum Log LCARS 2: safe design-foundation pass. Rhythm PADD/Voyager
+   colors and segmented controls; no geometry changes to the mobile journal,
+   schedule, forms, dialogs, or any student data. Loaded after original CSS. */
+:root {
+  --peach:#ff9966;
+  --purple:#cc99cc;
+  --blue:#9999ff;
+  --salmon:#cc6666;
+  --gold:#ffcc66;
+  --orange:#ff9900;
+  --muted:#c9b8d3;
+  --line:#8b73a3;
+  --padd-amber:#ffcc66;
+  --padd-lavender:#cc99cc;
+  --padd-ice:#99ccff;
+}
+body{background:#000;color:var(--peach)}
+/* The LCARS chassis stays fixed while section contents are updated. */
+header{border-top-color:var(--gold)}
+header .elbow{background:var(--gold)}
+.topline{color:var(--purple)}
+.rail i:first-child{background:var(--orange)}
+.rail i:nth-child(2){background:var(--peach)}
+.rail i:nth-child(3){background:var(--purple)}
+.telemetry span{border-color:var(--purple);color:var(--purple)}
+.telemetry span:nth-child(2){border-color:var(--gold);color:var(--gold)}
+.telemetry span:nth-child(3){border-color:var(--blue);color:var(--blue)}
+nav button{transition:filter .14s,box-shadow .18s}
+nav button:nth-child(1){background:var(--gold)}
+nav button:nth-child(2){background:var(--peach)}
+nav button:nth-child(3){background:var(--purple)}
+nav button:nth-child(4){background:var(--blue)}
+nav button.active{background:var(--gold);box-shadow:inset 0 -4px 0 var(--orange)}
+.sidebarfill{background:var(--orange)}
+.sidetail{background:var(--purple)}
+.sectionhead{border-bottom-color:var(--purple)}
+.sectionhead::after{background:var(--orange)}
+button:focus-visible,
+nav button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible {
+  outline:3px solid var(--gold);
+  outline-offset:3px;
+}
+button:disabled{filter:none}
+#notice{border-left-color:var(--gold)}
+#error{border-left-color:var(--salmon)}
+/* Keep edits immediate and predictable: motion only acknowledges a real click. */
+@keyframes drum-lcars-press {
+ from{box-shadow:inset 0 0 0 0 var(--gold)}
+ to{box-shadow:inset 0 -3px 0 0 rgba(0,0,0,.25)}
+}
+nav button:active{animation:drum-lcars-press 160ms ease-out}
+@media(max-width:600px){
+ /* Original one-window layout, input font sizes and safe-area rules win. */
+ nav button{box-shadow:none}
+ nav button.active{box-shadow:inset 0 -3px 0 var(--orange)}
+ .sidebarfill,.sidetail{background:var(--orange)}
+}
+@media(prefers-reduced-motion:reduce){
+ nav button,button{animation:none!important;transition:none!important}
+}
