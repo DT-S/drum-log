@@ -69,7 +69,7 @@ Drum Log is already used for real teaching records. A full-screen gate and new s
 - M2 Chromium layout checks previously passed at 320/390/768/1440 with synthetic data and save/reload; rerun after M3 before acceptance.
 
 ## Additional requested LCARS parity work (after M4)
-- **M6 · Update installer / PWA updates:** reuse the metronome's update detection, staged download/activation messaging, safe reload and a controlled "Check for updates" action. **Never** discard unsaved journal notes or replace the database when applying a shell update. Avoid unsolicited `skipWaiting` while text is unsaved.
+- **M6 · Update installer / PWA updates [implemented; device validation pending]:** reuse the metronome's update detection, staged download/activation messaging, safe reload and a controlled "Check for updates" action. **Never** discard unsaved journal notes or replace the database when applying a shell update. Avoid unsolicited `skipWaiting` while text is unsaved.
 - **M7 · LCARS slider components:** port the metronome's distinctive segmented track, bracket thumb, LED tick rail and numerical readout into Drum Log's *existing* Sound Volume and Mobile Scale sliders; preserve their current min/max/step, focus, keyboard and iOS accessibility.
 - **M8 · Additional staggered interface effects:** refine buttons, notice banners, modal assembly, chart-free list and pane transitions. No continuously moving content, no focus-stealing effects; honor `prefers-reduced-motion`.
 - **M9 · Quality-of-life parity:** review the metronome's settings clarity, toast expiration, backup/update status, responsive sizing, and input affordances individually. No accidental import of metronome-specific rhythm functions.
@@ -99,3 +99,10 @@ References:
 - https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/touch-action
 - https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/virtualkeyboardpolicy
 - https://caniuse.com/mdn-html_global_attributes_virtualkeyboardpolicy
+
+## M6 checkpoint — explicit, editor-safe PWA update installer
+- The `Data systems > Storage status` card has `CHECK FOR UPDATES`, `INSTALL UPDATE & RELOAD`, and `RELOAD UPDATED APP` states, plus non-disappearing status text.
+- Updates use the existing PWA service worker via one shared registration; updates are **not** applied silently, and the page is never automatically reloaded. `skipWaiting` occurs only following an explicit request and after editor-save and open-tab checks.
+- The update manager checks ongoing save transactions, save failures and open dialogs; it refuses to reload when notes may be unsaved. The active worker counts open scope clients before allowing forced activation. Unavailable counts are treated as unsafe.
+- A just-installed update requires an explicit second click to reload. Tests must verify this two-phase flow and its failure modes. Service worker caches new update manager offline as `v23-update-console`.
+- Existing indexedDB database, data records, schema v10, previous and current JSON backups are untouched.
