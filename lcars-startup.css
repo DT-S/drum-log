@@ -769,3 +769,63 @@
 @media(prefers-reduced-motion:reduce){
  .drum-log-ring{animation:none!important;}
 }
+
+/* Startup 2.0: a staged *visible* initialization sequence. The original
+   sound plays immediately inside a real user gesture. Visuals persist
+   long enough for the user to actually see the LCARS construction. */
+@keyframes dl-init-progress{
+  0%{width:12%;filter:brightness(1.65)}
+  18%{width:26%}
+  48%{width:56%}
+  76%{width:86%}
+  100%{width:100%;filter:brightness(1)}
+}
+@keyframes dl-init-segment{
+  0%{opacity:0;filter:brightness(2)}
+  40%{opacity:.85;filter:brightness(1.38)}
+  100%{opacity:1;filter:none}
+}
+@keyframes dl-init-frame{
+  0%{opacity:.08;border-color:transparent;filter:brightness(1.9)}
+  50%{opacity:.75;filter:brightness(1.35)}
+  100%{opacity:1;filter:none}
+}
+@keyframes dl-init-cascade{
+  0%{opacity:.15;color:var(--padd-ice)}
+  60%{opacity:1;color:#fff}
+  100%{opacity:1}
+}
+.lcars-start-screen.lcars-initializing .lcars-boot-bar.active .lcars-boot-fill{
+  animation:dl-init-progress 1360ms cubic-bezier(.2,.64,.25,1) both;
+}
+.lcars-start-screen.lcars-initializing .lcars-rail-segments>.lcars-seg,
+.lcars-start-screen.lcars-initializing .lcars-bottom-segments>.lcars-seg,
+.lcars-start-screen.lcars-initializing .lcars-side-block{
+  animation:dl-init-segment 310ms steps(5,end) both;
+}
+.lcars-start-screen.lcars-initializing .lcars-rail-segments>.lcars-seg:nth-child(1),
+.lcars-start-screen.lcars-initializing .lcars-bottom-segments>.lcars-seg:nth-child(1){animation-delay:70ms}
+.lcars-start-screen.lcars-initializing .lcars-rail-segments>.lcars-seg:nth-child(2),
+.lcars-start-screen.lcars-initializing .lcars-bottom-segments>.lcars-seg:nth-child(2){animation-delay:180ms}
+.lcars-start-screen.lcars-initializing .lcars-rail-segments>.lcars-seg:nth-child(3),
+.lcars-start-screen.lcars-initializing .lcars-bottom-segments>.lcars-seg:nth-child(3){animation-delay:290ms}
+.lcars-start-screen.lcars-initializing .lcars-rail-segments>.lcars-seg:nth-child(n+4),
+.lcars-start-screen.lcars-initializing .lcars-bottom-segments>.lcars-seg:nth-child(n+4){animation-delay:405ms}
+.lcars-start-screen.lcars-initializing .lcars-side-block:nth-child(1){animation-delay:180ms}
+.lcars-start-screen.lcars-initializing .lcars-side-block:nth-child(2){animation-delay:270ms}
+.lcars-start-screen.lcars-initializing .lcars-side-block:nth-child(3){animation-delay:360ms}
+.lcars-start-screen.lcars-initializing .lcars-side-block:nth-child(4){animation-delay:450ms}
+.lcars-start-screen.lcars-initializing .lcars-console-frame{
+  animation:dl-init-frame 480ms ease-out 400ms both;
+}
+.lcars-start-screen.lcars-initializing .lcars-cascade span{
+  animation:dl-init-cascade 180ms steps(4,end) both;
+}
+.lcars-start-screen.lcars-initializing .lcars-cascade span:nth-child(2n){animation-delay:155ms}
+.lcars-start-screen.lcars-initializing .lcars-cascade span:nth-child(3n){animation-delay:310ms}
+.lcars-start-screen.lcars-initializing .lcars-cascade span:nth-child(5n){animation-delay:470ms}
+@media(prefers-reduced-motion:reduce){
+ .lcars-start-screen.lcars-initializing :is(.lcars-console-frame,.lcars-seg,.lcars-side-block,.lcars-boot-fill,.lcars-cascade span){
+  animation:none!important;filter:none!important;
+ }
+}
