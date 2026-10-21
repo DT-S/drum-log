@@ -35,7 +35,7 @@ test('M4 local logo, classes and actual gesture boot require no CDN and are offl
  assert.match(js,/startAudio:\(\)=>sounds\.startLaunch\(\)/);
  assert.match(sw,/'\.\/lcars-startup\.css'/);
  assert.match(sw,/'\.\/lcars-startup\.js'/);
- assert.match(sw,/v26-context-sounds/);
+ assert.match(sw,/v27-visible-sequences/);
  assert.equal(SOUND_FILES.launch,'soundsv2/launchsound_Staggered_Entrance_Animation.mp3');
  assert.doesNotMatch(css,/@import|https?:\/\//);
 });
@@ -92,6 +92,9 @@ test('M4 console starts audio only inside a direct click and opens journal if so
  assert.equal(calls,1);
  button.onclick();
  await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(entered,0,'The LCARS build must not disappear instantly when audio starts');
+ assert.equal(overlay.hidden,false);
+ await new Promise(resolve=>setTimeout(resolve,1550));
  assert.equal(entered,1);
  assert.equal(header.inert,false);
  assert.equal(overlay.hidden,true);
