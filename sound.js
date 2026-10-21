@@ -20,6 +20,20 @@ export const SOUND_FILES=Object.freeze({
  // No generic success in the newer pack; retain the original recording.
  accept:'Acceptsound.mp3'
 });
+// Buttons communicate their action with the same specific LCARS cues as the
+// metronome rather than giving every action the identical generic keypress.
+export function classifyDrumCue(el){
+ if(!el||el.dataset?.view!==undefined)return null;
+ if(el.hasAttribute?.('data-close'))return 'close';
+ if(el.dataset?.mobilePane!==undefined)return 'mode';
+ if(el.dataset?.up!==undefined||el.classList?.contains?.('lcars-plus')||
+  el.classList?.contains?.('lcars-jump-up')||el.classList?.contains?.('plan-arrow-next'))return 'increase';
+ if(el.dataset?.down!==undefined||el.classList?.contains?.('lcars-minus')||
+  el.classList?.contains?.('lcars-jump-down')||el.classList?.contains?.('plan-arrow-prev'))return 'decrease';
+ if(el.type==='checkbox'||el.tagName==='SUMMARY'||
+  el.getAttribute?.('aria-expanded')!==null&&el.getAttribute?.('aria-expanded')!==undefined)return 'toggle';
+ return 'press';
+}
 export function createSoundSystem({AudioContextClass=globalThis.AudioContext||globalThis.webkitAudioContext,fetchFile=globalThis.fetch?.bind(globalThis),clock=()=>performance.now()}={}){
  let context,master,enabled=true,volume=.35,active=null,lastHover=-Infinity,lastSignal=-Infinity,lastAlert=-Infinity,sequence=0,resuming=Promise.resolve(),audioError='';
  const layered=new Set();
@@ -77,17 +91,15 @@ export function createSoundSystem({AudioContextClass=globalThis.AudioContext||gl
    return true;
   }catch{return false;}finally{clearTimeout(timer);}
  }
- function bind(root=document){const target=e=>e.target?.closest?.('button, select, input:not([type="hidden"]), textarea, a[href]');const usable=el=>el&&!el.disabled&&!el.closest('[hidden]');
+ function bind(root=document){const target=e=>e.target?.closest?.('button, summary, select, input:not([type="hidden"]), textarea, a[href]');const usable=el=>el&&!el.disabled&&!el.closest('[hidden]');
  root.addEventListener('pointerdown',e=>{unlock();const el=target(e);if(usable(el)&&e.pointerType!=='mouse')play('hover');},true);
  root.addEventListener('touchend',()=>unlock(),{capture:true,passive:true});
  root.addEventListener('keydown',e=>{if(!e.repeat)unlock();},true);
  root.addEventListener('pointerover',e=>{if(e.pointerType!=='mouse')return;const el=target(e);if(usable(el)&&!el.contains(e.relatedTarget))play('hover');});
  root.addEventListener('click',e=>{unlock();const el=target(e);if(!usable(el)||el.type==='file'||el.dataset.view||el.closest?.('#lcarsStartup'))return;
   unlock();
-  if(el.type==='checkbox'||el.tagName==='SUMMARY'||el.getAttribute?.('aria-expanded')!==null
-    &&el.getAttribute?.('aria-expanded')!==undefined)play('toggle');
-  else if(el.hasAttribute?.('data-close'))play('close');
-  else play('press');},true);
+  const cue=classifyDrumCue(el);
+  if(cue)play(cue);},true);
  root.addEventListener('invalid',()=>play('invalid'),true);
  root.addEventListener('visibilitychange',()=>{if(root.hidden)stop();});
  }

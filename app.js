@@ -462,7 +462,10 @@ channel&&(channel.onmessage=()=>{notice('Data changed in another tab. Finish thi
 function tick(){$('#clock').textContent=new Date().toLocaleString('en-GB',{weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).toUpperCase();}tick();setInterval(tick,30000);
 const updater=createUpdateManager({serviceWorker:navigator.serviceWorker,online:()=>navigator.onLine,
  canProceed:async()=>!$('#modal')?.open&&!pending&&!saveFailure&&await ready(),
- reload:()=>location.reload(),onStatus:message=>{const e=$('#offlineInfo');if(e)e.textContent=message;}});
+ reload:()=>location.reload(),onStatus:message=>{
+  const e=$('#offlineInfo');if(e)e.textContent=message;
+  if(message.startsWith('New LCARS system installed'))sounds.play('update');
+ }});
 async function offline(){
  if(!('serviceWorker'in navigator)||!isSecureContext){
   $('#storageStatus').textContent='OFFLINE UNAVAILABLE — USE HTTPS OR LOCALHOST';

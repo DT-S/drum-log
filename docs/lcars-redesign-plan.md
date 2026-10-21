@@ -72,7 +72,7 @@ Drum Log is already used for real teaching records. A full-screen gate and new s
 - **M6 · Update installer / PWA updates [implemented; device validation pending]:** reuse the metronome's update detection, staged download/activation messaging, safe reload and a controlled "Check for updates" action. **Never** discard unsaved journal notes or replace the database when applying a shell update. Avoid unsolicited `skipWaiting` while text is unsaved.
 - **M7 · LCARS slider components [implemented; device acceptance pending]:** port the metronome's distinctive segmented track, bracket thumb, LED tick rail and numerical readout into Drum Log's *existing* Sound Volume and Mobile Scale sliders; preserve their current min/max/step, focus, keyboard and iOS accessibility.
 - **M8 · Additional staggered interface effects [implemented, pending device tests]:** refine buttons, notice banners, modal assembly, chart-free list and pane transitions. No continuously moving content, no focus-stealing effects; honor `prefers-reduced-motion`.
-- **M9 · Quality-of-life parity:** review the metronome's settings clarity, toast expiration, backup/update status, responsive sizing, and input affordances individually. No accidental import of metronome-specific rhythm functions.
+- **M9 · Quality-of-life parity [semantic sound pass implemented; review ongoing]:** review the metronome's settings clarity, toast expiration, backup/update status, responsive sizing, and input affordances individually. No accidental import of metronome-specific rhythm functions.
 - Each milestone requires its own regression/browser/backup acceptance; M6–M9 are planned only, not quietly merged into M4.
 
 ## M4 implementation
@@ -121,3 +121,10 @@ References:
 - Dialog, notice and error appearances briefly illuminate without hiding
   the actual content. Persistent errors remain visible until dismissed.
 - Honors reduced-motion preference. New scoped CSS offline-cached as v25.
+
+## M9 checkpoint — meaningful LCARS feedback
+- Use `modechange.mp3` for the mobile Journal Notes/History pane toggle.
+- Use `keypress_increase/decrease.mp3` for the +/- LCARS faders, next/previous presets, shortcut reorder and date arrows where applicable; preserve ordinary keypress for other controls.
+- Use `option_toggle_or_secondary_menu_pops_up.mp3` for actual checkboxes and expanding summaries, `windowcloses.mp3` for dialog close, and `update&restart.mp3` only after a successful update installation.
+- Navigation continues to use the distinct paired `keypress_standart + menu_or_window_change` cue; no metronome audio engine or 60fps animation imported.
+- Further QoL remains subject to real usage feedback, especially iOS keyboard handling, notices and backup workflow. The custom full LCARS keyboard is **strictly last**, after M5–M9 acceptance.
