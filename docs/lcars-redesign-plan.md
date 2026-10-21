@@ -29,7 +29,7 @@ Review `index.html`, `style.css`, `mobile.css`, `schedule.css`, `sound.js`, `app
 - Keep existing settings and format unchanged; pre-cache all used sound files and style. Unit-test layering, preemption, mute and offline asset list.
 - Small visual change only, no page transitions or startup gate yet.
 
-### M2. Responsive component polish
+### M2. Responsive component polish [implemented; browser/device validation pending]
 Map metronome's color segmentation, bracket/edge treatments, high-contrast labels, pressed states and consistent text sizing into Drum Log's *existing* sections: Journal, Students, Schedule and Data Systems. Pay particular attention to the one-window iPhone journal, Schedule action trio and touch/keyboard safe areas. Do not copy layout breakpoints blindly.
 
 ### M3. Navigation and screen-assembly motion
@@ -52,3 +52,11 @@ Drum Log is already used for real teaching records. A full-screen gate and new s
 - Baseline GitHub Actions on `main`: success for commit `a99428f0845b7844e8dcc5e8f686f6b4c36830f1`.
 - M1 branch commit before acceptance notes: `fec1d7afcdb4267d2c44e9c7b734c512ee4e71a0`. `npm test` in GitHub Actions: **139 of 139 passing** on both branch push and draft-PR, including original audio/data regressions and new layered-navigation/offline file tests. Check GitHub Actions for subsequent commits.
 - M1 manual browser acceptance remains pending (see `TESTING.md`). The live `main` site has not changed and should not be used to test experimental code.
+
+## M2 component review checklist
+
+- LCARS component theme is a separate stylesheet `lcars-components.css` loaded **after** the base, mobile and schedule styles. It does not change or rebind application markup, events, scheduling or the data schema.
+- All four surfaces get dedicated variants: Journal (editor/history/shortcuts), Students (roster/search), Schedule (three action segments, day rows, event status), Data Systems (settings and archive cards), plus modal confirmation hierarchy.
+- The semantic schedule accent colors for trials, canceled, free, and independent calendar events are preserved. The CSS does not alter placement of the three schedule action buttons, the one-window mobile pane switching, or the minimum text-editor font size.
+- Pointer-event-free decorations, visible focus rings, and reduced-motion preference are required. Check 320, 390, 768 and 1440 CSS px before release, plus iPhone landscape/safe-area and Firefox 200% zoom.
+- Added/offline-cached CSS bumps shell cache to v19 on this **experimental** branch. Never clear the user's real IndexedDB data to force an update.
