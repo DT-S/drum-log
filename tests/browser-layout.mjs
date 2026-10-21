@@ -91,6 +91,14 @@ try{
     `${label}: studio badge overlaps subtitle`);
    await page.locator('#lcarsInitialize').click();
    await page.waitForFunction(()=>document.querySelector('#lcarsStartup').hidden,{timeout:10000});
+   // Chassis lighting is an activation effect, never a continuous animation.
+   const chassisStyle=await page.evaluate(()=>{
+    const el=document.querySelector('body');
+    return {active:el.classList.contains('lcars-chassis-assembling'),
+      nav:document.querySelector('nav button').getBoundingClientRect().width};
+   });
+   assert.ok(chassisStyle.nav>=40,`${label}: chassis animation moved navigation`);
+
 
    const initial=await page.evaluate(()=>{
     const styles=[...document.styleSheets].map(s=>s.href||'');
