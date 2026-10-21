@@ -54,12 +54,35 @@ export function createSoundSystem({AudioContextClass=globalThis.AudioContext||gl
    }
   }).catch(()=>{});
  }
+ // A cold start is allowed only in the trusted INITIALIZE DRUM LOG click.
+ // Buffer decoding is time-bounded so broken audio cannot trap student data.
+ async function startLaunch({timeoutMs=1800}={}){
+  unlock(); // AudioContext.resume() occurs synchronously in the click call.
+  if(!enabled||volume===0||!context||!buffers.has('launch'))return false;
+  const token=++sequence;
+  const timeout=Number.isFinite(timeoutMs)?Math.max(0,Math.min(3000,timeoutMs)):1800;
+  let timer;
+  try{
+   const ready=await Promise.race([
+    Promise.all([buffers.get('launch'),resuming]).then(([buffer])=>buffer),
+    new Promise(resolve=>{timer=setTimeout(()=>resolve(null),timeout);})
+   ]);
+   if(!ready||token!==sequence||!enabled||volume===0||context.state!=='running')return false;
+   if(active){try{active.stop();}catch{}active=null;}
+   stopLayered();
+   const source=context.createBufferSource(),gain=context.createGain();
+   source.buffer=ready;gain.gain.value=1;source.connect(gain);gain.connect(master);
+   source.onended=()=>{source.disconnect();gain.disconnect();if(active===source)active=null;};
+   active=source;source.start();
+   return true;
+  }catch{return false;}finally{clearTimeout(timer);}
+ }
  function bind(root=document){const target=e=>e.target?.closest?.('button, select, input:not([type="hidden"]), textarea, a[href]');const usable=el=>el&&!el.disabled&&!el.closest('[hidden]');
  root.addEventListener('pointerdown',e=>{unlock();const el=target(e);if(usable(el)&&e.pointerType!=='mouse')play('hover');},true);
  root.addEventListener('touchend',()=>unlock(),{capture:true,passive:true});
  root.addEventListener('keydown',e=>{if(!e.repeat)unlock();},true);
  root.addEventListener('pointerover',e=>{if(e.pointerType!=='mouse')return;const el=target(e);if(usable(el)&&!el.contains(e.relatedTarget))play('hover');});
- root.addEventListener('click',e=>{unlock();const el=target(e);if(!usable(el)||el.type==='file'||el.dataset.view)return;
+ root.addEventListener('click',e=>{unlock();const el=target(e);if(!usable(el)||el.type==='file'||el.dataset.view||el.closest?.('#lcarsStartup'))return;
   unlock();
   if(el.type==='checkbox'||el.tagName==='SUMMARY'||el.getAttribute?.('aria-expanded')!==null
     &&el.getAttribute?.('aria-expanded')!==undefined)play('toggle');
@@ -70,5 +93,5 @@ export function createSoundSystem({AudioContextClass=globalThis.AudioContext||gl
  }
  function status(){if(!enabled)return 'Audio disabled in app settings.';if(volume===0)return 'App volume is zero.';if(audioError)return audioError;if(!context)return 'Tap Test sound to activate audio.';return context.state==='running'?'Audio active. If silent: turn off iPhone Silent Mode, raise media volume and check Bluetooth output.':'Audio '+context.state+'. Tap Test sound again.';}
  async function test(){unlock();play('accept');await Promise.all([buffers.get('accept'),resuming]);return status();}
- return {configure,unlock,play,transition,bind,stop,status,test};
+ return {configure,unlock,play,transition,startLaunch,bind,stop,status,test};
 }

@@ -67,3 +67,16 @@ Drum Log is already used for real teaching records. A full-screen gate and new s
 - `lcars-navigation-motion.css` staggers LCARS headings/rails, roster entries, the schedule and settings panels. Only opacity and brightness change; controls do not translate, scale, clip or lose hit targets. Navigation keeps the two original keypress/menu sounds from M1.
 - Respects reduced motion. CSS and JS precached by experimental service worker v20.
 - M2 Chromium layout checks previously passed at 320/390/768/1440 with synthetic data and save/reload; rerun after M3 before acceptance.
+
+## Additional requested LCARS parity work (after M4)
+- **M6 · Update installer / PWA updates:** reuse the metronome's update detection, staged download/activation messaging, safe reload and a controlled "Check for updates" action. **Never** discard unsaved journal notes or replace the database when applying a shell update. Avoid unsolicited `skipWaiting` while text is unsaved.
+- **M7 · LCARS slider components:** port the metronome's distinctive segmented track, bracket thumb, LED tick rail and numerical readout into Drum Log's *existing* Sound Volume and Mobile Scale sliders; preserve their current min/max/step, focus, keyboard and iOS accessibility.
+- **M8 · Additional staggered interface effects:** refine buttons, notice banners, modal assembly, chart-free list and pane transitions. No continuously moving content, no focus-stealing effects; honor `prefers-reduced-motion`.
+- **M9 · Quality-of-life parity:** review the metronome's settings clarity, toast expiration, backup/update status, responsive sizing, and input affordances individually. No accidental import of metronome-specific rhythm functions.
+- Each milestone requires its own regression/browser/backup acceptance; M6–M9 are planned only, not quietly merged into M4.
+
+## M4 implementation
+- Optional `INITIALIZE DRUM LOG` launch console, enabled by default. Uses the approved Voyager frame, Drum Log logo and original stored launch MP3; real click unlocks Web Audio.
+- Existing schema version 10 is retained. The optional `settings.launchScreen` boolean defaults to true in older backups, survives export/import, and may be disabled in Data Systems.
+- If audio fails or times out the console opens anyway; no note/schedule transaction waits for audio. The app cannot guarantee autoplay without a click.
+- The Startup CSS/JS and all MP3s are precached as an offline shell update; no custom sound uploads or remote fonts required.
