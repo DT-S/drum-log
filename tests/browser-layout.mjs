@@ -57,9 +57,12 @@ try{
    await page.locator('#modal [name="name"]').fill('VISUAL TEST STUDENT');
    await page.locator('#modal [type="submit"]').click();
    await page.waitForFunction(()=>document.querySelector('#studentCount')?.textContent==='01',{timeout:15000});
-   await page.locator('nav [data-view="journal"]').click();
+   // Explicitly open the newly saved profile rather than assuming the
+   // scheduler automatically selects an arbitrary weekday's first student.
+   await page.locator('#students [data-open]').first().click();
    const notes=page.locator('#notes');
-   assert.equal(await notes.count(),1,`${label}: journal missing after adding synthetic student`);
+   await notes.waitFor({state:'visible'});
+   assert.equal(await notes.count(),1,`${label}: journal missing after opening synthetic student`);
    const editor=await notes.evaluate(el=>({fontSize:parseFloat(getComputedStyle(el).fontSize),height:el.getBoundingClientRect().height}));
    assert.ok(editor.fontSize>=16,`${label}: iPhone input text must not trigger zoom`);
    assert.ok(editor.height>=75,`${label}: journal editor is too small`);
