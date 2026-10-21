@@ -94,24 +94,26 @@ try{
    await page.waitForTimeout(240);
    const launchPhase=await page.evaluate(()=>({
     visible:!document.querySelector('#lcarsStartup').hidden,
-    active:document.querySelector('#lcarsStartup').classList.contains('lcars-initializing'),
-    fill:getComputedStyle(document.querySelector('#lcarsBootFill')).animationName,
-    segments:getComputedStyle(document.querySelector('#lcarsStartup .lcars-rail-segments .lcars-seg')).animationName
+    booting:document.body.classList.contains('lcars-chassis-assembling'),
+    viewBoot:document.querySelector('#journal').classList.contains('lcars-view-boot'),
+    elbow:getComputedStyle(document.querySelector('header .elbow')).animationName,
+    rail:getComputedStyle(document.querySelector('nav button')).animationName,
+    versionVisible:getComputedStyle(document.querySelector('footer span:last-child')).display!=='none',
+    version:document.querySelector('footer span:last-child').textContent,
+    navWidth:document.querySelector('nav button').getBoundingClientRect().width
    }));
-   assert.equal(launchPhase.visible,true,`${label}: LCARS startup is gone before construction`);
-   assert.equal(launchPhase.active,true);
-   assert.match(launchPhase.fill,/dl-init-progress/);
-   assert.match(launchPhase.segments,/dl-init-segment/);
-   await page.waitForFunction(()=>document.querySelector('#lcarsStartup').hidden,{timeout:10000});
-   assert.ok(Date.now()-start>=1200,`${label}: startup stage disappeared prematurely`);
-   // Chassis lighting is an activation effect, never a continuous animation.
-   const chassisStyle=await page.evaluate(()=>{
-    const el=document.querySelector('body');
-    return {active:el.classList.contains('lcars-chassis-assembling'),
-      nav:document.querySelector('nav button').getBoundingClientRect().width};
-   });
-   assert.ok(chassisStyle.nav>=40,`${label}: chassis animation moved navigation`);
-
+   assert.equal(launchPhase.visible,false,`${label}: launcher should disappear immediately`);
+   assert.equal(launchPhase.booting,true,`${label}: main chassis not assembling`);
+   assert.equal(launchPhase.viewBoot,true,`${label}: first page missing long boot`);
+   assert.match(launchPhase.elbow,/dl-assembly-elbow/);
+   assert.match(launchPhase.rail,/dl-assembly-appear/);
+   assert.equal(launchPhase.versionVisible,true,`${label}: mobile version hidden`);
+   assert.match(launchPhase.version,/1\.11\.0/);
+   assert.ok(launchPhase.navWidth>=40,`${label}: nav button collapsed during assembly`);
+   await page.waitForFunction(()=>!document.body.classList.contains('lcars-chassis-assembling') &&
+    !document.querySelector('#journal').classList.contains('lcars-view-boot'));
+   assert.ok(Date.now()-start>=2700,`${label}: full boot ended too early`);
+   // Shell animation is finished before regular tab transitions begin.
 
    const initial=await page.evaluate(()=>{
     const styles=[...document.styleSheets].map(s=>s.href||'');

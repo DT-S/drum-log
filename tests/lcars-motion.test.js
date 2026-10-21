@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {LCARS_VIEW_DURATION_MS,createViewMotion} from '../lcars-motion.js';
+import {LCARS_VIEW_DURATION_MS,LCARS_BOOT_DURATION_MS,createViewMotion} from '../lcars-motion.js';
 
 function page(){const classes=new Set();return {
  hidden:false,classList:{
@@ -51,7 +51,26 @@ test('M3 CSS cannot shift hit targets and uses a one-shot app-navigation trigger
   const declarations=css.replace(/\/\*[\s\S]*?\*\//g,'');
  assert.doesNotMatch(declarations,/translate\(|scale\(|clip-path|pointer-events\s*:\s*none|infinite|position\s*:\s*(?:fixed|absolute)/);
  assert.match(html,/href="lcars-navigation-motion\.css"/);
- assert.match(sw,/lcars-core-v2|v27-visible-sequences/);
+ assert.match(sw,/lcars-core-v2|v28-console-unfold/);
  assert.match(sw,/'\.\/lcars-navigation-motion\.css'/);
  assert.match(sw,/'\.\/lcars-motion\.js'/);
+});
+
+test('RC28 full boot lasts longer than navigation and never doubles on quick tab change',()=>{
+ const journal=page(),students=page(),pages={journal,students};
+ let id=0;const pending=new Map();
+ const motion=createViewMotion({getElementById:key=>pages[key]},{
+  schedule:(fn,ms)=>{const key=++id;pending.set(key,{fn,ms});return key;},
+  clear:key=>pending.delete(key),reduced:()=>false
+ });
+ assert.equal(motion.play('journal',{boot:true}),true);
+ assert.ok(journal.classList.contains('lcars-view-boot'));
+ assert.equal([...pending.values()][0].ms,LCARS_BOOT_DURATION_MS);
+ assert.equal(LCARS_BOOT_DURATION_MS,3100);
+ assert.equal(motion.play('students'),true);
+ assert.equal(journal.classList.contains('lcars-view-boot'),false);
+ assert.equal(students.classList.contains('lcars-view-enter'),true);
+ assert.equal([...pending.values()][0].ms,LCARS_VIEW_DURATION_MS);
+ motion.stop();
+ assert.equal(students.classList.contains('lcars-view-enter'),false);
 });

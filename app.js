@@ -489,9 +489,9 @@ try{await openDB();state=await readState();sounds.configure(state.settings);appl
   if(state.settings.launchScreen!==false){
    startupConsole.show({
     startAudio:()=>sounds.startLaunch(),
-    onEnter:()=>{shellMotion.play();viewMotion.play(view);}
+    onEnter:()=>{shellMotion.play();viewMotion.play(view,{boot:true});}
    });
-  }else {shellMotion.play();viewMotion.play(view);}
+  }else {shellMotion.play();viewMotion.play(view,{boot:true});}
   if(state.settings.backupReminder&&(state.students.length||state.trials.length)&&(!state.settings.lastBackup||Date.now()-Date.parse(state.settings.lastBackup)>7*86400000))notice('Backup interval exceeded. Open Data systems to export a JSON backup.');offline();}catch(e){error(Error('Cannot open local storage. '+e.message));}
 
 function trialScheduleHTML(){

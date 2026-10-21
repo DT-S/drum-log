@@ -180,3 +180,31 @@ Use a **separate browser profile with fake students** and an isolated preview or
 10. Test rapid switching with an unsaved note: the existing save gate, warning and cross-tab conflict protection must remain intact. Test `prefers-reduced-motion` and keyboard-only navigation.
 
 Only after M1 manual approval should M2 reshape more elaborate page components. No automatic `main` merge is authorized.
+
+
+## LCARS 1.11.0 / RC28: launcher → main-console assembly
+
+Only the presentation layer changed. Database schema stays at 10; student records,
+lesson notes, planner, backups and IndexedDB are untouched. Offline shell is
+`v28-console-unfold`; `lcars-assembly.css` must be precached with the rest.
+
+**Expected handoff:** On initial load, the launcher is visible. On one real tap
+of INITIALIZE, launch audio starts inside that click and the launcher disappears
+immediately. It must *not* replay or finish its own startup animation. The
+main console then unfolds once over about 3 seconds: structural LCARS elbows,
+rails and navigation, active page housing, controls, then actual record rows.
+With the start screen disabled, the same full boot runs on load.
+
+**Expected tab navigation:** A view switch is shorter (~1.48 seconds), and
+animates only the destination view. The permanent header/sidebars/footer do not
+restart. Same-view edits/saves and background autosaves must not replay the
+boot. Schedule date/week changes still acknowledge their real updated content.
+
+**Checks:** Launch with and without audio; verify the same visual handoff. Test
+rapid tab switches, short and empty lists, reduced-motion, keyboard navigation,
+and the note textarea with the iPhone software keyboard. Ensure no scroll-area,
+hit-target, or safe-area clipping regressions. Check the 1.11.0 label is visible
+in the desktop and iPhone footer; version must also appear on the launcher.
+After first online activation, close and reopen the installed PWA offline and
+confirm the new animations work without a network. Do not clear website data,
+reset storage, or import real students into a disposable testing profile.

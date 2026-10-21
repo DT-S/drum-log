@@ -35,7 +35,7 @@ test('M4 local logo, classes and actual gesture boot require no CDN and are offl
  assert.match(js,/startAudio:\(\)=>sounds\.startLaunch\(\)/);
  assert.match(sw,/'\.\/lcars-startup\.css'/);
  assert.match(sw,/'\.\/lcars-startup\.js'/);
- assert.match(sw,/v27-visible-sequences/);
+ assert.match(sw,/v28-console-unfold/);
  assert.equal(SOUND_FILES.launch,'soundsv2/launchsound_Staggered_Entrance_Animation.mp3');
  assert.doesNotMatch(css,/@import|https?:\/\//);
 });
@@ -70,7 +70,7 @@ test('M4 launch is fail-open if MP3 unavailable or Web Audio blocked',async()=>{
   fetchFile:async()=>({ok:false})});
  assert.equal(await system.startLaunch({timeoutMs:10}),false);
 });
-test('M4 console starts audio only inside a direct click and opens journal if sound fails',async()=>{
+test('Initialize instantly hands off to main console exactly once, even without MP3',async()=>{
  const elements=new Map();
  function el(key){
   const o={hidden:false,disabled:false,inert:false,dataset:{},textContent:'',
@@ -79,24 +79,26 @@ test('M4 console starts audio only inside a direct click and opens journal if so
   elements.set(key,o);return o;
  }
  const overlay=el('#lcarsStartup'),button=el('#lcarsInitialize'),
- fill=el('#lcarsBootFill');el('#lcarsBootBar');el('#lcarsInitText');el('#lcarsInitCode');el('#lcarsStartupNote');
+  fill=el('#lcarsBootFill');
+ el('#lcarsBootBar');el('#lcarsInitText');el('#lcarsInitCode');el('#lcarsStartupNote');
  overlay.querySelectorAll=()=>[];
  const header={tagName:'HEADER',inert:false},script={tagName:'SCRIPT',inert:false};
  const root={querySelector:key=>elements.get(key),body:{children:[overlay,header,script]}};
  const screen=createStartupConsole(root);
  let calls=0,entered=0;
- assert.equal(screen.show({startAudio:()=>{calls++;return Promise.resolve(false);},onEnter:()=>entered++}),true);
+ assert.equal(screen.show({startAudio:()=>{
+  calls++;return Promise.reject(Error('no audio device'));
+ },onEnter:()=>entered++}),true);
  assert.equal(header.inert,true);
- assert.equal(calls,0,'no autoplay before user action');
+ assert.equal(calls,0,'no audio before gesture');
  button.onclick();
- assert.equal(calls,1);
+ assert.equal(calls,1,'audio began synchronously during click');
+ assert.equal(entered,1,'main assembly begins on that same click');
+ assert.equal(overlay.hidden,true,'launcher never re-animates during the assembly');
+ assert.equal(header.inert,false,'main console available immediately');
+ assert.equal(fill.style.width,'0%','no fake launcher progress animation');
  button.onclick();
- await new Promise(resolve=>setImmediate(resolve));
- assert.equal(entered,0,'The LCARS build must not disappear instantly when audio starts');
- assert.equal(overlay.hidden,false);
- await new Promise(resolve=>setTimeout(resolve,1550));
- assert.equal(entered,1);
- assert.equal(header.inert,false);
- assert.equal(overlay.hidden,true);
- assert.equal(fill.style.width,'100%');
+ await flush();
+ assert.equal(calls,1,'second activation ignored');
+ assert.equal(entered,1,'only one assembly');
 });
