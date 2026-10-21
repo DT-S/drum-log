@@ -27,3 +27,24 @@ export function createViewMotion(root,{
  };
  return {play,stop};
 }
+
+export function createShellMotion(root,{
+ schedule=(fn,ms)=>setTimeout(fn,ms),
+ clear=id=>clearTimeout(id),
+ reduced=()=>typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches
+}={}){
+ const shell=root.body||root;
+ let timer=null;
+ function stop(){
+  if(timer!==null){clear(timer);timer=null;}
+  shell.classList.remove('lcars-chassis-assembling');
+ }
+ function play(){
+  stop();
+  if(reduced())return false;
+  shell.classList.add('lcars-chassis-assembling');
+  timer=schedule(()=>{shell.classList.remove('lcars-chassis-assembling');timer=null;},1150);
+  return true;
+ }
+ return {play,stop};
+}

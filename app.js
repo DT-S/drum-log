@@ -1,5 +1,5 @@
 import {createSoundSystem} from './sound.js';
-import {createViewMotion} from './lcars-motion.js';
+import {createViewMotion,createShellMotion} from './lcars-motion.js';
 import {createStartupConsole} from './lcars-startup.js';
 import {installZoomGuard} from './lcars-zoom.js';
 import {createUpdateManager} from './lcars-updater.js';
@@ -9,6 +9,7 @@ import {openDB,readState,mutate,replaceState} from './db.js';
 import {dayEvents,scheduleWeek,availableSlots,holidaysOnDate,cancelLesson,restoreLesson,bookReplacement,bookFreeSlot,saveAppointment,removeAppointment,isMakeupLesson,saveCalendarEvent,removeCalendarEvent,saveLessonOverride,resetLessonOverride} from './schedule.js';
 const sounds=createSoundSystem();sounds.bind();
 const viewMotion=createViewMotion(document);
+const shellMotion=createShellMotion(document);
 const startupConsole=createStartupConsole(document);
 installZoomGuard(document);
 // Purely visual device preference. Existing backup schemas default to 80% on phones.
@@ -478,9 +479,9 @@ try{await openDB();state=await readState();sounds.configure(state.settings);appl
   if(state.settings.launchScreen!==false){
    startupConsole.show({
     startAudio:()=>sounds.startLaunch(),
-    onEnter:()=>viewMotion.play(view)
+    onEnter:()=>{shellMotion.play();viewMotion.play(view);}
    });
-  }
+  }else shellMotion.play();
   if(state.settings.backupReminder&&(state.students.length||state.trials.length)&&(!state.settings.lastBackup||Date.now()-Date.parse(state.settings.lastBackup)>7*86400000))notice('Backup interval exceeded. Open Data systems to export a JSON backup.');offline();}catch(e){error(Error('Cannot open local storage. '+e.message));}
 
 function trialScheduleHTML(){

@@ -1,0 +1,41 @@
+/* LCARS M8: one-shot staggered chassis and modal/notice feedback.
+   Only brightness/opacity; no layout shift or input displacement. */
+@keyframes dl-chassis-light{
+ 0%{opacity:.42;filter:brightness(1.65)}
+ 60%{opacity:.92;filter:brightness(1.12)}
+ 100%{opacity:1;filter:brightness(1)}
+}
+body.lcars-chassis-assembling header .elbow{
+ animation:dl-chassis-light 450ms ease-out both;
+}
+body.lcars-chassis-assembling header .mast{
+ animation:dl-chassis-light 460ms ease-out 80ms both;
+}
+body.lcars-chassis-assembling header .rail>i{
+ animation:dl-chassis-light 410ms ease-out 180ms both;
+}
+body.lcars-chassis-assembling header .rail>i:nth-child(2){animation-delay:250ms}
+body.lcars-chassis-assembling header .rail>i:nth-child(3){animation-delay:320ms}
+body.lcars-chassis-assembling nav button{
+ animation:dl-chassis-light 430ms ease-out 350ms both;
+}
+body.lcars-chassis-assembling nav button:nth-child(2){animation-delay:420ms}
+body.lcars-chassis-assembling nav button:nth-child(3){animation-delay:490ms}
+body.lcars-chassis-assembling nav button:nth-child(4){animation-delay:560ms}
+body.lcars-chassis-assembling .sidebarfill,
+body.lcars-chassis-assembling .sidetail{
+ animation:dl-chassis-light 530ms ease-out 450ms both;
+}
+body.lcars-chassis-assembling footer{
+ animation:dl-chassis-light 450ms ease-out 650ms both;
+}
+dialog[open],#notice:not([hidden]),#error:not([hidden]){
+ animation:dl-chassis-light 280ms ease-out both;
+}
+@media(prefers-reduced-motion:reduce){
+ body.lcars-chassis-assembling :is(header .elbow,header .mast,header .rail i,
+ nav button,.sidebarfill,.sidetail,footer),
+ dialog[open],#notice:not([hidden]),#error:not([hidden]){
+  animation:none!important;filter:none!important;
+ }
+}
