@@ -78,8 +78,8 @@ body.lcars-chassis-assembling header .mast .rail>i{
 body.lcars-chassis-assembling header .mast .rail>i:nth-child(2){animation-delay:560ms!important}
 body.lcars-chassis-assembling header .mast .rail>i:nth-child(3){animation-delay:690ms!important}
 body.lcars-chassis-assembling nav button{
-  transform-origin:left center;
-  animation:dl-assembly-extend 640ms cubic-bezier(.16,1,.3,1) 540ms both!important;
+  /* Keep actual touch/click rectangles full-size throughout construction. */
+  animation:dl-assembly-appear 640ms cubic-bezier(.16,1,.3,1) 540ms both!important;
 }
 body.lcars-chassis-assembling nav button:nth-child(2){animation-delay:700ms!important}
 body.lcars-chassis-assembling nav button:nth-child(3){animation-delay:860ms!important}
@@ -126,8 +126,7 @@ body.lcars-chassis-assembling footer{
 #schedule.lcars-view-boot .schedule-actions>button,
 #schedule.lcars-view-boot .plan-mode-switch>button,
 #schedule.lcars-view-boot .plan-date-nav>button{
-  animation:dl-assembly-extend 400ms cubic-bezier(.22,1,.36,1) 1780ms both!important;
-  transform-origin:left center;
+  animation:dl-assembly-appear 400ms cubic-bezier(.22,1,.36,1) 1780ms both!important;
 }
 #schedule.lcars-view-boot .schedule-actions>button:nth-child(2),
 #schedule.lcars-view-boot .plan-mode-switch>button:nth-child(2){animation-delay:1900ms!important}
