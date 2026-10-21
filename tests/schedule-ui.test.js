@@ -125,5 +125,5 @@ test('offline stylesheet cache and release label update together',()=>{
  assert.match(sw,/'\.\/schedule\.css'/);
  assert.equal(pkg.version,'1.10.1');
  assert.match(html,/DRUM LOG \/ 1\.10\.1/);
- assert.match(sw,/PREFIX\+'v23-update-console'/);
+ assert.match(sw,/PREFIX\+'v24-lcars-faders'/);
 });

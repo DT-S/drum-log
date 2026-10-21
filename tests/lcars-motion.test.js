@@ -51,7 +51,7 @@ test('M3 CSS cannot shift hit targets and uses a one-shot app-navigation trigger
   const declarations=css.replace(/\/\*[\s\S]*?\*\//g,'');
  assert.doesNotMatch(declarations,/translate\(|scale\(|clip-path|pointer-events\s*:\s*none|infinite|position\s*:\s*(?:fixed|absolute)/);
  assert.match(html,/href="lcars-navigation-motion\.css"/);
- assert.match(sw,/lcars-core-v2|v23-update-console/);
+ assert.match(sw,/lcars-core-v2|v24-lcars-faders/);
  assert.match(sw,/'\.\/lcars-navigation-motion\.css'/);
  assert.match(sw,/'\.\/lcars-motion\.js'/);
 });

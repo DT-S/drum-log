@@ -70,7 +70,7 @@ Drum Log is already used for real teaching records. A full-screen gate and new s
 
 ## Additional requested LCARS parity work (after M4)
 - **M6 · Update installer / PWA updates [implemented; device validation pending]:** reuse the metronome's update detection, staged download/activation messaging, safe reload and a controlled "Check for updates" action. **Never** discard unsaved journal notes or replace the database when applying a shell update. Avoid unsolicited `skipWaiting` while text is unsaved.
-- **M7 · LCARS slider components:** port the metronome's distinctive segmented track, bracket thumb, LED tick rail and numerical readout into Drum Log's *existing* Sound Volume and Mobile Scale sliders; preserve their current min/max/step, focus, keyboard and iOS accessibility.
+- **M7 · LCARS slider components [implemented; device acceptance pending]:** port the metronome's distinctive segmented track, bracket thumb, LED tick rail and numerical readout into Drum Log's *existing* Sound Volume and Mobile Scale sliders; preserve their current min/max/step, focus, keyboard and iOS accessibility.
 - **M8 · Additional staggered interface effects:** refine buttons, notice banners, modal assembly, chart-free list and pane transitions. No continuously moving content, no focus-stealing effects; honor `prefers-reduced-motion`.
 - **M9 · Quality-of-life parity:** review the metronome's settings clarity, toast expiration, backup/update status, responsive sizing, and input affordances individually. No accidental import of metronome-specific rhythm functions.
 - Each milestone requires its own regression/browser/backup acceptance; M6–M9 are planned only, not quietly merged into M4.
@@ -106,3 +106,9 @@ References:
 - The update manager checks ongoing save transactions, save failures and open dialogs; it refuses to reload when notes may be unsaved. The active worker counts open scope clients before allowing forced activation. Unavailable counts are treated as unsafe.
 - A just-installed update requires an explicit second click to reload. Tests must verify this two-phase flow and its failure modes. Service worker caches new update manager offline as `v23-update-console`.
 - Existing indexedDB database, data records, schema v10, previous and current JSON backups are untouched.
+
+## M7 checkpoint — authentic LCARS segmented sliders
+- Ported `src/lcars-slider.js` and `v2-lcars-slider.css` from LCARS Metronome to Drum Log, with the same LED pills, rulers, glowing bracket, quick calibration marks, +/- and stepped buttons.
+- Mounted over the *existing* `#soundVolume` (0–100, step 1) and `#mobileScale` (65–100, step 5) range inputs, preserving labels, IDs, application event listeners, keyboard input, and the exact saved schema. Presets: sound 0/50/100 and mobile 65/80/100.
+- Plus/minus and calibration clicks dispatch both native `input` and `change` so the original handlers preview **and persist** the selection. No copied metronome state/scheduler or new database fields.
+- Visual CSS is kept separate and offline-cached in service-worker `v24-lcars-faders`. Need iPhone/Firefox real device drag, focus/VoiceOver and 320px layout acceptance.

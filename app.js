@@ -3,6 +3,7 @@ import {createViewMotion} from './lcars-motion.js';
 import {createStartupConsole} from './lcars-startup.js';
 import {installZoomGuard} from './lcars-zoom.js';
 import {createUpdateManager} from './lcars-updater.js';
+import {mountLcarsSlider} from './lcars-slider.js';
 import {validDate,validTime,DAYS,defaults,localDate,selectScheduled,scheduleType,todayLesson,lessonKey,validateBackup,convertTrial,csv} from './core.js';
 import {openDB,readState,mutate,replaceState} from './db.js';
 import {dayEvents,scheduleWeek,availableSlots,holidaysOnDate,cancelLesson,restoreLesson,bookReplacement,bookFreeSlot,saveAppointment,removeAppointment,isMakeupLesson,saveCalendarEvent,removeCalendarEvent,saveLessonOverride,resetLessonOverride} from './schedule.js';
@@ -406,6 +407,17 @@ function renderSettings(){$('#settings').innerHTML=`<div class="sectionhead"><di
  $('#soundVolume').onchange=async e=>{const v=Number(e.target.value)/100;await change(s=>s.settings.soundVolume=v);sounds.play('hover');};
  $('#mobileScale').oninput=e=>{const value=Number(e.target.value);$('#mobileScaleValue').textContent=value+'%';applyMobileScale(value);};
  $('#mobileScale').onchange=async e=>{const value=Number(e.target.value);try{await change(s=>{s.settings.uiScale=value;});}catch(ex){applyMobileScale(state.settings.uiScale);error(ex);}};
+ // Visually identical to Rhythm PADD: native range inputs are MOVED into
+ // their segmented shells, so keyboard, touch and save handlers stay intact.
+ for(const {id,title,kind,code} of [
+  {id:'soundVolume',title:'SOUND / VOLUME',kind:'percent',code:'47-A7'},
+  {id:'mobileScale',title:'MOBILE / SIZE',kind:'scale',code:'47-U1'}
+ ]){
+  const input=$('#'+id),mount=document.createElement('div');
+  mount.className='lcars-slider-mount';
+  input.before(mount);mount.append(input);
+  mountLcarsSlider(input,{kind,title,code});
+ }
 
  const hoursForm=$('#teachingHoursForm');
  hoursForm.querySelectorAll('[data-hours-toggle]').forEach(box=>box.onchange=()=>{
