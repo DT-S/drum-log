@@ -138,6 +138,33 @@ try{
    await page.locator('nav [data-view="settings"]').click();
    await page.locator('#soundEnabled').waitFor({state:'visible'});
    assert.equal(await page.locator('#soundEnabled').count(),1);
+   assert.equal(await page.locator('#updateCheck').isVisible(),true,
+    `${label}: LCARS update console missing`);
+   assert.equal(await page.locator('#settings .lcars-slide-percent .lcars-pill').count(),24);
+   assert.equal(await page.locator('#settings .lcars-slide-scale .lcars-pill').count(),24);
+   const scaleLimits=await page.locator('#mobileScale').evaluate(el=>[el.min,el.max,el.step]);
+   assert.deepEqual(scaleLimits,['65','100','5']);
+   await page.locator('#settings .lcars-slide-percent .lcars-preset[data-value="50"]').click();
+   await page.locator('#settings .lcars-slide-scale .lcars-preset[data-value="65"]').click();
+   assert.equal(await page.locator('#soundVolume').inputValue(),'50');
+   assert.equal(await page.locator('#mobileScale').inputValue(),'65');
+   assert.equal(await page.locator('#volumeValue').textContent(),'50%');
+   assert.equal(await page.locator('#mobileScaleValue').textContent(),'65%');
+   await page.locator('#mobileScale').focus();
+   await page.locator('#mobileScale').press('ArrowUp');
+   assert.equal(await page.locator('#mobileScale').inputValue(),'70');
+   await page.waitForFunction(async()=>{
+    const db=await new Promise((resolve,reject)=>{
+     const r=indexedDB.open('drum-log-lcars',1);
+     r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
+    });
+    try{return await new Promise(resolve=>{
+     const r=db.transaction('state','readonly').objectStore('state').get('main');
+     r.onsuccess=()=>resolve(r.result.settings.uiScale===70&&r.result.settings.soundVolume===.5);
+     r.onerror=()=>resolve(false);
+    });}finally{db.close();}
+   });
+
    assert.equal(await page.locator('#launchScreen').isChecked(),true);
    await page.locator('#launchScreen').uncheck();
    await page.waitForFunction(async()=>{
