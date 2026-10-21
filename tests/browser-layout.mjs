@@ -30,6 +30,35 @@ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const origin=`http://127.0.0.1:${server.address().port}/`;
 const browser=await chromium.launch({headless:true});
 let failures=0;
+// Separate emulated touchscreen probe, using disposable browser context. This
+// does not prove iOS Safari behavior but catches lost scroll/tap handlers.
+try{
+ const touch=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+ try{
+  await touch.goto(origin,{waitUntil:'networkidle'});
+  const gestures=await touch.evaluate(()=>{
+   const event=(type,count)=>{
+    const e=new Event(type,{bubbles:true,cancelable:true});
+    Object.defineProperty(e,'touches',{value:Array.from({length:count},()=>({}))});
+    document.dispatchEvent(e);return e.defaultPrevented;
+   };
+   return {
+    coarse:matchMedia('(any-pointer: coarse)').matches,
+    action:getComputedStyle(document.body).touchAction,
+    twoFinger:event('touchmove',2),
+    oneFinger:event('touchmove',1),
+    gesture:event('gesturestart',0)
+   };
+  });
+  assert.equal(gestures.coarse,true);
+  assert.match(gestures.action,/pan-x pan-y/);
+  assert.equal(gestures.oneFinger,false);
+  assert.equal(gestures.twoFinger,true);
+  assert.equal(gestures.gesture,true);
+  console.log('PASS emulated touch zoom guard');
+ }finally{await touch.close();}
+}catch(error){failures++;console.error('FAIL emulated touch zoom guard',error);}
+
 try{
  for(const vp of [{width:320,height:700},{width:390,height:844},{width:768,height:1024},{width:1440,height:900}]){
   const page=await browser.newPage({viewport:vp});

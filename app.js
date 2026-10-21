@@ -1,12 +1,14 @@
 import {createSoundSystem} from './sound.js';
 import {createViewMotion} from './lcars-motion.js';
 import {createStartupConsole} from './lcars-startup.js';
+import {installZoomGuard} from './lcars-zoom.js';
 import {validDate,validTime,DAYS,defaults,localDate,selectScheduled,scheduleType,todayLesson,lessonKey,validateBackup,convertTrial,csv} from './core.js';
 import {openDB,readState,mutate,replaceState} from './db.js';
 import {dayEvents,scheduleWeek,availableSlots,holidaysOnDate,cancelLesson,restoreLesson,bookReplacement,bookFreeSlot,saveAppointment,removeAppointment,isMakeupLesson,saveCalendarEvent,removeCalendarEvent,saveLessonOverride,resetLessonOverride} from './schedule.js';
 const sounds=createSoundSystem();sounds.bind();
 const viewMotion=createViewMotion(document);
 const startupConsole=createStartupConsole(document);
+installZoomGuard(document);
 // Purely visual device preference. Existing backup schemas default to 80% on phones.
 function applyMobileScale(raw){const value=Number(raw);const percent=Number.isFinite(value)?Math.max(65,Math.min(100,value)):80;document.documentElement.style.setProperty('--mobile-ui-scale',String(percent/100));}
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

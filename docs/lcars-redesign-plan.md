@@ -80,3 +80,22 @@ Drum Log is already used for real teaching records. A full-screen gate and new s
 - Existing schema version 10 is retained. The optional `settings.launchScreen` boolean defaults to true in older backups, survives export/import, and may be disabled in Data Systems.
 - If audio fails or times out the console opens anyway; no note/schedule transaction waits for audio. The app cannot guarantee autoplay without a click.
 - The Startup CSS/JS and all MP3s are precached as an offline shell update; no custom sound uploads or remote fonts required.
+
+## M10 · Mobile zoom guard and LCARS keyboard feasibility (2026-10-22)
+### Implemented: accidental page zoom guard
+- Touch devices only: `lcars-zoom.css` uses `touch-action: pan-x pan-y`, intentionally **not** `touch-action: none` or `manipulation`. Keep one-finger vertical/horizontal scrolling, normal taps, and input selection; remove double-tap page zoom and browser pinch-zoom.
+- `lcars-zoom.js` adds a passive-false, touch-only fallback for WebKit `gesturestart`/`gesturechange` and multi-touch moves. Single-finger moves are never canceled. No global `dblclick` prevention, no disabling OS assistive zoom, and no change to the saved `uiScale` preference.
+- Coarse-pointer text inputs/selects/textarea remain at least 16 CSS px to prevent iOS auto-focus zoom. Adds the files to offline precache (v22).
+- Real iOS Safari/PWA acceptance still necessary. Browser engines/OS accessibility settings can override some zoom restrictions.
+
+### Research: replacing the iOS software keyboard with an LCARS keyboard
+- **Feasible in-page, not a system keyboard replacement.** Drum Log could render its own LCARS keypad as a DOM overlay and insert text into actual controls.
+- iOS Safari does **not** implement `virtualkeyboardpolicy="manual"` or the Chromium VirtualKeyboard API. `inputmode="none"` is not dependable enough on iOS for production suppression, and blindly forcing every input `readonly` breaks selection, external keyboards, cut/copy/paste, dictation, shortcuts and native autofill.
+- Safer incremental experiment: opt-in **LCARS date/time/numeric keypad** first, for simple bounded inputs (date, time, duration, makeup count). Use scoped `readonly` only while the custom keypad is active, preserve input value/selection semantics, and offer a visible **SYSTEM KEYBOARD** escape action.
+- A full LCARS QWERTY keyboard for student names and multi-line lesson notes is possible but significantly larger: locale layouts (German umlauts, special characters), caret/selection, composition/IME, autocorrect, accessibility, clipboard, external-keyboard handling, software keyboard suppression and secure input all need tests. The native iOS keyboard remains the default for notes.
+- Prototype on an **isolated test page**, not in the live note editor; test real iPhone 13/iPad Safari before any integration. No keyboard substitution is shipped in M10.
+
+References:
+- https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/touch-action
+- https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/virtualkeyboardpolicy
+- https://caniuse.com/mdn-html_global_attributes_virtualkeyboardpolicy
