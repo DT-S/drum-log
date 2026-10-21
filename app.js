@@ -24,9 +24,7 @@ const noteKey=()=>lessonKey(studentId,noteSlot().date,noteSlot().time);
 const lesson=()=>state.lessons.find(l=>l.id===noteKey());
 const niceDate=d=>d;
 let dialogErrorTimeout=null;
-const updater=createUpdateManager({serviceWorker:navigator.serviceWorker,online:()=>navigator.onLine,
- canProceed:async()=>!$('#modal')?.open&&!pending&&!saveFailure&&await ready(),
- reload:()=>location.reload(),onStatus:message=>{const e=$('#offlineInfo');if(e)e.textContent=message;}});
+
 function clearDialogError(){
  if(dialogErrorTimeout!==null){clearTimeout(dialogErrorTimeout);dialogErrorTimeout=null;}
  $('#modal')?.querySelector('[data-dialog-error]')?.remove();
@@ -449,6 +447,9 @@ window.addEventListener('unhandledrejection',e=>{error(e.reason||Error('An opera
 window.addEventListener('beforeunload',e=>{if(pending||saveFailure){e.preventDefault();e.returnValue='';}});
 channel&&(channel.onmessage=()=>{notice('Data changed in another tab. Finish this note before navigating. Avoid editing the same lesson in two tabs.');});
 function tick(){$('#clock').textContent=new Date().toLocaleString('en-GB',{weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).toUpperCase();}tick();setInterval(tick,30000);
+const updater=createUpdateManager({serviceWorker:navigator.serviceWorker,online:()=>navigator.onLine,
+ canProceed:async()=>!$('#modal')?.open&&!pending&&!saveFailure&&await ready(),
+ reload:()=>location.reload(),onStatus:message=>{const e=$('#offlineInfo');if(e)e.textContent=message;}});
 async function offline(){
  if(!('serviceWorker'in navigator)||!isSecureContext){
   $('#storageStatus').textContent='OFFLINE UNAVAILABLE — USE HTTPS OR LOCALHOST';
