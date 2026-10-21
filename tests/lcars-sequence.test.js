@@ -18,14 +18,18 @@ test('RC27 builds real LCARS content in five stages, not a subtle flash',()=>{
  assert.match(app,/if\(entering\)viewMotion\.play\(view\)/);
  assert.doesNotMatch(css,/infinite|\.chart-lock-reticle/);
 });
-test('RC27 1450ms startup includes a fail-open deadline and cached CSS',()=>{
- const css=get('lcars-startup.css'),js=get('lcars-startup.js'),sw=get('sw.js');
- assert.match(js,/minimumMs=reduced\?0:1450/);
- assert.match(js,/2350/);
+test('RC28 launcher hands off immediately to the long main-shell assembly',()=>{
+ const css=get('lcars-assembly.css'),js=get('lcars-startup.js'),sw=get('sw.js'),app=get('app.js');
+ for(const key of ['dl-assembly-elbow','dl-assembly-rail-x','dl-assembly-extend',
+  'dl-assembly-unfold','lcars-view-boot','prefers-reduced-motion:reduce'])
+  assert.ok(css.includes(key),key);
+ assert.match(js,/dismiss\(\);\s*try\{onEnter\(\)/);
  assert.match(js,/startAudio\(\)/);
- assert.match(js,/Promise\.race\(/);
- assert.match(css,/dl-init-progress/);
- assert.match(css,/lcars-initializing/);
- assert.match(sw,/v27-visible-sequences/);
- assert.match(sw,/'\.\/lcars-sequence\.css'/);
+ assert.doesNotMatch(js,/minimumMs|Promise\.race/);
+ assert.match(app,/viewMotion\.play\(view,\{boot:true\}\)/);
+ assert.match(sw,/v28-console-unfold/);
+ assert.match(sw,/'\.\/lcars-assembly\.css'/);
+ assert.match(get('index.html'),/href="lcars-assembly\.css"/);
+ assert.match(get('index.html'),/DRUM LOG \/ 1\.11\.0/);
+ assert.match(css,/footer span:last-child\{display:inline!important/);
 });
