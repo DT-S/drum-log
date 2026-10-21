@@ -52,6 +52,9 @@ try{
    assert.ok(initial.bodyOverflow<=3,`${label}: viewport spills horizontally (${initial.bodyOverflow}px)`);
    assert.ok(initial.navHeight>=35,`${label}: navigation too small to touch`);
    await page.locator('nav [data-view="students"]').click();
+   await page.locator('#students.lcars-view-enter').waitFor({state:'visible'});
+   assert.equal(await page.locator('#students.lcars-view-enter').count(),1,
+    `${label}: animation did not acknowledge Students navigation`);
    await page.locator('#addStudent').click();
    assert.equal(await page.locator('#modal').evaluate(el=>el.open),true);
    await page.locator('#modal [name="name"]').fill('VISUAL TEST STUDENT');
@@ -90,6 +93,11 @@ try{
    assert.equal(await page.locator('#notes').inputValue(),
     'M2 LCARS visual regression sample. No real student information.',
     `${label}: journal data changed after reload`);
+   await page.emulateMedia({reducedMotion:'reduce'});
+   await page.locator('nav [data-view="schedule"]').click();
+   await page.locator('#addAppointment').waitFor({state:'visible'});
+   assert.equal(await page.locator('#schedule.lcars-view-enter').count(),0,
+    `${label}: reduced-motion requested yet a view animation started`);
    assert.deepEqual(errors,[],`${label}: browser JavaScript errors`);
    console.log(`PASS ${label}: visuals, four views, dialog, input, save/reload`);
   }catch(error){

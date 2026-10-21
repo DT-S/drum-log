@@ -32,7 +32,7 @@ Review `index.html`, `style.css`, `mobile.css`, `schedule.css`, `sound.js`, `app
 ### M2. Responsive component polish [implemented; browser/device validation pending]
 Map metronome's color segmentation, bracket/edge treatments, high-contrast labels, pressed states and consistent text sizing into Drum Log's *existing* sections: Journal, Students, Schedule and Data Systems. Pay particular attention to the one-window iPhone journal, Schedule action trio and touch/keyboard safe areas. Do not copy layout breakpoints blindly.
 
-### M3. Navigation and screen-assembly motion
+### M3. Navigation and screen-assembly motion [implemented; device validation pending]
 Add the distinctive one-shot staged LCARS headers/rails/chips/panels on **view changes only**, not continuous animation. No clipping or moving clickable input regions. Navigation sounds remain appropriately sequenced. Include reduced-motion and rapid-tab-switch cancellation checks.
 
 ### M4. Optional initialize/launch console
@@ -60,3 +60,10 @@ Drum Log is already used for real teaching records. A full-screen gate and new s
 - The semantic schedule accent colors for trials, canceled, free, and independent calendar events are preserved. The CSS does not alter placement of the three schedule action buttons, the one-window mobile pane switching, or the minimum text-editor font size.
 - Pointer-event-free decorations, visible focus rings, and reduced-motion preference are required. Check 320, 390, 768 and 1440 CSS px before release, plus iPhone landscape/safe-area and Firefox 200% zoom.
 - Added/offline-cached CSS bumps shell cache to v19 on this **experimental** branch. Never clear the user's real IndexedDB data to force an update.
+
+## M3 implementation checkpoint
+
+- `lcars-motion.js` animates only after a real navigation to a different tab; it never reruns on render/autosave or at idle. Rapid navigation cancels the prior class/timer, while a same-tab click keeps the original press sound.
+- `lcars-navigation-motion.css` staggers LCARS headings/rails, roster entries, the schedule and settings panels. Only opacity and brightness change; controls do not translate, scale, clip or lose hit targets. Navigation keeps the two original keypress/menu sounds from M1.
+- Respects reduced motion. CSS and JS precached by experimental service worker v20.
+- M2 Chromium layout checks previously passed at 320/390/768/1440 with synthetic data and save/reload; rerun after M3 before acceptance.

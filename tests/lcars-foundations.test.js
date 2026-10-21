@@ -19,7 +19,7 @@ test('LCARS refresh remains separate from the stable data and layout modules',()
 });
 test('Drum Log v19 offline shell precaches the style and every active sound',()=>{
  const sw=read('sw.js'),html=read('index.html');
- assert.match(sw,/const CACHE=PREFIX\+'v19-lcars-components'/);
+ assert.match(sw,/const CACHE=PREFIX\+'v20-lcars-motion'/);
  assert.match(sw,/'\.\/lcars-refresh\.css'/);
  assert.match(html,/href="mobile\.css"/);
  assert.match(html,/href="schedule\.css"/);
