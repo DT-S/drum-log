@@ -39,6 +39,30 @@ try{
   try{
    await page.goto(origin,{waitUntil:'networkidle'});
    await page.waitForFunction(()=>document.querySelector('#storageStatus')?.textContent?.includes('OFFLINE READY'),{timeout:15000});
+   // Full Voyager launch gate defaults on, with a real click for audio.
+   await page.locator('#lcarsInitialize').waitFor({state:'visible'});
+   const startup=await page.evaluate(()=>{
+    const bounds=q=>{
+     const e=document.querySelector(q),r=e.getBoundingClientRect();
+     return {left:r.left,right:r.right,width:r.width,top:r.top,bottom:r.bottom};
+    };
+    return {heading:document.querySelector('#lcarsStartupHeading').textContent,
+      screen:bounds('#lcarsStartup'),button:bounds('#lcarsInitialize'),
+      subtitle:bounds('.lcars-subbrand-label'),
+      center:bounds('.lcars-subbrand-bar'),
+      badge:bounds('.lcars-studio-badge')};
+   });
+   assert.match(startup.heading,/DRUM LOG/);
+   assert.ok(startup.button.width>=90&&startup.button.left>=0&&startup.button.right<=vp.width+2,
+    `${label}: launch CTA clipped horizontally`);
+   assert.ok(startup.subtitle.left>=startup.center.left-2 &&
+    startup.subtitle.right<=startup.center.right+2,
+    `${label}: LCARS subtitle outside colored bar`);
+   assert.ok(startup.badge.top>=startup.center.bottom-1,
+    `${label}: studio badge overlaps subtitle`);
+   await page.locator('#lcarsInitialize').click();
+   await page.waitForFunction(()=>document.querySelector('#lcarsStartup').hidden,{timeout:10000});
+
    const initial=await page.evaluate(()=>{
     const styles=[...document.styleSheets].map(s=>s.href||'');
     return {
@@ -85,7 +109,23 @@ try{
    await page.locator('nav [data-view="settings"]').click();
    await page.locator('#soundEnabled').waitFor({state:'visible'});
    assert.equal(await page.locator('#soundEnabled').count(),1);
+   assert.equal(await page.locator('#launchScreen').isChecked(),true);
+   await page.locator('#launchScreen').uncheck();
+   await page.waitForFunction(async()=>{
+    const db=await new Promise((resolve,reject)=>{
+     const req=indexedDB.open('drum-log-lcars',1);
+     req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+    });
+    try{return await new Promise(resolve=>{
+     const get=db.transaction('state','readonly').objectStore('state').get('main');
+     get.onsuccess=()=>resolve(get.result.settings.launchScreen===false);
+     get.onerror=()=>resolve(false);
+    });}finally{db.close();}
+   });
    await page.reload({waitUntil:'networkidle'});
+   await page.waitForFunction(()=>document.querySelector('#storageStatus')?.textContent?.includes('OFFLINE READY'),{timeout:15000});
+   assert.equal(await page.locator('#lcarsStartup').isVisible(),false,
+    `${label}: disabled launch should not block restored journal`);
    await page.locator('nav [data-view="students"]').click();
    await page.locator('#students [data-open]').first().waitFor({state:'visible'});
    await page.locator('#students [data-open]').first().click();

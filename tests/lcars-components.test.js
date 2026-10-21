@@ -34,6 +34,6 @@ test('M2 CSS keeps schedule-specific status colors and data rules intact',()=>{
 test('M2 stylesheet is offline cached and cache version updated',()=>{
  const css=read('lcars-components.css'),sw=read('sw.js');
  assert.match(sw,/'\.\/lcars-components\.css'/);
- assert.match(sw,/const CACHE=PREFIX\+'v20-lcars-motion'/);
+ assert.match(sw,/const CACHE=PREFIX\+'v21-lcars-startup'/);
  assert.doesNotMatch(css,/@import|https?:\/\//);
 });
