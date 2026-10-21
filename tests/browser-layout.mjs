@@ -69,6 +69,7 @@ try{
    await notes.fill('M2 LCARS visual regression sample. No real student information.');
    await page.waitForFunction(()=>document.querySelector('#saveStatus')?.textContent?.includes('Saved on this device'),{timeout:15000});
    await page.locator('nav [data-view="schedule"]').click();
+   await page.locator('#addAppointment').waitFor({state:'visible'});
    const schedule=await page.evaluate(()=>{
     const rect=id=>{const r=document.getElementById(id).getBoundingClientRect();
       return {x:r.x,width:r.width,y:r.y,height:r.height,right:r.right};};
@@ -79,9 +80,13 @@ try{
     if(i>0)assert.ok(schedule[i].x>=schedule[i-1].right-1,`${label}: schedule actions overlap`);
    }
    await page.locator('nav [data-view="settings"]').click();
+   await page.locator('#soundEnabled').waitFor({state:'visible'});
    assert.equal(await page.locator('#soundEnabled').count(),1);
    await page.reload({waitUntil:'networkidle'});
-   await page.locator('nav [data-view="journal"]').click();
+   await page.locator('nav [data-view="students"]').click();
+   await page.locator('#students [data-open]').first().waitFor({state:'visible'});
+   await page.locator('#students [data-open]').first().click();
+   await page.locator('#notes').waitFor({state:'visible'});
    assert.equal(await page.locator('#notes').inputValue(),
     'M2 LCARS visual regression sample. No real student information.',
     `${label}: journal data changed after reload`);
