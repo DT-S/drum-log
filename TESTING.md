@@ -208,3 +208,30 @@ in the desktop and iPhone footer; version must also appear on the launcher.
 After first online activation, close and reopen the installed PWA offline and
 confirm the new animations work without a network. Do not clear website data,
 reset storage, or import real students into a disposable testing profile.
+
+
+## Drum Log 1.11.1 / RC29: MP3-aligned choreography
+
+This release supersedes **only the animation durations** documented under
+RC28. No IndexedDB migration, no change to students, appointments, journal,
+backup files or audio assets. New offline shell: `v29-audio-sync`.
+
+Measured from the original bundled MPEG-1 Layer III frame counts:
+
+- `launchsound_Staggered_Entrance_Animation.mp3`: **1,608 ms**. Clicking
+  INITIALIZE hides the launcher immediately; the permanent LCARS shell
+  and real active page unfold together in **~1,600 ms** (class removed after
+  1,620 ms). The shell and page do *not* reconstruct twice.
+- `menu_or_window_change.mp3`: **576 ms**. It follows a keypress at **+55 ms**,
+  so the usual navigation choreography completes within **~630 ms**, with a
+  640 ms class cleanup. Permanent shell remains steady; only destination view
+  builds again.
+
+Regression suite `tests/audio-animation-sync.test.js` parses the real bundled
+MP3 frames and checks both choreography budgets. The complete Node suite and
+Playwright layout tests must pass. On iPhone PWA, confirm version **1.11.1**
+and test INITIALIZE once, then several quick page switches with sound enabled.
+The two sound effects should end with the animations, without holding up app
+interaction. Test muting and Reduce Motion. After an online update, verify
+offline reopen without clearing Safari/website storage or importing any live
+student data into a test profile.
