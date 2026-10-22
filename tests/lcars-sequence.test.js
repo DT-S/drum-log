@@ -30,6 +30,6 @@ test('RC28 launcher hands off immediately to the long main-shell assembly',()=>{
  assert.match(sw,/v30-makeup-audio-recovery/);
  assert.match(sw,/'\.\/lcars-assembly\.css'/);
  assert.match(get('index.html'),/href="lcars-assembly\.css"/);
- assert.match(get('index.html'),/DRUM LOG \/ 1\.11\.1/);
+ assert.match(get('index.html'),/DRUM LOG \/ 1\.11\.2/);
  assert.match(css,/footer span:last-child\{display:inline!important/);
 });
