@@ -248,7 +248,7 @@ try{
    await page.reload({waitUntil:'networkidle'});
    await page.waitForFunction(()=>document.querySelector('#storageStatus')?.textContent?.includes('OFFLINE READY'));
    await page.locator('nav [data-view="students"]').click();
-   await page.locator('#students [data-edit]').first().click();
+   await page.locator('#students .studentrow').filter({hasText:'VISUAL TEST STUDENT'}).locator('[data-edit]').click();
    await page.locator('#modal [name="makeupBalance"]').fill('4');
    await page.locator('#modal [type="submit"]').click();
    await page.waitForFunction(()=>!document.querySelector('#modal').open);
