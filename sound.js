@@ -49,6 +49,8 @@ export function createSoundSystem({AudioContextClass=globalThis.AudioContext||gl
    // iOS can close a Web Audio context while the home-screen PWA is in the
    // background. A closed context cannot be resumed: rebuild its audio graph.
    if(!context||context.state==='closed'){
+    // Invalidate pending decoded clips that targeted the abandoned context.
+    if(context)stop();
     context=new AudioContextClass();const target=context;
     master=target.createGain();master.gain.value=volume;master.connect(target.destination);
     buffers.clear();
