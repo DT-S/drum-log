@@ -43,7 +43,25 @@ export function createSoundSystem({AudioContextClass=globalThis.AudioContext||gl
  function stopLayered(){for(const source of layered){try{source.stop();}catch{}}layered.clear();}
  function stop(){sequence++;if(active){try{active.stop();}catch{}active=null;}stopLayered();}
  function configure(settings={}){enabled=settings.soundEnabled??true;volume=Number.isFinite(settings.soundVolume)?Math.max(0,Math.min(1,settings.soundVolume)):.35;if(master)master.gain.value=volume;if(!enabled||volume===0)stop();}
- function unlock(){if(!enabled||volume===0||!AudioContextClass)return;try{if(!context){context=new AudioContextClass();master=context.createGain();master.gain.value=volume;master.connect(context.destination);for(const kind of bytes.keys())buffers.set(kind,bytes.get(kind).then(data=>data?context.decodeAudioData(data.slice(0)):null).catch(()=>{audioError='A sound file could not be decoded.';return null;}));}if(context.state!=='running'&&context.state!=='closed')resuming=Promise.resolve(context.resume()).catch(()=>{audioError='Audio blocked. Tap Test sound again.';});}catch{audioError='Audio could not be initialized.';}return resuming;}
+ function unlock(){
+  if(!enabled||volume===0||!AudioContextClass)return resuming;
+  try{
+   // iOS can close a Web Audio context while the home-screen PWA is in the
+   // background. A closed context cannot be resumed: rebuild its audio graph.
+   if(!context||context.state==='closed'){
+    context=new AudioContextClass();const target=context;
+    master=target.createGain();master.gain.value=volume;master.connect(target.destination);
+    buffers.clear();
+    for(const kind of bytes.keys())buffers.set(kind,bytes.get(kind).then(data=>data?target.decodeAudioData(data.slice(0)):null).catch(()=>{audioError='A sound file could not be decoded.';return null;}));
+    resuming=Promise.resolve();
+   }
+   // WebKit has a nonstandard "interrupted" state after app switching.
+   // Resume on foreground AND retry inside the next trusted touch/click.
+   if(context.state!=='running')
+    resuming=Promise.resolve(context.resume()).catch(()=>{audioError='Audio blocked. Tap Test sound again.';});
+  }catch{audioError='Audio could not be initialized.';}
+  return resuming;
+ }
  function play(kind){if(!enabled||volume===0||!context||!buffers.has(kind))return;const now=clock();if(kind==='hover'){if(now-lastHover<90||now-lastSignal<240)return;lastHover=now;}else{if(kind==='invalid'||kind==='warning'){if(now-lastAlert<160)return;lastAlert=now;}lastSignal=now;}
  const token=++sequence;void Promise.all([buffers.get(kind),resuming]).then(([buffer])=>{if(!buffer||token!==sequence||!enabled||volume===0||context.state!=='running')return;if(active){try{active.stop();}catch{}}stopLayered();const source=context.createBufferSource(),gain=context.createGain();source.buffer=buffer;gain.gain.value=kind==='hover'?.45:1;source.connect(gain);gain.connect(master);source.onended=()=>{source.disconnect();gain.disconnect();if(active===source)active=null;};active=source;source.start();}).catch(()=>{});}
  // Navigation is a deliberate layered cue: short keypress immediately, then
@@ -101,7 +119,12 @@ export function createSoundSystem({AudioContextClass=globalThis.AudioContext||gl
   const cue=classifyDrumCue(el);
   if(cue)play(cue);},true);
  root.addEventListener('invalid',()=>play('invalid'),true);
- root.addEventListener('visibilitychange',()=>{if(root.hidden)stop();});
+ // An installed iOS PWA may remain alive across several app switches.
+ // Stop any half-played cue in the background, then re-arm the same context
+ // on foreground. A denied automatic resume is retried on the next gesture.
+ root.addEventListener('visibilitychange',()=>{if(root.hidden)stop();else unlock();});
+ root.defaultView?.addEventListener('pageshow',()=>{if(!root.hidden)unlock();});
+ root.defaultView?.addEventListener('focus',()=>{if(!root.hidden)unlock();});
  }
  function status(){if(!enabled)return 'Audio disabled in app settings.';if(volume===0)return 'App volume is zero.';if(audioError)return audioError;if(!context)return 'Tap Test sound to activate audio.';return context.state==='running'?'Audio active. If silent: turn off iPhone Silent Mode, raise media volume and check Bluetooth output.':'Audio '+context.state+'. Tap Test sound again.';}
  async function test(){unlock();play('accept');await Promise.all([buffers.get('accept'),resuming]);return status();}
