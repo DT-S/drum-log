@@ -24,22 +24,27 @@
 
   /* Elite Force Hazard Team Tactical Theme */
   .lcars-start-screen[data-theme="elite"] {
-    --padd-orange: #ff8800;
-    --padd-amber: #55ccff;
-    --padd-peach: #ffaa44;
-    --padd-lavender: #4488cc;
-    --padd-blue: #88ddff;
-    --padd-tan: #336699;
+    --padd-orange: #9069db;
+    --padd-amber: #e4c76b;
+    --padd-peach: #b8a3e6;
+    --padd-lavender: #7f56c8;
+    --padd-blue: #79b8f0;
+    --padd-ice: #aed6ff;
+    --padd-tan: #507fc8;
+    --padd-red: #8464cc;
+    --padd-cream: #ede4ff;
   }
 
   /* Red Alert Tactical Theme */
   .lcars-start-screen[data-theme="redalert"] {
-    --padd-orange: #ff2222;
-    --padd-amber: #ffaa00;
-    --padd-peach: #ff5544;
-    --padd-lavender: #cc3333;
-    --padd-blue: #ff7744;
-    --padd-tan: #881111;
+    --padd-orange: #ea3c43;
+    --padd-amber: #f5b470;
+    --padd-peach: #f87957;
+    --padd-lavender: #d85751;
+    --padd-blue: #f7a36a;
+    --padd-tan: #b8313f;
+    --padd-red: #d72d37;
+    --padd-cream: #ffe2cf;
   }
 
 .lcars-start-screen,.lcars-start-screen * { box-sizing:border-box;-webkit-tap-highlight-color:transparent; }

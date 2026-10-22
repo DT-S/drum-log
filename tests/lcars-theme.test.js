@@ -1,3 +1,4 @@
+import {readFileSync} from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {defaults,validateBackup} from '../core.js';
@@ -24,4 +25,14 @@ test('palette sets shell, launch preview and controls',()=>{
  assert.equal(setting.value,'redalert');
  assert.deepEqual(buttons.map(b=>b['aria-pressed']),['false','false','true']);
  assert.equal(normalizeTheme('invalid'),'voyager');
+});
+
+test('settings routes theme choice back to launch console without a dropdown',()=>{
+ const fs=readFileSync(new URL('../app.js',import.meta.url),'utf8');
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(fs,/id="openLaunchConsole"/);
+ assert.match(fs,/startupConsole\.show\(\{startAudio:/);
+ assert.doesNotMatch(fs,/<select id="appTheme"/);
+ assert.match(html,/data-set-theme="elite"/);
+ assert.match(html,/data-set-theme="redalert"/);
 });

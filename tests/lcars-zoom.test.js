@@ -47,5 +47,5 @@ test('coarse touch CSS blocks pinch but allows scrolling and 16px input text',()
  assert.match(html,/href="lcars-zoom\.css"/);
  assert.match(sw,/'\.\/lcars-zoom\.css'/);
  assert.match(sw,/'\.\/lcars-zoom\.js'/);
- assert.match(sw,/v32-console-themes/);
+ assert.match(sw,/v33-launch-palette-polish/);
 });
