@@ -29,6 +29,6 @@ test('M7 ports exactly the recognizable metronome fader elements',()=>{
  assert.match(html,/href="lcars-slider\.css"/);
  assert.match(sw,/'\.\/lcars-slider\.js'/);
  assert.match(sw,/'\.\/lcars-slider\.css'/);
- assert.match(sw,/v30-makeup-audio-recovery/);
+ assert.match(sw,/v31-makeup-filter/);
  assert.doesNotMatch(css,/@import|https?:\/\//);
 });

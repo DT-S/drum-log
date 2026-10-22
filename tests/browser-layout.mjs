@@ -108,7 +108,7 @@ try{
    assert.match(launchPhase.elbow,/dl-assembly-elbow/);
    assert.match(launchPhase.rail,/dl-assembly-appear/);
    assert.equal(launchPhase.versionVisible,true,`${label}: mobile version hidden`);
-   assert.match(launchPhase.version,/1\.11\.2/);
+   assert.match(launchPhase.version,/1\.11\.3/);
    assert.ok(launchPhase.navWidth>=40,`${label}: nav button collapsed during assembly`);
    await page.waitForFunction(()=>!document.body.classList.contains('lcars-chassis-assembling') &&
     !document.querySelector('#journal').classList.contains('lcars-view-boot'));
@@ -261,6 +261,19 @@ try{
    assert.equal(safety.balance,4,`${label}: manual makeup balance correction failed`);
    assert.equal(safety.overrides,1,`${label}: another student's override changed`);
    assert.match(safety.notes||'',/M2 LCARS visual regression/);
+   // True browser integration: select owed-only filter after editing student balances.
+   await page.locator('#filter').selectOption('makeup');
+   assert.equal(await page.locator('#students .studentrow').count(),2,
+    `${label}: owed-only filter should show both positive-balance students`);
+   assert.equal(await page.locator('#students .studentrow').filter({hasText:'VISUAL TEST STUDENT'}).count(),1);
+   assert.equal(await page.locator('#students .studentrow').filter({hasText:'ZZ OVERRIDE OWNER'}).count(),1);
+   await page.locator('#search').fill('visual');
+   assert.equal(await page.locator('#students .studentrow').count(),1,
+    `${label}: text search should narrow the owed-only view`);
+   await page.locator('#search').fill('');
+   await page.locator('#filter').selectOption('active');
+   assert.equal(await page.locator('#students .studentrow').count(),2,
+    `${label}: active directory filter failed after returning from owed-only`);
    await page.emulateMedia({reducedMotion:'reduce'});
    await page.locator('nav [data-view="schedule"]').click();
    await page.locator('#addAppointment').waitFor({state:'visible'});
