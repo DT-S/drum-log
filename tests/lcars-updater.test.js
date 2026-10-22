@@ -80,7 +80,7 @@ test('M6 worker activation observer recognizes redundancy and completion',async(
 });
 test('M6 update files are offline-cached and journal save protection remains unchanged',()=>{
  const sw=read('sw.js'),app=read('app.js'),updater=read('lcars-updater.js');
- assert.match(sw,/v32-console-themes/);
+ assert.match(sw,/v33-launch-palette-polish/);
  assert.match(sw,/'\.\/lcars-updater\.js'/);
  assert.match(sw,/ACTIVATE_DRUM_LOG_UPDATE/);
  assert.match(sw,/COUNT_DRUM_LOG_CLIENTS/);
