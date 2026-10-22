@@ -1,7 +1,8 @@
+import {applyTheme} from './lcars-theme.js';
 // LCARS launcher is a gate, never a second boot animation.
 // A trusted click starts the long sample and immediately hands the screen to
 // the main-console assembly. No waiting for an audio promise or progress bar.
-export function createStartupConsole(root){
+export function createStartupConsole(root,{getTheme=()=> 'voyager',onThemeChange=()=>{}}={}){
  const $=selector=>root.querySelector(selector);
  const overlay=$('#lcarsStartup'),button=$('#lcarsInitialize');
  const shell=[...root.body.children].filter(el=>el!==overlay&&el.tagName!=='SCRIPT');
@@ -16,13 +17,16 @@ export function createStartupConsole(root){
  };
  for(const theme of themes){
   theme.addEventListener('click',()=>{
-   overlay.dataset.theme=theme.dataset.setTheme;
-   for(const choice of themes)choice.setAttribute('aria-pressed',String(choice===theme));
+   const previous=getTheme();
+   applyTheme(root,theme.dataset.setTheme);
+   try{Promise.resolve(onThemeChange(theme.dataset.setTheme)).catch(()=>applyTheme(root,previous));}
+   catch{applyTheme(root,previous);}
   });
  }
  function show({startAudio=()=>Promise.resolve(false),onEnter=()=>{}}={}){
   if(!overlay||!button||active)return false;
   activated=false;active=true;button.disabled=false;
+  applyTheme(root,getTheme());
   $('#lcarsInitText').textContent='INITIALIZE DRUM LOG';
   $('#lcarsInitCode').textContent='ENGAGE // 47';
   $('#lcarsStartupNote').textContent='SYSTEM STANDBY // LOCAL DATABASE & AUDIO READY';

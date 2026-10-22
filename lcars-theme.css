@@ -1,0 +1,54 @@
+/* Persistent LCARS palettes. Voyager keeps the current approved colors. */
+html[data-app-theme="elite"] {
+ --peach:#ffb366;--purple:#499ad5;--blue:#72d9ff;--salmon:#447db7;
+ --gold:#ffd17a;--orange:#ff8800;--muted:#b7d2ed;--line:#4a87b1;
+ --padd-amber:#55ccff;--padd-lavender:#4488cc;--padd-ice:#88ddff;
+ --lcars-shadow:rgba(85,204,255,.22);--lcars-wash:rgba(68,136,204,.14);
+ --lcars-rule:rgba(85,204,255,.48);
+}
+html[data-app-theme="redalert"] {
+ --peach:#ffb7a8;--purple:#c64a51;--blue:#ff9b85;--salmon:#ff5353;
+ --gold:#ff8370;--orange:#ff2b35;--muted:#e2b0b5;--line:#9c414b;
+ --padd-amber:#ffaa75;--padd-lavender:#c64a51;--padd-ice:#ffb4a5;
+ --lcars-shadow:rgba(255,42,52,.2);--lcars-wash:rgba(198,74,81,.12);
+ --lcars-rule:rgba(255,83,83,.44);
+}
+html[data-app-theme="elite"] .sidebarfill,
+html[data-app-theme="redalert"] .sidebarfill {background:linear-gradient(180deg,var(--orange),var(--gold));}
+html[data-app-theme="elite"] .notes,
+html[data-app-theme="redalert"] .notes {color:var(--peach);}
+html[data-app-theme="elite"] .telemetry span,
+html[data-app-theme="redalert"] .telemetry span {background:linear-gradient(90deg,var(--lcars-wash),transparent);}
+html[data-app-theme="elite"] input::placeholder,
+html[data-app-theme="redalert"] input::placeholder,
+html[data-app-theme="elite"] textarea::placeholder,
+html[data-app-theme="redalert"] textarea::placeholder {color:var(--muted);}
+html[data-app-theme="redalert"] .warn {color:var(--gold);}
+#appTheme {margin:10px 0 6px;min-height:48px;}
+
+/* The segmented LCARS sliders have component-local color tokens and hardcoded
+   Voyager LED gradients. Recolor those too, without changing their geometry. */
+html[data-app-theme="elite"] .lcars-slide,
+html[data-app-theme="redalert"] .lcars-slide {
+ --sl-orange:var(--orange);--sl-gold:var(--gold);--sl-peach:var(--peach);
+ --sl-lavender:var(--purple);--sl-salmon:var(--salmon);
+ --sl-cream:var(--text,var(--peach));
+}
+html[data-app-theme="elite"] .lcars-pill.lit.led-gold,
+html[data-app-theme="redalert"] .lcars-pill.lit.led-gold {
+ background:linear-gradient(var(--gold),var(--orange));
+}
+html[data-app-theme="elite"] .lcars-pill.lit.led-peach,
+html[data-app-theme="redalert"] .lcars-pill.lit.led-peach {
+ background:linear-gradient(var(--peach),var(--orange));
+}
+html[data-app-theme="elite"] .lcars-pill.lit.led-salmon,
+html[data-app-theme="redalert"] .lcars-pill.lit.led-salmon {
+ background:linear-gradient(var(--purple),var(--salmon));
+}
+html[data-app-theme="elite"] .lcars-bracket-core,
+html[data-app-theme="redalert"] .lcars-bracket-core {
+ background:linear-gradient(var(--peach),var(--orange),var(--salmon));
+}
+html[data-app-theme="elite"] .lcars-cap-crescent,
+html[data-app-theme="redalert"] .lcars-cap-crescent {background:var(--purple);}
