@@ -35,7 +35,7 @@ test('M4 local logo, classes and actual gesture boot require no CDN and are offl
  assert.match(js,/startAudio:\(\)=>sounds\.startLaunch\(\)/);
  assert.match(sw,/'\.\/lcars-startup\.css'/);
  assert.match(sw,/'\.\/lcars-startup\.js'/);
- assert.match(sw,/v28-console-unfold/);
+ assert.match(sw,/v29-audio-sync/);
  assert.equal(SOUND_FILES.launch,'soundsv2/launchsound_Staggered_Entrance_Animation.mp3');
  assert.doesNotMatch(css,/@import|https?:\/\//);
 });
