@@ -233,6 +233,34 @@ try{
    assert.equal(await page.locator('#notes').inputValue(),
     'M2 LCARS visual regression sample. No real student information.',
     `${label}: journal data changed after reload`);
+   // Regression for Edit Student with a different student's one-off override.
+   await page.evaluate(async()=>{
+    const {mutate}=await import('/db.js');
+    await mutate(st=>{
+     st.students.push({id:'synthetic-override-owner',name:'ZZ OVERRIDE OWNER',
+      schedule:'weekly',day:1,time:'14:00',duration:45,remarks:'',
+      archived:false,makeupBalance:2});
+     st.lessonOverrides.push({studentId:'synthetic-override-owner',
+      originalDate:'2026-10-19',originalTime:'14:00',
+      date:'2026-10-19',time:'14:00',duration:90});
+    });
+   });
+   await page.reload({waitUntil:'networkidle'});
+   await page.waitForFunction(()=>document.querySelector('#storageStatus')?.textContent?.includes('OFFLINE READY'));
+   await page.locator('nav [data-view="students"]').click();
+   await page.locator('#students [data-edit]').first().click();
+   await page.locator('#modal [name="makeupBalance"]').fill('4');
+   await page.locator('#modal [type="submit"]').click();
+   await page.waitForFunction(()=>!document.querySelector('#modal').open);
+   const safety=await page.evaluate(async()=>{
+    const {readState}=await import('/db.js'),st=await readState();
+    return {balance:st.students.find(x=>x.name==='VISUAL TEST STUDENT')?.makeupBalance,
+     overrides:st.lessonOverrides.filter(x=>x.studentId==='synthetic-override-owner').length,
+     notes:st.lessons.find(x=>x.notes?.startsWith('M2 LCARS visual regression'))?.notes};
+   });
+   assert.equal(safety.balance,4,`${label}: manual makeup balance correction failed`);
+   assert.equal(safety.overrides,1,`${label}: another student's override changed`);
+   assert.match(safety.notes||'',/M2 LCARS visual regression/);
    await page.emulateMedia({reducedMotion:'reduce'});
    await page.locator('nav [data-view="schedule"]').click();
    await page.locator('#addAppointment').waitFor({state:'visible'});
