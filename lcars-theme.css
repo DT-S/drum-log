@@ -25,3 +25,30 @@ html[data-app-theme="elite"] textarea::placeholder,
 html[data-app-theme="redalert"] textarea::placeholder {color:var(--muted);}
 html[data-app-theme="redalert"] .warn {color:var(--gold);}
 #appTheme {margin:10px 0 6px;min-height:48px;}
+
+/* The segmented LCARS sliders have component-local color tokens and hardcoded
+   Voyager LED gradients. Recolor those too, without changing their geometry. */
+html[data-app-theme="elite"] .lcars-slide,
+html[data-app-theme="redalert"] .lcars-slide {
+ --sl-orange:var(--orange);--sl-gold:var(--gold);--sl-peach:var(--peach);
+ --sl-lavender:var(--purple);--sl-salmon:var(--salmon);
+ --sl-cream:var(--text,var(--peach));
+}
+html[data-app-theme="elite"] .lcars-pill.lit.led-gold,
+html[data-app-theme="redalert"] .lcars-pill.lit.led-gold {
+ background:linear-gradient(var(--gold),var(--orange));
+}
+html[data-app-theme="elite"] .lcars-pill.lit.led-peach,
+html[data-app-theme="redalert"] .lcars-pill.lit.led-peach {
+ background:linear-gradient(var(--peach),var(--orange));
+}
+html[data-app-theme="elite"] .lcars-pill.lit.led-salmon,
+html[data-app-theme="redalert"] .lcars-pill.lit.led-salmon {
+ background:linear-gradient(var(--purple),var(--salmon));
+}
+html[data-app-theme="elite"] .lcars-bracket-core,
+html[data-app-theme="redalert"] .lcars-bracket-core {
+ background:linear-gradient(var(--peach),var(--orange),var(--salmon));
+}
+html[data-app-theme="elite"] .lcars-cap-crescent,
+html[data-app-theme="redalert"] .lcars-cap-crescent {background:var(--purple);}
