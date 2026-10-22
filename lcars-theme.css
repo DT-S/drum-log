@@ -1,17 +1,17 @@
 /* Persistent LCARS palettes. Voyager keeps the current approved colors. */
 html[data-app-theme="elite"] {
- --peach:#ffb366;--purple:#499ad5;--blue:#72d9ff;--salmon:#447db7;
- --gold:#ffd17a;--orange:#ff8800;--muted:#b7d2ed;--line:#4a87b1;
- --padd-amber:#55ccff;--padd-lavender:#4488cc;--padd-ice:#88ddff;
- --lcars-shadow:rgba(85,204,255,.22);--lcars-wash:rgba(68,136,204,.14);
- --lcars-rule:rgba(85,204,255,.48);
+ --peach:#d8c9ff;--purple:#946ad7;--blue:#79b8f0;--salmon:#718dd3;
+ --gold:#e4c76b;--orange:#9674df;--muted:#b7b5d8;--line:#6256a1;
+ --padd-amber:#e4c76b;--padd-lavender:#8f67d0;--padd-ice:#aed6ff;
+ --lcars-shadow:rgba(146,108,218,.19);--lcars-wash:rgba(122,166,231,.1);
+ --lcars-rule:rgba(148,106,215,.38);
 }
 html[data-app-theme="redalert"] {
- --peach:#ffb7a8;--purple:#c64a51;--blue:#ff9b85;--salmon:#ff5353;
- --gold:#ff8370;--orange:#ff2b35;--muted:#e2b0b5;--line:#9c414b;
- --padd-amber:#ffaa75;--padd-lavender:#c64a51;--padd-ice:#ffb4a5;
- --lcars-shadow:rgba(255,42,52,.2);--lcars-wash:rgba(198,74,81,.12);
- --lcars-rule:rgba(255,83,83,.44);
+ --peach:#ffbea1;--purple:#c74652;--blue:#ee7653;--salmon:#ee4b49;
+ --gold:#f1ae69;--orange:#eb4047;--muted:#e0adb0;--line:#98424e;
+ --padd-amber:#f1ae69;--padd-lavender:#d35a50;--padd-ice:#ffc199;
+ --lcars-shadow:rgba(235,64,71,.2);--lcars-wash:rgba(230,103,78,.1);
+ --lcars-rule:rgba(233,110,88,.38);
 }
 html[data-app-theme="elite"] .sidebarfill,
 html[data-app-theme="redalert"] .sidebarfill {background:linear-gradient(180deg,var(--orange),var(--gold));}
@@ -24,7 +24,8 @@ html[data-app-theme="redalert"] input::placeholder,
 html[data-app-theme="elite"] textarea::placeholder,
 html[data-app-theme="redalert"] textarea::placeholder {color:var(--muted);}
 html[data-app-theme="redalert"] .warn {color:var(--gold);}
-#appTheme {margin:10px 0 6px;min-height:48px;}
+/* Launch is the palette selector; never present a duplicate dropdown. */
+#openLaunchConsole {min-height:48px;margin:8px 0 4px;width:100%;text-align:center;border-radius:28px 5px 5px 28px;}
 
 /* The segmented LCARS sliders have component-local color tokens and hardcoded
    Voyager LED gradients. Recolor those too, without changing their geometry. */
@@ -52,3 +53,30 @@ html[data-app-theme="redalert"] .lcars-bracket-core {
 }
 html[data-app-theme="elite"] .lcars-cap-crescent,
 html[data-app-theme="redalert"] .lcars-cap-crescent {background:var(--purple);}
+
+/* Controlled theme distribution: keep Voyager intact. Purple+blue for Hazard
+   Team, a red -> coral -> amber progression for tactical red alert. */
+html[data-app-theme="elite"] header {border-top-color:var(--purple);}
+html[data-app-theme="elite"] header .elbow {background:var(--purple);}
+html[data-app-theme="elite"] footer {border-left-color:var(--purple);border-bottom-color:var(--purple);}
+html[data-app-theme="elite"] nav button:nth-child(1){background:#9c78de;}
+html[data-app-theme="elite"] nav button:nth-child(2){background:#8bb9ed;}
+html[data-app-theme="elite"] nav button:nth-child(3){background:#b6a0e9;}
+html[data-app-theme="elite"] nav button:nth-child(4){background:#6d8fd2;}
+html[data-app-theme="elite"] nav button.active{background:#e3c77f;}
+html[data-app-theme="redalert"] header {border-top-color:var(--orange);}
+html[data-app-theme="redalert"] header .elbow {background:var(--orange);}
+html[data-app-theme="redalert"] footer {border-left-color:var(--orange);border-bottom-color:var(--orange);}
+html[data-app-theme="redalert"] nav button:nth-child(1){background:#d74247;}
+html[data-app-theme="redalert"] nav button:nth-child(2){background:#e75a4d;}
+html[data-app-theme="redalert"] nav button:nth-child(3){background:#f37a56;}
+html[data-app-theme="redalert"] nav button:nth-child(4){background:#f4a369;}
+html[data-app-theme="redalert"] nav button.active{background:#ffc184;}
+html[data-app-theme="elite"] .sidebarfill{background:linear-gradient(180deg,#9875d8,#638cd2);}
+html[data-app-theme="redalert"] .sidebarfill{background:linear-gradient(180deg,#d63a45,#ed8054);}
+html[data-app-theme="elite"] .sidetail{background:#6f9bde;}
+html[data-app-theme="redalert"] .sidetail{background:#f19464;}
+html[data-app-theme="elite"] .panel{background-image:linear-gradient(120deg,rgba(145,108,214,.09),transparent 48%);}
+html[data-app-theme="redalert"] .panel{background-image:linear-gradient(120deg,rgba(235,74,73,.09),transparent 48%);}
+html[data-app-theme="elite"] .panel.peach{background-image:linear-gradient(120deg,rgba(121,184,240,.09),transparent 48%);}
+html[data-app-theme="redalert"] .panel.peach{background-image:linear-gradient(120deg,rgba(245,139,83,.09),transparent 48%);}
