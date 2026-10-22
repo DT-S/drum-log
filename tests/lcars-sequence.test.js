@@ -13,7 +13,7 @@ test('RC27 builds real LCARS content in five stages, not a subtle flash',()=>{
  assert.match(css,/nth-child\(-n\+8\)/);
  assert.match(css,/#journal\.lcars-view-enter #notes\{animation:none!important/);
  assert.match(css,/prefers-reduced-motion:reduce/);
- assert.match(motion,/LCARS_VIEW_DURATION_MS=1480/);
+ assert.match(motion,/LCARS_VIEW_DURATION_MS=640/);
  assert.match(app,/lastRenderedView/);
  assert.match(app,/if\(entering\)viewMotion\.play\(view\)/);
  assert.doesNotMatch(css,/infinite|\.chart-lock-reticle/);
@@ -27,9 +27,9 @@ test('RC28 launcher hands off immediately to the long main-shell assembly',()=>{
  assert.match(js,/startAudio\(\)/);
  assert.doesNotMatch(js,/minimumMs|Promise\.race/);
  assert.match(app,/viewMotion\.play\(view,\{boot:true\}\)/);
- assert.match(sw,/v28-console-unfold/);
+ assert.match(sw,/v29-audio-sync/);
  assert.match(sw,/'\.\/lcars-assembly\.css'/);
  assert.match(get('index.html'),/href="lcars-assembly\.css"/);
- assert.match(get('index.html'),/DRUM LOG \/ 1\.11\.0/);
+ assert.match(get('index.html'),/DRUM LOG \/ 1\.11\.1/);
  assert.match(css,/footer span:last-child\{display:inline!important/);
 });
