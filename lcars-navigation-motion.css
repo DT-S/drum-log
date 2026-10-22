@@ -1,4 +1,4 @@
-/* M3: Voyager staggered view assembly.
+/* RC29: Voyager staggered view assembly, no trailing fade after menu cue.
    Triggered only by navigation to another tab; no transform, clip-path,
    pointer blocking, scroll-lock or synthetic audio. */
 @keyframes dl-panel-activate{
@@ -17,11 +17,11 @@
 /* Main shell never animates during a page switch. */
 .view.lcars-view-enter>.sectionhead,
 .view.lcars-view-enter>.eyebrow{
- animation:dl-heading-calibrate 320ms ease-out both;
+ animation:dl-heading-calibrate 275ms ease-out both;
 }
 .view.lcars-view-enter>.sectionhead::before,
 .view.lcars-view-enter>.sectionhead::after{
- animation:dl-rail-calibrate 390ms ease-out 75ms both;
+ animation:dl-rail-calibrate 335ms ease-out 65ms both;
 }
 /* Individual content blocks acknowledge the new view without displacement. */
 .view.lcars-view-enter>.searchbar,
@@ -29,7 +29,7 @@
 .view.lcars-view-enter>.plan-controls,
 .view.lcars-view-enter>.plan-legend,
 .view.lcars-view-enter>.mobile-pane-tabs{
- animation:dl-panel-activate 310ms ease-out 110ms both;
+ animation:dl-panel-activate 267ms ease-out 95ms both;
 }
 .view.lcars-view-enter>.journalgrid,
 .view.lcars-view-enter>.list,
@@ -37,22 +37,22 @@
 .view.lcars-view-enter>.settingsgrid,
 .view.lcars-view-enter>.panel,
 .view.lcars-view-enter>.empty{
- animation:dl-panel-activate 350ms ease-out 175ms both;
+ animation:dl-panel-activate 301ms ease-out 151ms both;
 }
 .view.lcars-view-enter .studentrow,
 .view.lcars-view-enter .plan-day,
 .view.lcars-view-enter .settingsgrid .panel{
- animation:dl-panel-activate 320ms ease-out 225ms both;
+ animation:dl-panel-activate 275ms ease-out 194ms both;
 }
 .view.lcars-view-enter .studentrow:nth-child(2),
 .view.lcars-view-enter .plan-day:nth-child(2),
-.view.lcars-view-enter .settingsgrid .panel:nth-child(2){animation-delay:270ms;}
+.view.lcars-view-enter .settingsgrid .panel:nth-child(2){animation-delay:232ms;}
 .view.lcars-view-enter .studentrow:nth-child(3),
 .view.lcars-view-enter .plan-day:nth-child(3),
-.view.lcars-view-enter .settingsgrid .panel:nth-child(3){animation-delay:315ms;}
+.view.lcars-view-enter .settingsgrid .panel:nth-child(3){animation-delay:271ms;}
 .view.lcars-view-enter .studentrow:nth-child(n+4),
 .view.lcars-view-enter .plan-day:nth-child(n+4),
-.view.lcars-view-enter .settingsgrid .panel:nth-child(n+4){animation-delay:350ms;}
+.view.lcars-view-enter .settingsgrid .panel:nth-child(n+4){animation-delay:301ms;}
 /* No animation of the editing textarea itself, which may have live focus. */
 @media(prefers-reduced-motion:reduce){
  .view.lcars-view-enter *,
