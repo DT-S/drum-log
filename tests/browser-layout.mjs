@@ -108,11 +108,11 @@ try{
    assert.match(launchPhase.elbow,/dl-assembly-elbow/);
    assert.match(launchPhase.rail,/dl-assembly-appear/);
    assert.equal(launchPhase.versionVisible,true,`${label}: mobile version hidden`);
-   assert.match(launchPhase.version,/1\.11\.0/);
+   assert.match(launchPhase.version,/1\.11\.1/);
    assert.ok(launchPhase.navWidth>=40,`${label}: nav button collapsed during assembly`);
    await page.waitForFunction(()=>!document.body.classList.contains('lcars-chassis-assembling') &&
     !document.querySelector('#journal').classList.contains('lcars-view-boot'));
-   assert.ok(Date.now()-start>=2700,`${label}: full boot ended too early`);
+   assert.ok(Date.now()-start>=1450,`${label}: MP3-aligned full boot ended too early`);
    // Shell animation is finished before regular tab transitions begin.
 
    const initial=await page.evaluate(()=>{

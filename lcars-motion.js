@@ -1,8 +1,10 @@
 // One-shot LCARS choreography. Tab changes animate only the active page.
 // The INITIALIZE handoff is deliberately longer and runs exactly once.
-export const LCARS_VIEW_DURATION_MS=1480;
-export const LCARS_BOOT_DURATION_MS=3100;
-export const LCARS_SHELL_DURATION_MS=3000;
+// Menu MP3 = 576ms + 55ms delayed entrance; the view ends with the cue.
+export const LCARS_VIEW_DURATION_MS=640;
+// Launch MP3 = 1608ms. Reserve a tiny frame budget for cleanup.
+export const LCARS_BOOT_DURATION_MS=1620;
+export const LCARS_SHELL_DURATION_MS=1560;
 export function createViewMotion(root,{
  schedule=(fn,ms)=>setTimeout(fn,ms),
  clear=id=>clearTimeout(id),

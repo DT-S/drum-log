@@ -17,7 +17,7 @@ test('M8 chassis runs once, then removes its class without any layout change',()
  const t=setup();
  assert.equal(t.controller.play(),true);
  assert.ok(t.classes.has('lcars-chassis-assembling'));
- assert.equal([...t.timers.values()][0].ms,3000);
+ assert.equal([...t.timers.values()][0].ms,1560);
  t.controller.stop();
  assert.equal(t.classes.size,0);
  assert.equal(t.timers.size,0);
@@ -37,5 +37,5 @@ test('M8 modal/light bar animations are finite, offline cached and do not move i
  assert.match(css,/prefers-reduced-motion:reduce/);
  assert.doesNotMatch(css,/infinite|translate\(|scale\(|pointer-events:\s*none/);
  assert.match(sw,/'\.\/lcars-effects\.css'/);
- assert.match(sw,/v28-console-unfold/);
+ assert.match(sw,/v29-audio-sync/);
 });

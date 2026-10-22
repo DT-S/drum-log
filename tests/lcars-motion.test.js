@@ -51,7 +51,7 @@ test('M3 CSS cannot shift hit targets and uses a one-shot app-navigation trigger
   const declarations=css.replace(/\/\*[\s\S]*?\*\//g,'');
  assert.doesNotMatch(declarations,/translate\(|scale\(|clip-path|pointer-events\s*:\s*none|infinite|position\s*:\s*(?:fixed|absolute)/);
  assert.match(html,/href="lcars-navigation-motion\.css"/);
- assert.match(sw,/lcars-core-v2|v28-console-unfold/);
+ assert.match(sw,/lcars-core-v2|v29-audio-sync/);
  assert.match(sw,/'\.\/lcars-navigation-motion\.css'/);
  assert.match(sw,/'\.\/lcars-motion\.js'/);
 });
@@ -66,7 +66,8 @@ test('RC28 full boot lasts longer than navigation and never doubles on quick tab
  assert.equal(motion.play('journal',{boot:true}),true);
  assert.ok(journal.classList.contains('lcars-view-boot'));
  assert.equal([...pending.values()][0].ms,LCARS_BOOT_DURATION_MS);
- assert.equal(LCARS_BOOT_DURATION_MS,3100);
+ assert.equal(LCARS_BOOT_DURATION_MS,1620);
+ assert.equal(LCARS_VIEW_DURATION_MS,640);
  assert.equal(motion.play('students'),true);
  assert.equal(journal.classList.contains('lcars-view-boot'),false);
  assert.equal(students.classList.contains('lcars-view-enter'),true);
