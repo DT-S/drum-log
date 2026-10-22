@@ -287,5 +287,30 @@ try{
    await page.screenshot({path:`/tmp/drum-log-layout-${vp.width}.png`,fullPage:true}).catch(()=>{});
   }finally{await page.close();}
  }
+ // Launch-console theme reentry must not reset the local teaching database.
+ const palettePage=await browser.newPage({viewport:{width:390,height:844}});
+ try{
+  await palettePage.goto(origin,{waitUntil:'networkidle'});
+  await palettePage.locator('#lcarsInitialize').click();
+  await palettePage.locator('nav [data-view="settings"]').click();
+  assert.equal(await palettePage.locator('#appTheme').count(),0,
+    'Theme selection should live on the launch console, not a dropdown');
+  await palettePage.locator('#openLaunchConsole').click();
+  await palettePage.locator('#lcarsStartup').waitFor({state:'visible'});
+  await palettePage.locator('[data-set-theme="elite"]').click();
+  await palettePage.waitForFunction(async()=>{
+   const {readState}=await import('/db.js');
+   return (await readState()).settings.theme==='elite';
+  });
+  assert.equal(await palettePage.locator('#lcarsStartup').getAttribute('data-theme'),'elite');
+  await palettePage.locator('#lcarsInitialize').click();
+  assert.equal(await palettePage.locator('#lcarsStartup').isVisible(),false);
+  await palettePage.reload({waitUntil:'networkidle'});
+  await palettePage.locator('#lcarsInitialize').waitFor({state:'visible'});
+  assert.equal(await palettePage.locator('#lcarsStartup').getAttribute('data-theme'),'elite');
+  assert.equal(await palettePage.evaluate(()=>document.documentElement.dataset.appTheme),'elite');
+  console.log('PASS LCARS palette reentry + IndexedDB persistence (iPhone)');
+ }catch(error){failures++;console.error('FAIL LCARS palette reentry',error);}
+ finally{await palettePage.close();}
 }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
 if(failures)process.exitCode=1;
