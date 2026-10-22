@@ -27,9 +27,9 @@ test('RC28 launcher hands off immediately to the long main-shell assembly',()=>{
  assert.match(js,/startAudio\(\)/);
  assert.doesNotMatch(js,/minimumMs|Promise\.race/);
  assert.match(app,/viewMotion\.play\(view,\{boot:true\}\)/);
- assert.match(sw,/v32-console-themes/);
+ assert.match(sw,/v33-launch-palette-polish/);
  assert.match(sw,/'\.\/lcars-assembly\.css'/);
  assert.match(get('index.html'),/href="lcars-assembly\.css"/);
- assert.match(get('index.html'),/DRUM LOG \/ 1\.11\.4/);
+ assert.match(get('index.html'),/DRUM LOG \/ 1\.11\.5/);
  assert.match(css,/footer span:last-child\{display:inline!important/);
 });
