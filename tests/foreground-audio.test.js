@@ -23,7 +23,7 @@ function harness(){
   fetchFile:async()=>({ok:true,arrayBuffer:async()=>new ArrayBuffer(4)})
  });
  sys.bind(doc);
- const send=key=>{const cb=listeners.get(key);assert.ok(cb,'missing '+key);cb();};
+ const send=(key,event)=>{const cb=listeners.get(key);assert.ok(cb,'missing '+key);cb(event);};
  return {sys,doc,send,instances,starts};
 }
 test('iOS foreground visibility resumes interrupted audio context without rebooting PWA',async()=>{
@@ -67,9 +67,12 @@ test('muted sound remains muted after returning to app, and retry remains attach
  h.instances[0].state='interrupted';
  // A user gesture re-attempts WebKit audio resumption even if lifecycle
  // callbacks did not fire or an earlier automatic attempt was denied.
- const cb=h.send;
- // Bindings attach to the document in the capture phase.
- const doc2={...h.doc};
+ h.send('document:pointerdown',{
+  pointerType:'mouse',
+  target:{closest:()=>({disabled:false,closest:()=>null})}
+ });
+ await flush();
+ assert.equal(h.instances[0].resumeCalls,1);
  assert.match(readFileSync(new URL('../sound.js',import.meta.url),'utf8'),
   /root\.addEventListener\('pointerdown',e=>\{unlock\(\)/);
 });
