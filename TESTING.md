@@ -235,3 +235,40 @@ The two sound effects should end with the animations, without holding up app
 interaction. Test muting and Reduce Motion. After an online update, verify
 offline reopen without clearing Safari/website storage or importing any live
 student data into a test profile.
+
+## Drum Log 1.11.2: Student profile save & iOS sound restore
+
+Release fixes the Edit Student modal showing **"Invalid backup: lesson override."**
+when any other student has a one-off lesson adjustment. The old draft
+validation incorrectly retained all lesson overrides while replacing the student
+collection with the single edited student. The form now validates only the new
+student draft against an otherwise empty defaults state, and validates the
+**complete current state** before committing the edit. Student IDs, other
+students' exceptions, lesson history, makeup credits and all records are
+preserved. Deleting an entire student profile also removes that student's
+own dangling exception records, never those of other students.
+
+Installed iPhone PWAs: Web Audio is stopped on hide as before; it is now
+**resumed** when the app becomes visible, on pageshow or focus, and retried
+inside the next user gesture. If iOS *closed* the context in the background,
+a fresh graph and fresh decoded buffers are created. Disabled/muted sounds
+remain disabled; no alert is played just because the PWA comes into focus.
+Apple's silent-mode/output restrictions remain outside the app's control.
+
+Regression checks:
+- Two synthetic students; one has an overridden weekly occurrence. Open the
+  other student's Edit Student form and adjust MAKE-UP LESSONS OWED to 4.
+  Save must succeed, preserve the separate override, and preserve journal notes.
+- Test weekly/biweekly/flexible schedule changes; real validation must still
+  prevent invalid records. Delete a synthetic student with overrides, ensuring
+  no orphan remains. Backup/export and offline reopen as usual.
+- On iPhone, play a cue, switch to Calendar, return without force quitting,
+  and navigate. Sound should work again. Also repeat with mute, silent-mode,
+  Bluetooth headset, offline, fast background/foreground switches.
+- The automated Web Audio tests simulate an `interrupted` context, a
+  `closed` context, and foreground/gesture recovery, not native iOS Safari.
+
+No IndexedDB migration or changes to the database schema. PWA shell cache
+`v30-makeup-audio-recovery`, application version **1.11.2**. Do not clear
+website data or remove the home-screen app to update it. Export a real JSON
+backup first, then use Data systems > Check for updates after merge.
