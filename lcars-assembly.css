@@ -44,63 +44,63 @@
 }
 /* The live journal editor must never move relative to the iPhone caret. */
 #journal.lcars-view-enter>.journalgrid{
-  animation:dl-assembly-appear 500ms ease-out 180ms both!important;
+  animation:dl-assembly-appear 230ms ease-out 83ms both!important;
 }
 #journal.lcars-view-enter #notes,
 #journal.lcars-view-boot #notes{
   animation:none!important;transform:none!important;filter:none!important;
 }
 
-/* FULL BOOT: 3.1 seconds only after INITIALIZE (or opted-out startup).
-   0–0.9s: chassis and permanent rails.
-   0.5–1.6s: navigator and shell counters.
-   1.0–2.2s: page frame and controls.
-   1.6–3.1s: actual rows, data and readouts.
+/* FULL BOOT: 1.61 seconds only after INITIALIZE (or opted-out startup).
+   0–0.56s: chassis and permanent rails.
+   0.3–1.0s: navigator and shell counters.
+   0.5–1.2s: page frame and controls.
+   0.9–1.61s: actual rows, data and readouts.
    Never start another launcher animation in this sequence. */
 body.lcars-chassis-assembling header .elbow{
-  animation:dl-assembly-elbow 840ms cubic-bezier(.16,1,.3,1) both!important;
+  animation:dl-assembly-elbow 521ms cubic-bezier(.16,1,.3,1) both!important;
 }
 body.lcars-chassis-assembling header .mast .topline{
-  animation:dl-assembly-rail-x 670ms cubic-bezier(.22,1,.36,1) 260ms both!important;
+  animation:dl-assembly-rail-x 415ms cubic-bezier(.22,1,.36,1) 161ms both!important;
 }
 body.lcars-chassis-assembling header .mast h1{
-  animation:dl-assembly-appear 580ms ease-out 420ms both!important;
+  animation:dl-assembly-appear 360ms ease-out 260ms both!important;
 }
 body.lcars-chassis-assembling header .telemetry span{
-  animation:dl-assembly-extend 590ms cubic-bezier(.22,1,.36,1) 650ms both!important;
+  animation:dl-assembly-extend 366ms cubic-bezier(.22,1,.36,1) 403ms both!important;
   transform-origin:left center;
 }
-body.lcars-chassis-assembling header .telemetry span:nth-child(2){animation-delay:780ms!important}
-body.lcars-chassis-assembling header .telemetry span:nth-child(3){animation-delay:910ms!important}
+body.lcars-chassis-assembling header .telemetry span:nth-child(2){animation-delay:484ms!important}
+body.lcars-chassis-assembling header .telemetry span:nth-child(3){animation-delay:564ms!important}
 body.lcars-chassis-assembling header .mast .rail>i{
-  animation:dl-assembly-rail-x 730ms cubic-bezier(.22,1,.36,1) 430ms both!important;
+  animation:dl-assembly-rail-x 453ms cubic-bezier(.22,1,.36,1) 267ms both!important;
 }
-body.lcars-chassis-assembling header .mast .rail>i:nth-child(2){animation-delay:560ms!important}
-body.lcars-chassis-assembling header .mast .rail>i:nth-child(3){animation-delay:690ms!important}
+body.lcars-chassis-assembling header .mast .rail>i:nth-child(2){animation-delay:347ms!important}
+body.lcars-chassis-assembling header .mast .rail>i:nth-child(3){animation-delay:428ms!important}
 body.lcars-chassis-assembling nav button{
   /* Keep actual touch/click rectangles full-size throughout construction. */
-  animation:dl-assembly-appear 640ms cubic-bezier(.16,1,.3,1) 540ms both!important;
+  animation:dl-assembly-appear 397ms cubic-bezier(.16,1,.3,1) 335ms both!important;
 }
-body.lcars-chassis-assembling nav button:nth-child(2){animation-delay:700ms!important}
-body.lcars-chassis-assembling nav button:nth-child(3){animation-delay:860ms!important}
-body.lcars-chassis-assembling nav button:nth-child(4){animation-delay:1020ms!important}
+body.lcars-chassis-assembling nav button:nth-child(2){animation-delay:434ms!important}
+body.lcars-chassis-assembling nav button:nth-child(3){animation-delay:533ms!important}
+body.lcars-chassis-assembling nav button:nth-child(4){animation-delay:632ms!important}
 body.lcars-chassis-assembling :is(.sidebarfill,.sidetail){
-  animation:dl-assembly-rail-y 780ms cubic-bezier(.22,1,.36,1) 750ms both!important;
+  animation:dl-assembly-rail-y 484ms cubic-bezier(.22,1,.36,1) 465ms both!important;
 }
-body.lcars-chassis-assembling .sidetail{animation-delay:1120ms!important}
+body.lcars-chassis-assembling .sidetail{animation-delay:694ms!important}
 body.lcars-chassis-assembling footer{
-  animation:dl-assembly-rail-x 900ms cubic-bezier(.22,1,.36,1) 1500ms both!important;
+  animation:dl-assembly-rail-x 558ms cubic-bezier(.22,1,.36,1) 930ms both!important;
 }
 
 /* Full-boot active page. The permanent chassis is NOT replayed on tabs. */
 .view.lcars-view-boot>.sectionhead,
 .view.lcars-view-boot>.eyebrow{
-  animation:dl-sequence-head 640ms cubic-bezier(.22,1,.36,1) 1010ms both!important;
+  animation:dl-sequence-head 342ms cubic-bezier(.22,1,.36,1) 540ms both!important;
 }
 .view.lcars-view-boot>.sectionhead::before,
 .view.lcars-view-boot>.sectionhead::after{
   transform-origin:left center;
-  animation:dl-assembly-rail-x 830ms cubic-bezier(.22,1,.36,1) 1080ms both!important;
+  animation:dl-assembly-rail-x 444ms cubic-bezier(.22,1,.36,1) 578ms both!important;
 }
 .view.lcars-view-boot>.journalgrid,
 .view.lcars-view-boot>.list,
@@ -110,47 +110,47 @@ body.lcars-chassis-assembling footer{
 .view.lcars-view-boot>.plan-controls,
 .view.lcars-view-boot>.calendar-events-register{
   transform-origin:left center;
-  animation:dl-assembly-unfold 790ms cubic-bezier(.22,1,.36,1) 1330ms both!important;
+  animation:dl-assembly-unfold 423ms cubic-bezier(.22,1,.36,1) 712ms both!important;
 }
 /* Notes/journal controls stay physically stationary even on the long boot. */
 #journal.lcars-view-boot>.journalgrid{
-  animation:dl-assembly-appear 790ms ease-out 1330ms both!important;
+  animation:dl-assembly-appear 423ms ease-out 712ms both!important;
 }
 .view.lcars-view-boot>.searchbar,
 .view.lcars-view-boot>.makeup-credit-row,
 .view.lcars-view-boot>.plan-legend,
 .view.lcars-view-boot>.mobile-pane-tabs,
 .view.lcars-view-boot>.sectionhead :is(button,.tag){
-  animation:dl-assembly-appear 470ms ease-out 1690ms both!important;
+  animation:dl-assembly-appear 251ms ease-out 904ms both!important;
 }
 #schedule.lcars-view-boot .schedule-actions>button,
 #schedule.lcars-view-boot .plan-mode-switch>button,
 #schedule.lcars-view-boot .plan-date-nav>button{
-  animation:dl-assembly-appear 400ms cubic-bezier(.22,1,.36,1) 1780ms both!important;
+  animation:dl-assembly-appear 214ms cubic-bezier(.22,1,.36,1) 952ms both!important;
 }
 #schedule.lcars-view-boot .schedule-actions>button:nth-child(2),
-#schedule.lcars-view-boot .plan-mode-switch>button:nth-child(2){animation-delay:1900ms!important}
+#schedule.lcars-view-boot .plan-mode-switch>button:nth-child(2){animation-delay:1017ms!important}
 #schedule.lcars-view-boot .schedule-actions>button:nth-child(3),
-#schedule.lcars-view-boot .plan-mode-switch>button:nth-child(3){animation-delay:2020ms!important}
+#schedule.lcars-view-boot .plan-mode-switch>button:nth-child(3){animation-delay:1081ms!important}
 #students.lcars-view-boot .list>.studentrow:nth-child(-n+8),
 #schedule.lcars-view-boot .plan-days>.plan-day:nth-child(-n+8),
 #settings.lcars-view-boot .settingsgrid .panel:nth-child(-n+8),
 #journal.lcars-view-boot .journalgrid :is(.editor-console,.panel){
-  animation:dl-assembly-appear 500ms steps(7,end) 2000ms both!important;
+  animation:dl-assembly-appear 268ms steps(7,end) 1070ms both!important;
 }
 #students.lcars-view-boot .list>.studentrow:nth-child(2),
 #schedule.lcars-view-boot .plan-days>.plan-day:nth-child(2),
-#settings.lcars-view-boot .settingsgrid .panel:nth-child(2){animation-delay:2120ms!important}
+#settings.lcars-view-boot .settingsgrid .panel:nth-child(2){animation-delay:1134ms!important}
 #students.lcars-view-boot .list>.studentrow:nth-child(3),
 #schedule.lcars-view-boot .plan-days>.plan-day:nth-child(3),
-#settings.lcars-view-boot .settingsgrid .panel:nth-child(3){animation-delay:2240ms!important}
+#settings.lcars-view-boot .settingsgrid .panel:nth-child(3){animation-delay:1198ms!important}
 #students.lcars-view-boot .list>.studentrow:nth-child(n+4):nth-child(-n+8),
 #schedule.lcars-view-boot .plan-days>.plan-day:nth-child(n+4):nth-child(-n+8),
-#settings.lcars-view-boot .settingsgrid .panel:nth-child(n+4):nth-child(-n+8){animation-delay:2360ms!important}
+#settings.lcars-view-boot .settingsgrid .panel:nth-child(n+4):nth-child(-n+8){animation-delay:1263ms!important}
 #journal.lcars-view-boot .journalgrid :is(.shortcuts,.savebar,.history),
 #schedule.lcars-view-boot .plan-days .plan-row:nth-child(-n+6),
 #settings.lcars-view-boot .settingsgrid .lcars-slide{
-  animation:dl-assembly-appear 410ms ease-out 2580ms both!important;
+  animation:dl-assembly-appear 219ms ease-out 1380ms both!important;
 }
 
 /* The version must not vanish on iPhone, where older mobile.css hid it. */
