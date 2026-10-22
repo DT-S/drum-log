@@ -124,6 +124,6 @@ test('offline stylesheet cache and release label update together',()=>{
  assert.match(html,/schedule\.css/);
  assert.match(sw,/'\.\/schedule\.css'/);
  assert.equal(pkg.version,'1.11.1');
- assert.match(html,/DRUM LOG \/ 1\.11\.0/);
+ assert.match(html,/DRUM LOG \/ 1\.11\.1/);
  assert.match(sw,/PREFIX\+'v29-audio-sync'/);
 });
