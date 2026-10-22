@@ -29,6 +29,7 @@ The installed app and browser may have different storage contexts. Create or imp
 ## Daily use
 
 - Add a student under **Students**, including weekday, start time and duration.
+- In the Students filter, **Make-up lessons owed (1+)** shows every profile with a positive make-up balance, including archived students. Name search and normal teaching-day sort still apply; choosing this filter does not change credits.
 - On a fresh app load, the current lesson is selected; otherwise the next scheduled lesson is shown with its scheduled date. **Today / new entry** opens today's date instead.
 - **Follow schedule** recalculates the selection. Manual selection remains in place while editing; the application never changes the student underneath a note.
 - Overlapping scheduled lessons are explicitly listed; choose the intended student.
